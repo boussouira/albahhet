@@ -226,7 +226,7 @@ void MainWindow::startSearching()
                                            "Search count %3 ")
                                    .arg(srch)
                                    .arg(lucene::util::Misc::currentTimeMillis() - str)
-                                   .arg(0));
+                                   .arg(m_resultModel->rowCount()));
     _CLDELETE(h);
     _CLDELETE(q);
 
@@ -294,11 +294,16 @@ Document* MainWindow::FileDocument(QString id, QString ayaText)
 
 QString MainWindow::cleanString(QString str)
 {
+//    uint64_t startTime = lucene::util::Misc::currentTimeMillis();
+
     str.remove(QRegExp(trUtf8("[ًٌٍَُِّْ]")));
     str.replace(letterMap["ALEF_WITH_HAMZA_ABOVE"], letterMap["ALEF"]);
     str.replace(letterMap["ALEF_WITH_HAMZA_BELOW"], letterMap["ALEF"]);
     str.replace(letterMap["ALEF_WITH_MADDA_ABOVE"], letterMap["ALEF"]);
     str.replace(letterMap["HAMZA_ABOVE_ALEF"], letterMap["ALEF"]);
     str.replace(letterMap["MARBUTA"], letterMap["HEH"]);
+
+//    uint64_t cleanTime = lucene::util::Misc::currentTimeMillis() - startTime;
+//    qDebug() << QString("Clean time %1 ms.").arg(cleanTime);
     return str;
 }
