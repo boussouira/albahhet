@@ -41,11 +41,8 @@ public slots:
     void startSearching();
     void showStatistic();
     void indexDocs(IndexWriter* writer);
-    Document* FileDocument(QString id,
-                           QString ayaText,
-                           QString ayaNumber,
-                           QString pageNumber,
-                           QString soraNumber);
+    Document* FileDocument(QString id, QString ayaText);
+    QString cleanString(QString str);
 
 protected:
     QSqlDatabase m_quranDB;
@@ -53,6 +50,7 @@ protected:
     QString m_quranDBPath;
     QSqlQueryModel *m_resultModel;
     Ui::MainWindow *ui;
+    QMap<QString, QChar> letterMap;
 };
 
 #endif // MAINWINDOW_H

@@ -73,6 +73,16 @@
      </layout>
     </item>
     <item>
+     <widget class="QCheckBox" name="checkBox">
+      <property name="text">
+       <string>كل العباراة</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QTableView" name="tableView"/>
     </item>
    </layout>

@@ -9,9 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //qDebug() << "WORD: " << QChar(0x0639);
-/*
-    QMap<QString, QChar> letterMap;
     // letters used in Quran text
     letterMap.insert("HAMZA", QChar(0x0621));
     letterMap.insert("ALEF_WITH_MADDA_ABOVE", QChar(0x0622));
@@ -101,8 +98,8 @@ MainWindow::MainWindow(QWidget *parent) :
     letterMap.insert("SWASH_KAF", QChar(0x06AA));
     letterMap.insert("YEH_BARREE", QChar(0x06D2));
 
-    qDebug() << letterMap;
-*/
+//    qDebug() << letterMap;
+
     m_quranDB = QSqlDatabase::addDatabase("QSQLITE", "QuranTextDB");
     m_quranDB.setDatabaseName("quran.db");
 
@@ -169,9 +166,11 @@ void MainWindow::startSearching()
     //Searcher searcher("quran_index");
     standard::StandardAnalyzer analyzer;
 
-    QString queryWord = ui->lineQuery->text();
-    queryWord.remove(QRegExp(trUtf8("[ًٌٍَُِّْ]")));
-    queryWord.replace(" ", " + ");
+    QString queryWord = cleanString(ui->lineQuery->text());
+
+    if(ui->checkBox->isChecked()) {
+        queryWord.replace(" ", " AND ");
+    }
     const TCHAR* buf;
 
     IndexSearcher s("quran_index");
@@ -270,20 +269,13 @@ void MainWindow::indexDocs(IndexWriter* writer)
     while(m_quranQuery->next())
     {
         Document* doc = FileDocument(m_quranQuery->value(0).toString(),
-                                     m_quranQuery->value(1).toString(),
-                                     m_quranQuery->value(2).toString(),
-                                     m_quranQuery->value(3).toString(),
-                                     m_quranQuery->value(4).toString());
+                                     m_quranQuery->value(1).toString());
         writer->addDocument( doc );
         _CLDELETE(doc);
     }
 }
 
-Document* MainWindow::FileDocument(QString id,
-                                   QString ayaText,
-                                   QString ayaNumber,
-                                   QString pageNumber,
-                                   QString soraNumber)
+Document* MainWindow::FileDocument(QString id, QString ayaText)
 {
     // make a new, empty document
     Document* doc = _CLNEW Document();
@@ -293,9 +285,20 @@ Document* MainWindow::FileDocument(QString id,
 //    doc->add( *_CLNEW Field(_T("sora"), soraNumber.toStdWString().c_str() ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
 //    doc->add( *_CLNEW Field(_T("page"), pageNumber.toStdWString().c_str() ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
 
-    ayaText.remove(QRegExp(trUtf8("[ًٌٍَُِّْ]")));
+    ayaText = cleanString(ayaText);
 //    qDebug() << "CLEAN: " << ayaText;
     doc->add( *_CLNEW Field(_T("text"),ayaText.toStdWString().c_str(), Field::STORE_NO | Field::INDEX_TOKENIZED) );
 
     return doc;
+}
+
+QString MainWindow::cleanString(QString str)
+{
+    str.remove(QRegExp(trUtf8("[ًٌٍَُِّْ]")));
+    str.replace(letterMap["ALEF_WITH_HAMZA_ABOVE"], letterMap["ALEF"]);
+    str.replace(letterMap["ALEF_WITH_HAMZA_BELOW"], letterMap["ALEF"]);
+    str.replace(letterMap["ALEF_WITH_MADDA_ABOVE"], letterMap["ALEF"]);
+    str.replace(letterMap["HAMZA_ABOVE_ALEF"], letterMap["ALEF"]);
+    str.replace(letterMap["MARBUTA"], letterMap["HEH"]);
+    return str;
 }
