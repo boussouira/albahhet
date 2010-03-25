@@ -180,7 +180,7 @@ void MainWindow::startSearching()
 
     buf = q->toString(_T("text"));
     qDebug() << "Searching for: " << QString::fromWCharArray(buf);
-    _CLDELETE_CARRAY(buf);
+//    _CLDELETE_CARRAY(buf);
 
     uint64_t str = lucene::util::Misc::currentTimeMillis();
     Hits* h = s.search(q);
@@ -245,8 +245,8 @@ void MainWindow::showStatistic()
 
     int64_t ver = r->getCurrentVersion("quran_index");
     TCHAR str[16];
-    _i64tot(ver, str, 10);
-    qDebug() << "Current Version: " << ver ;
+//    _i64tot(ver, str, 10);
+//    qDebug() << "Current Version: " << ver ;
 
     TermEnum* te = r->terms();
     int32_t nterms;

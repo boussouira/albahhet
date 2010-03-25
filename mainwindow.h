@@ -6,12 +6,18 @@
 
 #include <CLucene/StdHeader.h>
 #include <CLucene.h>
-#include <CLucene/util/Reader.h>
+#include <CLucene/util/CLStreams.h>
 #include <CLucene/util/Misc.h>
+#include <CLucene/config/repl_tchar.h>
+#include <CLucene/util/StringBuffer.h>
 #include <CLucene/util/dirent.h>
 #include <CLucene/search/IndexSearcher.h>
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
+#include <cctype>
+#include <string.h>
+#include <algorithm>
 
 using namespace std;
 using namespace lucene::index;

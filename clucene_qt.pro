@@ -16,5 +16,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
-
-LIBS += -lclucene
+INCLUDEPATH += "/home/naruto/Bureau/clucene-2/src/ext"
+INCLUDEPATH += "/home/naruto/Bureau/clucene-2/src/shared"
+LIBS += -lclucene-core
+DEFINES += _REENTRANT _UCS2 _UNICODE
