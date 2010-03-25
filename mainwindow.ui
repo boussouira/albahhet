@@ -50,6 +50,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pushRCount">
+        <property name="text">
+         <string>نتائج البحث</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushStatstic">
         <property name="text">
          <string>احصاءات</string>

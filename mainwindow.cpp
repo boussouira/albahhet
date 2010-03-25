@@ -3,12 +3,15 @@
 #include <QDebug>
 #include <QStringListModel>
 
+#define INDEX_PATH "quran_index"
+#define DATABASE_PATH "quran.db"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    {
     // letters used in Quran text
     letterMap.insert("HAMZA", QChar(0x0621));
     letterMap.insert("ALEF_WITH_MADDA_ABOVE", QChar(0x0622));
@@ -97,11 +100,11 @@ MainWindow::MainWindow(QWidget *parent) :
     letterMap.insert("FARSI_KEHEH", QChar(0x06A9));
     letterMap.insert("SWASH_KAF", QChar(0x06AA));
     letterMap.insert("YEH_BARREE", QChar(0x06D2));
-
+}
 //    qDebug() << letterMap;
 
     m_quranDB = QSqlDatabase::addDatabase("QSQLITE", "QuranTextDB");
-    m_quranDB.setDatabaseName("quran.db");
+    m_quranDB.setDatabaseName(DATABASE_PATH);
 
     if (!m_quranDB.open()) {
         qDebug() << "Cannot open database.";
@@ -112,6 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
+    connect(ui->pushRCount, SIGNAL(clicked()), this, SLOT(resultsCount()));
 
     //    this->showStatistic();
 }
@@ -136,18 +140,18 @@ void MainWindow::changeEvent(QEvent *e)
 void MainWindow::startIndexing()
 {
     IndexWriter* writer = NULL;
-    //lucene::analysis::SimpleAnalyzer* an = *_CLNEW lucene::analysis::SimpleAnalyzer();
+//    SimpleAnalyzer* an = _CLNEW SimpleAnalyzer();
     lucene::analysis::standard::StandardAnalyzer an;
 
-    if ( IndexReader::indexExists("quran_index") ){
-            if ( IndexReader::isLocked("quran_index") ){
+    if ( IndexReader::indexExists(INDEX_PATH) ){
+            if ( IndexReader::isLocked(INDEX_PATH) ){
                     printf("Index was locked... unlocking it.\n");
-                    IndexReader::unlock("quran_index");
+                    IndexReader::unlock(INDEX_PATH);
             }
 
-            writer = _CLNEW IndexWriter( "quran_index", &an, true);
+            writer = _CLNEW IndexWriter( INDEX_PATH, &an, true);
     }else{
-            writer = _CLNEW IndexWriter( "quran_index" ,&an, true);
+            writer = _CLNEW IndexWriter( INDEX_PATH ,&an, true);
     }
     writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
@@ -163,7 +167,7 @@ void MainWindow::startIndexing()
 
 void MainWindow::startSearching()
 {
-    //Searcher searcher("quran_index");
+    //Searcher searcher(INDEX_PATH);
     standard::StandardAnalyzer analyzer;
 
     QString queryWord = cleanString(ui->lineQuery->text());
@@ -173,7 +177,7 @@ void MainWindow::startSearching()
     }
     const TCHAR* buf;
 
-    IndexSearcher s("quran_index");
+    IndexSearcher s(INDEX_PATH);
 
     // Start building the query
     Query* q = QueryParser::parse(queryWord.toStdWString().c_str(),_T("text"),&analyzer);
@@ -192,14 +196,15 @@ void MainWindow::startSearching()
                        "LEFT JOIN QuranSowar "
                        "ON QuranSowar.id = QuranText.soraNumber "
                        "WHERE QuranText.id IN (");
-    for ( int32_t i=0;i<h->length();i++ ){
+    int32_t i=0;
+    for ( i=0;i<h->length();i++ ){
         Document* doc = &h->doc(i);
-        /*
-        qDebug() <<  i
-                << " - Sora: " << QString::fromWCharArray(doc->get(_T("sora")))
-                << " - Aya: "  << QString::fromWCharArray(doc->get(_T("aya")))
-                << " - text: "  << QString::fromWCharArray(doc->get(_T("text")));
-        */
+
+//        qDebug() <<  i
+//                << " - Sora: " << QString::fromWCharArray(doc->get(_T("sora")))
+//                << " - Aya: "  << QString::fromWCharArray(doc->get(_T("aya")))
+//                << " - text: "  << QString::fromWCharArray(doc->get(_T("text")));
+//        */
         sqlQureyString.append(QString::fromWCharArray(doc->get(_T("id"))));
         sqlQureyString.append(",");
         //        qDebug() <<  i << " -> " << QString::number((double)h->score(i));
@@ -214,8 +219,8 @@ void MainWindow::startSearching()
     m_resultModel->setHeaderData(1, Qt::Horizontal, trUtf8("رفم"));
     m_resultModel->setHeaderData(2, Qt::Horizontal, trUtf8("الاية"));
     m_resultModel->setHeaderData(3, Qt::Horizontal, trUtf8("النص"));
-
-    ui->tableView->setModel(m_resultModel);
+    ui->tableView->setWordWrap(true);
+//    ui->tableView->setModel(m_resultModel);
     ui->tableView->resizeColumnsToContents();
     ui->tableView->setAlternatingRowColors(true);
 
@@ -226,7 +231,7 @@ void MainWindow::startSearching()
                                            "Search count %3 ")
                                    .arg(srch)
                                    .arg(lucene::util::Misc::currentTimeMillis() - str)
-                                   .arg(m_resultModel->rowCount()));
+                                   .arg(i));
     _CLDELETE(h);
     _CLDELETE(q);
 
@@ -237,16 +242,14 @@ void MainWindow::startSearching()
 
 void MainWindow::showStatistic()
 {
-    IndexReader* r = IndexReader::open("quran_index");
-    qDebug() << "Statistics for quran_index";
+    IndexReader* r = IndexReader::open(INDEX_PATH);
+    qDebug() << "Statistics for " << INDEX_PATH;
 
     qDebug() << "Max Docs: " << r->maxDoc();
     qDebug() << "Num Docs: " << r->numDocs();
 
-    int64_t ver = r->getCurrentVersion("quran_index");
-    TCHAR str[16];
-//    _i64tot(ver, str, 10);
-//    qDebug() << "Current Version: " << ver ;
+    int64_t ver = r->getCurrentVersion(INDEX_PATH);
+    qDebug() << "Current Version: " << ver ;
 
     TermEnum* te = r->terms();
     int32_t nterms;
@@ -302,8 +305,17 @@ QString MainWindow::cleanString(QString str)
     str.replace(letterMap["ALEF_WITH_MADDA_ABOVE"], letterMap["ALEF"]);
     str.replace(letterMap["HAMZA_ABOVE_ALEF"], letterMap["ALEF"]);
     str.replace(letterMap["MARBUTA"], letterMap["HEH"]);
-
+    str.remove(QRegExp("\\[([^\\[]+)\\]"));
+    str.remove(QRegExp("\\[co\\]([^\\[]+)\\[/co\\]"));
+    str.remove(QRegExp("\\(([a-zA-Z0-9]+]+)\\)"));
+    str.remove(QRegExp("\\[([a-zA-Z0-9]+)\\]"));
 //    uint64_t cleanTime = lucene::util::Misc::currentTimeMillis() - startTime;
 //    qDebug() << QString("Clean time %1 ms.").arg(cleanTime);
     return str;
+}
+
+void MainWindow::resultsCount()
+{
+    this->statusBar()->showMessage(QString("Search results count: %1 ")
+                                   .arg(m_resultModel->rowCount()) );
 }

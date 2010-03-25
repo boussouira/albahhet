@@ -49,6 +49,7 @@ public slots:
     void indexDocs(IndexWriter* writer);
     Document* FileDocument(QString id, QString ayaText);
     QString cleanString(QString str);
+    void resultsCount();
 
 protected:
     QSqlDatabase m_quranDB;
