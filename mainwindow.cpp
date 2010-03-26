@@ -167,100 +167,116 @@ void MainWindow::startIndexing()
 
 void MainWindow::startSearching()
 {
-    //Searcher searcher(INDEX_PATH);
-    standard::StandardAnalyzer analyzer;
+    try {
+        //Searcher searcher(INDEX_PATH);
+        standard::StandardAnalyzer analyzer;
 
-    QString queryWord = cleanString(ui->lineQuery->text());
+        QString queryWord = cleanString(ui->lineQuery->text());
 
-    if(ui->checkBox->isChecked()) {
-        queryWord.replace(" ", " AND ");
+        if(ui->checkBox->isChecked()) {
+            queryWord.replace(" ", " AND ");
+        }
+        const TCHAR* buf;
+        IndexSearcher s(INDEX_PATH);
+
+        // Start building the query
+        Query* q = QueryParser::parse(queryWord.toStdWString().c_str(),_T("text"),&analyzer);
+
+        buf = q->toString(_T("text"));
+        qDebug() << "Searching for: " << QString::fromWCharArray(buf);
+        //    _CLDELETE_CARRAY(buf);
+
+        uint64_t str = lucene::util::Misc::currentTimeMillis();
+        Hits* h = s.search(q);
+        uint64_t srch = lucene::util::Misc::currentTimeMillis() - str;
+        str = lucene::util::Misc::currentTimeMillis();
+
+        QString sqlQureyString("SELECT QuranSowar.SoraName, QuranText.soraNumber, QuranText.ayaNumber, QuranText.ayaText "
+                               "FROM QuranText "
+                               "LEFT JOIN QuranSowar "
+                               "ON QuranSowar.id = QuranText.soraNumber "
+                               "WHERE QuranText.id IN (");
+        int32_t i=0;
+        for ( i=0;i<h->length();i++ ){
+            Document* doc = &h->doc(i);
+
+            //        qDebug() <<  i
+            //                << " - Sora: " << QString::fromWCharArray(doc->get(_T("sora")))
+            //                << " - Aya: "  << QString::fromWCharArray(doc->get(_T("aya")))
+            //                << " - text: "  << QString::fromWCharArray(doc->get(_T("text")));
+            //        */
+            sqlQureyString.append(QString::fromWCharArray(doc->get(_T("id"))));
+            sqlQureyString.append(",");
+            //        qDebug() <<  i << " -> " << QString::number((double)h->score(i));
+
+            //delete doc;
+        }
+        sqlQureyString.remove(QRegExp(",$"));
+        sqlQureyString.append(")");
+
+        m_resultModel->setQuery(sqlQureyString, m_quranDB);
+        m_resultModel->setHeaderData(0, Qt::Horizontal, trUtf8("سورة"));
+        m_resultModel->setHeaderData(1, Qt::Horizontal, trUtf8("رفم"));
+        m_resultModel->setHeaderData(2, Qt::Horizontal, trUtf8("الاية"));
+        m_resultModel->setHeaderData(3, Qt::Horizontal, trUtf8("النص"));
+        ui->tableView->setWordWrap(true);
+        ui->tableView->setModel(m_resultModel);
+        ui->tableView->resizeColumnsToContents();
+        ui->tableView->setAlternatingRowColors(true);
+
+        //    qDebug() << "Search took: " << srch << " ms.";
+        //    qDebug() << "Screen dump took: "<< lucene::util::Misc::currentTimeMillis() - str << " ms.";
+        this->statusBar()->showMessage(QString("Search took %1 ms. "
+                                               "Screen dump took: %2 ms. "
+                                               "Search count %3 ")
+                                       .arg(srch)
+                                       .arg(lucene::util::Misc::currentTimeMillis() - str)
+                                       .arg(i));
+        _CLDELETE(h);
+        _CLDELETE(q);
+
+
+        s.close();
+        //delete line;
     }
-    const TCHAR* buf;
 
-    IndexSearcher s(INDEX_PATH);
-
-    // Start building the query
-    Query* q = QueryParser::parse(queryWord.toStdWString().c_str(),_T("text"),&analyzer);
-
-    buf = q->toString(_T("text"));
-    qDebug() << "Searching for: " << QString::fromWCharArray(buf);
-//    _CLDELETE_CARRAY(buf);
-
-    uint64_t str = lucene::util::Misc::currentTimeMillis();
-    Hits* h = s.search(q);
-    uint64_t srch = lucene::util::Misc::currentTimeMillis() - str;
-    str = lucene::util::Misc::currentTimeMillis();
-
-    QString sqlQureyString("SELECT QuranSowar.SoraName, QuranText.soraNumber, QuranText.ayaNumber, QuranText.ayaText "
-                       "FROM QuranText "
-                       "LEFT JOIN QuranSowar "
-                       "ON QuranSowar.id = QuranText.soraNumber "
-                       "WHERE QuranText.id IN (");
-    int32_t i=0;
-    for ( i=0;i<h->length();i++ ){
-        Document* doc = &h->doc(i);
-
-//        qDebug() <<  i
-//                << " - Sora: " << QString::fromWCharArray(doc->get(_T("sora")))
-//                << " - Aya: "  << QString::fromWCharArray(doc->get(_T("aya")))
-//                << " - text: "  << QString::fromWCharArray(doc->get(_T("text")));
-//        */
-        sqlQureyString.append(QString::fromWCharArray(doc->get(_T("id"))));
-        sqlQureyString.append(",");
-        //        qDebug() <<  i << " -> " << QString::number((double)h->score(i));
-
-        //delete doc;
+    catch(CLuceneError *tmp) {
+        qDebug() << "Error : " << tmp->what();
     }
-    sqlQureyString.remove(QRegExp(",$"));
-    sqlQureyString.append(")");
 
-    m_resultModel->setQuery(sqlQureyString, m_quranDB);
-    m_resultModel->setHeaderData(0, Qt::Horizontal, trUtf8("سورة"));
-    m_resultModel->setHeaderData(1, Qt::Horizontal, trUtf8("رفم"));
-    m_resultModel->setHeaderData(2, Qt::Horizontal, trUtf8("الاية"));
-    m_resultModel->setHeaderData(3, Qt::Horizontal, trUtf8("النص"));
-    ui->tableView->setWordWrap(true);
-//    ui->tableView->setModel(m_resultModel);
-    ui->tableView->resizeColumnsToContents();
-    ui->tableView->setAlternatingRowColors(true);
+    catch(...) {
+        qDebug() << "Error when searching at : " << INDEX_PATH;
+    }
 
-    //    qDebug() << "Search took: " << srch << " ms.";
-    //    qDebug() << "Screen dump took: "<< lucene::util::Misc::currentTimeMillis() - str << " ms.";
-    this->statusBar()->showMessage(QString("Search took %1 ms. "
-                                           "Screen dump took: %2 ms. "
-                                           "Search count %3 ")
-                                   .arg(srch)
-                                   .arg(lucene::util::Misc::currentTimeMillis() - str)
-                                   .arg(i));
-    _CLDELETE(h);
-    _CLDELETE(q);
-
-
-    s.close();
-    //delete line;
 }
 
 void MainWindow::showStatistic()
 {
-    IndexReader* r = IndexReader::open(INDEX_PATH);
-    qDebug() << "Statistics for " << INDEX_PATH;
+    try {
+        IndexReader* r = IndexReader::open(INDEX_PATH);
+        qDebug() << "Statistics for " << INDEX_PATH;
 
-    qDebug() << "Max Docs: " << r->maxDoc();
-    qDebug() << "Num Docs: " << r->numDocs();
+        qDebug() << "Max Docs: " << r->maxDoc();
+        qDebug() << "Num Docs: " << r->numDocs();
 
-    int64_t ver = r->getCurrentVersion(INDEX_PATH);
-    qDebug() << "Current Version: " << ver ;
+        int64_t ver = r->getCurrentVersion(INDEX_PATH);
+        qDebug() << "Current Version: " << ver ;
 
-    TermEnum* te = r->terms();
-    int32_t nterms;
-    for (nterms = 0; te->next() == true; nterms++) {
-        /* empty */
+        TermEnum* te = r->terms();
+        int32_t nterms;
+        for (nterms = 0; te->next() == true; nterms++) {
+            /* empty */
+        }
+        qDebug() << "Term count: " << nterms;
+        _CLDELETE(te);
+
+        r->close();
+        _CLDELETE(r);
     }
-    qDebug() << "Term count: " << nterms;
-    _CLDELETE(te);
+    catch(...) {
+        qDebug() << "Error when opening : " << INDEX_PATH;
+    }
 
-    r->close();
-    _CLDELETE(r);
 }
 
 void MainWindow::indexDocs(IndexWriter* writer)
