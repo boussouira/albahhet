@@ -6,6 +6,9 @@ include_directories(
 	"/home/naruto/Bureau/clucene-2/src/ext"
 	"/home/naruto/Bureau/clucene-2/src/shared"
 )
+link_directories (
+)
+
 set(clucene_qt_SRCS
     main.cpp
     mainwindow.cpp
