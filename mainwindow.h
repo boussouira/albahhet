@@ -4,8 +4,13 @@
 #include <QMainWindow>
 #include <QtSql>
 
-#include <CLucene/StdHeader.h>
+#define WIN32_LEAN_AND_MEAN
+
 #include <CLucene.h>
+#include <CLucene/StdHeader.h>
+#include <CLucene/_clucene-config.h>
+#include <CLucene/config/repl_tchar.h>
+#include <CLucene/config/repl_wchar.h>
 #include <CLucene/util/CLStreams.h>
 #include <CLucene/util/Misc.h>
 #include <CLucene/config/repl_tchar.h>
@@ -18,6 +23,7 @@
 #include <cctype>
 #include <string.h>
 #include <algorithm>
+#include <stdio.h>
 
 using namespace std;
 using namespace lucene::index;
