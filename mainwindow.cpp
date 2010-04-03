@@ -155,14 +155,15 @@ void MainWindow::startIndexing()
     }
     writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
-    uint64_t str = lucene::util::Misc::currentTimeMillis();
+    QTime time;
+    time.start();
 
     indexDocs(writer);
     writer->optimize();
     writer->close();
-    _CLDELETE(writer);
+    _CLDELETE(writer)
 
-    qDebug() << "Indexing took: " << lucene::util::Misc::currentTimeMillis() - str << " ms.";
+    statusBar()->showMessage(tr("Indexing took: %1 ms").arg(time.elapsed()));
 }
 
 void MainWindow::startSearching()
@@ -186,10 +187,11 @@ void MainWindow::startSearching()
         qDebug() << "Searching for: " << QString::fromWCharArray(buf);
         //    _CLDELETE_CARRAY(buf);
 
-        uint64_t str = lucene::util::Misc::currentTimeMillis();
+        QTime time;
+
+        time.start();
         Hits* h = s.search(q);
-        uint64_t srch = lucene::util::Misc::currentTimeMillis() - str;
-        str = lucene::util::Misc::currentTimeMillis();
+        int timeSearch = time.restart();
 
         QString sqlQureyString("SELECT QuranSowar.SoraName, QuranText.soraNumber, QuranText.ayaNumber, QuranText.ayaText "
                                "FROM QuranText "
@@ -229,8 +231,8 @@ void MainWindow::startSearching()
         this->statusBar()->showMessage(QString("Search took %1 ms. "
                                                "Screen dump took: %2 ms. "
                                                "Search count %3 ")
-                                       .arg(srch)
-                                       .arg(lucene::util::Misc::currentTimeMillis() - str)
+                                       .arg(timeSearch)
+                                       .arg(time.elapsed())
                                        .arg(i));
         _CLDELETE(h);
         _CLDELETE(q);
