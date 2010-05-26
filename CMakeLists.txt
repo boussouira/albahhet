@@ -4,7 +4,7 @@ set ( CMAKE_BUILD_TYPE Release )
 add_definitions ( -Wall )
 find_package ( Qt4 REQUIRED )
 include ( ${QT_USE_FILE} )
-set ( CLUCENE_DIR /home/naruto/Bureau/clucene-2.3.2)
+set ( CLUCENE_DIR C:/clucene-2.3.2)
 include_directories (
 	${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 	${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} 
@@ -18,12 +18,13 @@ link_directories (
 	${CLUCENE_DIR}/bin
 )
 set ( clucene_qt_HDRS
-	
+	arabicanalyzer.h
 	)
 
 set ( clucene_qt_SRCS
 	main.cpp
 	mainwindow.cpp
+	arabicanalyzer.cpp
 	)
 
 set ( clucene_qt_UIS
@@ -36,7 +37,7 @@ set ( clucene_qt_MOCS
 	)
 QT4_WRAP_CPP(MOCS ${clucene_qt_MOCS})
 
-add_executable ( clucene_qt ${clucene_qt_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
+add_executable ( clucene_qt ${clucene_qt_SRCS} ${clucene_qt_HDRS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( clucene_qt  ${QT_QTCORE_LIBRARY} 
 						${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} 
 						${QT_QTGUI_LIBRARY} ${QT_QTSQL_LIBRARY}

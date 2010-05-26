@@ -1,18 +1,16 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2010-03-21T11:57:14
-#
-#-------------------------------------------------
 
 QT       += core gui sql
 TARGET = clucene_qt
 TEMPLATE = app
 
-SOURCES += main.cpp mainwindow.cpp
-HEADERS  += mainwindow.h
+SOURCES += main.cpp mainwindow.cpp \
+    arabicanalyzer.cpp
+HEADERS  += mainwindow.h \
+    arabicanalyzer.h
 FORMS    += mainwindow.ui
 
-CLUCENE_PATH = "/home/naruto/Bureau/clucene-2.3.2"
+unix:CLUCENE_PATH = "/home/naruto/Bureau/clucene-2.3.2"
+win32:CLUCENE_PATH = "C:/clucene-2.3.2"
 
 DEFINES += _REENTRANT _UCS2 _UNICODE
 INCLUDEPATH += $$CLUCENE_PATH/src/core
