@@ -19,12 +19,14 @@ link_directories (
 )
 set ( clucene_qt_HDRS
 	arabicanalyzer.h
+	mdbconverter.h
 	)
 
 set ( clucene_qt_SRCS
 	main.cpp
 	mainwindow.cpp
 	arabicanalyzer.cpp
+	mdbconverter.cpp
 	)
 
 set ( clucene_qt_UIS

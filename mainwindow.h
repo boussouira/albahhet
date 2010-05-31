@@ -1,25 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#ifdef Q_OS_WIN
-	#define TCHAR_TO_QSTRING(s)   QString::fromUtf16((const ushort*) s)
-	#define FIELD_TO_INT(name, d) QString::fromUtf16((const ushort*)d->get(_T(name))).toInt()
-	#define QSTRING_TO_TCHAR(s) (const wchar_t*) s.utf16()
-	#define WIN32_LEAN_AND_MEAN
-#else
-	#define TCHAR_TO_QSTRING(s)   QString::fromWCharArray(s)
-	#define FIELD_TO_INT(name, d) QString::fromWCharArray(d->get(_T(name))).toInt()
-	#define QSTRING_TO_TCHAR(s) s.toStdWString().c_str()
-#endif
-
-#ifndef USE_MIL_SEC
-	#define miTOsec(x) (x/1000.0)
-	#define SECONDE_AR "ثانية"
-#else
-	#define miTOsec(x) x
-	#define SECONDE_AR "جزء من الثانية"
-#endif
-
 #include "arabicanalyzer.h"
 #include <QMainWindow>
 #include <QtSql>
@@ -28,9 +9,12 @@
 #include <QMessageBox>
 #include <QTextBrowser>
 #include <QStandardItemModel>
+#include <QFileDialog>
+#include <QSettings>
 
 #include <CLucene.h>
 #include <CLucene/StdHeader.h>
+
 #include <CLucene/_clucene-config.h>
 #include <CLucene/config/repl_tchar.h>
 #include <CLucene/config/repl_wchar.h>
@@ -38,6 +22,7 @@
 #include <CLucene/util/Misc.h>
 #include <CLucene/util/StringBuffer.h>
 #include <CLucene/util/dirent.h>
+
 #include <CLucene/search/IndexSearcher.h>
 //test for memory leaks:
 #ifdef _MSC_VER
@@ -56,6 +41,33 @@
 #include <algorithm>
 #include <stdio.h>
 
+#ifdef Q_OS_WIN32
+	#define TCHAR_TO_QSTRING(s)   QString::fromUtf16((const ushort*) s)
+	#define FIELD_TO_INT(name, d) QString::fromUtf16((const ushort*)d->get(_T(name))).toInt()
+	#define QSTRING_TO_TCHAR(s) (const wchar_t*) s.utf16()
+	#define WIN32_LEAN_AND_MEAN
+#else
+	#define TCHAR_TO_QSTRING(s)   QString::fromWCharArray(s)
+	#define FIELD_TO_INT(name, d) QString::fromWCharArray(d->get(_T(name))).toInt()
+	#define QSTRING_TO_TCHAR(s) s.toStdWString().c_str()
+	#include "mdbconverter.h"
+#endif
+
+#ifndef USE_MIL_SEC
+	#define miTOsec(x) (x/1000.0)
+	#define SECONDE_AR "ثانية"
+#else
+	#define miTOsec(x) x
+	#define SECONDE_AR "جزء من الثانية"
+#endif
+
+#define _toBint(x) (int)(x+0.9)
+#define _atLeastOne(x) (x > 0 ? x : 1)
+
+#define INDEX_PATH  "book_index"
+#define SQL_QUERY   "SELECT page, part, nass FROM %1 WHERE id = %2"
+#define SQL_QUERY_INDEX "SELECT id, nass FROM %1 ORDER BY id "
+
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -68,7 +80,7 @@ using namespace lucene::search;
 struct result{
     QList<int> results;
     QList<float_t> scoring;
-    int offest;
+    int page;
 };
 
 namespace Ui {
@@ -85,6 +97,7 @@ protected:
     void changeEvent(QEvent *e);
     QString hiText(const QString &text, const QString &strToHi);
     QStringList buildRegExp(const QString &str);
+    QString abbreviate(QString str, int size);
 
 public slots:
     void startIndexing();
@@ -95,19 +108,33 @@ public slots:
     QString cleanString(QString str);
     void resultsCount();
     void displayResults(/*result &pResult*/);
+    void setPageCount(int current, int count);
+    void buttonStat(int currentPage, int pageCount);
+    QStringList makeVLabels(int start, int end);
+    void resizeTable();
+    void openDB();
 
 protected:
-    QSqlDatabase m_quranDB;
-    QSqlQuery *m_quranQuery;
+    QSqlDatabase m_bookDB;
+    QSqlQuery *m_bookQuery;
     QString m_quranDBPath;
+    QString tocName;
+    QString mainName;
+    QString bookPath;
     QSqlQueryModel *m_resultModel;
     Ui::MainWindow *ui;
     QMap<QString, QChar> letterMap;
     int resultCount;
+    bool dbIsOpen;
     result m_resultStruct;
     QStandardItemModel *resultModel;
 
 private slots:
+    void on_pushButton_clicked();
+    void on_lineQuery_returnPressed();
+    void on_pushGoLast_clicked();
+    void on_pushGoFirst_clicked();
+    void on_pushGoPrev_clicked();
     void on_tableView_doubleClicked(QModelIndex index);
     void on_pushGoNext_clicked();
 };

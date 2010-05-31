@@ -1,150 +1,35 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#ifndef QURAN_TEXT
-    #define INDEX_PATH  "quran_index"
-    #define DATABASE_PATH   "quran.db"
-    #define SQL_QUERY   "SELECT QuranSowar.SoraName, QuranText.soraNumber, QuranText.ayaNumber, QuranText.ayaText " \
-                        "FROM QuranText " \
-                        "LEFT JOIN QuranSowar " \
-                        "ON QuranSowar.id = QuranText.soraNumber " \
-                        "WHERE QuranText.id = %1"
-    #define SQL_QUERY_INDEX "SELECT QuranText.id, QuranText.ayaText, QuranText.ayaNumber, " \
-                            "QuranText.pageNumber, QuranText.soraNumber " \
-                            "FROM QuranText " \
-                            "ORDER BY QuranText.id "
-#else
-    #define INDEX_PATH  "t-tabari"
-    #define DATABASE_PATH   "t-tabari.db"
-    #define SQL_QUERY   "SELECT sora, aya, text FROM tafesirText WHERE id = %1"
-    #define SQL_QUERY_INDEX "SELECT id, text FROM tafesirText ORDER BY id "
-*/
-    #define INDEX_PATH  "bokari"
-    #define DATABASE_PATH   INDEX_PATH".db"
-    #define SQL_QUERY   "SELECT page, part, nass FROM book WHERE id = %1"
-    #define SQL_QUERY_INDEX "SELECT id, nass FROM book ORDER BY id "
-
-#endif
-
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+        QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-	ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    {
-    // letters used in Quran text
-     #define HAMZA QChar(0x0621)
-     #define ALEF_WITH_MADDA_ABOVE QChar(0x0622)
-     #define ALEF_WITH_HAMZA_ABOVE QChar(0x0623)
-     #define WAW_WITH_HAMZA_ABOVE QChar(0x0624)
-     #define ALEF_WITH_HAMZA_BELOW QChar(0x0625)
-     #define YEH_WITH_HAMZA QChar(0x0626)
-     #define ALEF QChar(0x0627)
-     #define BEH QChar(0x0628)
-     #define MARBUTA QChar(0x0629)
-     #define TEH QChar(0x062A)
-     #define THEH QChar(0x062B)
-     #define JEMM QChar(0x062C)
-     #define HAH QChar(0x062D)
-     #define KHAH QChar(0x062E)
-     #define DAL QChar(0x062F)
-     #define THAL QChar(0x0630)
-     #define REH QChar(0x0631)
-     #define ZAIN QChar(0x0632)
-     #define SEEN QChar(0x0633)
-     #define SHEEN QChar(0x0634)
-     #define SAD QChar(0x0635)
-     #define DAD QChar(0x0636)
-     #define TAH QChar(0x0637)
-     #define ZAH QChar(0x0638)
-     #define AIN QChar(0x0639)
-     #define GHAIN QChar(0x063A)
-     #define TATWEEL QChar(0x0640)
-     #define FEH QChar(0x0641)
-     #define QAF QChar(0x0642)
-     #define KAF QChar(0x0643)
-     #define LAM QChar(0x0644)
-     #define MEEM QChar(0x0645)
-     #define NOON QChar(0x0646)
-     #define HEH QChar(0x0647)
-     #define WAW QChar(0x0648)
-     #define ALEF_MAKSURA QChar(0x0649)
-     #define YEH QChar(0x064A)
-     #define FATHATAN QChar(0x064B)
-     #define DAMMATAN QChar(0x064C)
-     #define KASRATAN QChar(0x064D)
-     #define FATHA QChar(0x064E)
-     #define DAMMA QChar(0x064F)
-     #define KASRA QChar(0x0650)
-     #define SHADDA QChar(0x0651)
-     #define SUKUN QChar(0x0652)
-     #define MADDA QChar(0x0653)
-     #define HAMZA_ABOVE QChar(0x0654)
-     #define HAMZA_BELOW QChar(0x0655)
-     #define SMALL_ALEF QChar(0x065F)
-     #define SUPERSCRIPT_ALEF QChar(0x0670)
-     #define ALEF_WASLA QChar(0x0671)
-     #define HIGH_SALA QChar(0x06D6)
-     #define HIGH_GHALA QChar(0x06D7)
-     #define HIGH_MEEM_INITIAL_FORM QChar(0x06D8)
-     #define HIGH_LA QChar(0x06D9)
-     #define HIGH_JEMM QChar(0x06DA)
-     #define HIGH_THREE_DOT QChar(0x06DB)
-     #define HIGH_SEEN QChar(0x06DC)
-     #define RUB_EL_HIZB QChar(0x06DE)
-     #define HIGH_ROUNDED_ZERO QChar(0x06DF)
-     #define HIGH_UPRIGHT_ZERO QChar(0x06E0)
-     #define HIGH_MEEM QChar(0x06E2)
-     #define LOW_SEEN QChar(0x06E3)
-     #define SMALL_WAW QChar(0x06E5)
-     #define SMALL_YEH QChar(0x06E6)
-     #define HIGH_NOON QChar(0x06E8)
-     #define SAJDAH QChar(0x06E9)
-     #define LOW_STOP QChar(0x06EA)
-     #define HIGH_STOP QChar(0x06EB)
-     #define HIGH_STOP_FILLED QChar(0x06EC)
-     #define LOW_MEEM QChar(0x06ED)
-     #define HAMZA_ABOVE_ALEF QChar(0x0675)
-     #define DOTLESS_BEH QChar(0x066E)
-     #define HIGH_YEH QChar(0x06E7)
-     #define ZWNJ QChar(0x200C)
-     #define NBSP QChar(0x00A0)
-     #define NNBSP QChar(0x202F)
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-     // other letters
-     #define ARABIC_COMMA QChar(0x060C)
-     #define ARABIC_SEMICOLON QChar(0x061B)
-
-     #define FARSI_YEH QChar(0x06CC)
-     #define FARSI_HIGH_HAMZA QChar(0x0674)
-     #define FARSI_KEHEH QChar(0x06A9)
-     #define SWASH_KAF QChar(0x06AA)
-     #define YEH_BARREE QChar(0x06D2)
-}
-//    qDebug() << letterMap;
     ui->lineQuery->setText(trUtf8("الله ولي الذين امنوا"));
-    m_quranDB = QSqlDatabase::addDatabase("QSQLITE", "QuranTextDB");
-    m_quranDB.setDatabaseName(DATABASE_PATH);
+    setWindowTitle("CLucene Test");
 
-    if (!m_quranDB.open()) {
-        qDebug() << "Cannot open database.";
-    }
-    m_quranQuery = new QSqlQuery(m_quranDB);
     m_resultModel = new QSqlQueryModel(this);
     resultModel = new QStandardItemModel();
     resultCount = 0;
+    dbIsOpen = false;
+
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope,
+                       "cluceneTest", "E-Shamela");
+    ui->lineBook->setText(settings.value("db").toString());
 
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
     connect(ui->pushRCount, SIGNAL(clicked()), this, SLOT(resultsCount()));
-
-    //    this->showStatistic();
 }
 
 MainWindow::~MainWindow()
 {
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope,
+                       "cluceneTest", "E-Shamela");
+    settings.setValue("db", ui->lineBook->text());
     delete ui;
 }
 
@@ -162,6 +47,8 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::startIndexing()
 {
+    if(!dbIsOpen)
+		openDB();
     try {
         IndexWriter* writer = NULL;
         QDir dir;
@@ -200,6 +87,8 @@ void MainWindow::startIndexing()
 void MainWindow::startSearching()
 {
     resultModel->clear();
+    if(!dbIsOpen)
+        openDB();
     try {
         //Searcher searcher(INDEX_PATH);
 //        standard::StandardAnalyzer analyzer;
@@ -238,15 +127,9 @@ void MainWindow::startSearching()
         }
         m_resultStruct.results = resultList;
         m_resultStruct.scoring = scoreList;
-        m_resultStruct.offest = 0;
+        m_resultStruct.page = 0;
         displayResults(/*ResultStrc*/);
 
-        QStringList headersList;
-        headersList << trUtf8("سورة") << trUtf8("الآية") << trUtf8("النص") << trUtf8("التطابق");
-        resultModel->setHorizontalHeaderLabels(headersList);
-
-        ui->tableView->setModel(resultModel);
-        //ui->tableView->resizeColumnsToContents();
         this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
@@ -281,7 +164,7 @@ void MainWindow::showStatistic()
         TermEnum* te = r->terms();
         int32_t nterms;
         for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << QString::fromWCharArray(te->term()->text()); */
+            /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
         }
         txt.append(tr("Term count: %1").arg(nterms));
         _CLDELETE(te);
@@ -301,11 +184,11 @@ void MainWindow::showStatistic()
 
 void MainWindow::indexDocs(IndexWriter* writer)
 {
-    m_quranQuery->exec(SQL_QUERY_INDEX);
-    while(m_quranQuery->next())
+    m_bookQuery->exec(QString(SQL_QUERY_INDEX).arg(mainName));
+    while(m_bookQuery->next())
     {
-        Document* doc = FileDocument(m_quranQuery->value(0).toString(),
-                                     m_quranQuery->value(1).toString());
+        Document* doc = FileDocument(m_bookQuery->value(0).toString(),
+                                     m_bookQuery->value(1).toString());
         writer->addDocument( doc );
         _CLDELETE(doc);
     }
@@ -347,35 +230,55 @@ void MainWindow::resultsCount()
 
 void MainWindow::displayResults(/*result &pResult*/)
 {
+    QStringList headersList;
     QList<QStandardItem *> listItems;
-    int start = m_resultStruct.offest + 10;
-    int maxResult  =  (m_resultStruct.results.count() >= start) ? start : m_resultStruct.results.count();
 
-    for(int i=m_resultStruct.offest; i < maxResult;i++){
-        m_quranQuery->exec(QString(SQL_QUERY).arg(m_resultStruct.results.at(i)));
-        if(m_quranQuery->first()){
-            listItems.append(new QStandardItem(m_quranQuery->value(0).toString()));
-            listItems.append(new QStandardItem(m_quranQuery->value(2).toString()));
-            listItems.append(new QStandardItem(m_quranQuery->value(3).toString()));
+    headersList << trUtf8("النص") << trUtf8("الصفحة") << trUtf8("الجزء") << trUtf8("التطابق");
+    resultModel->clear();
+
+    int start = m_resultStruct.page * 10;
+    int maxResult  =  (m_resultStruct.results.count() >= start+10) ? start+10 : m_resultStruct.results.count();
+
+    for(int i=start; i < maxResult;i++){
+        m_bookQuery->exec(QString(SQL_QUERY).arg(mainName).arg(m_resultStruct.results.at(i)));
+        if(m_bookQuery->first()){
+            listItems.append(new QStandardItem(abbreviate(m_bookQuery->value(2).toString(),120)));
+            listItems.append(new QStandardItem(m_bookQuery->value(1).toString()));
+            listItems.append(new QStandardItem(m_bookQuery->value(0).toString()));
             listItems.append(new QStandardItem(QString::number(m_resultStruct.scoring.at(i), 'f', 4)));
             resultModel->appendRow(listItems);
             listItems.clear();
         }
     }
-    m_resultStruct.offest += maxResult;
+    resultModel->setHorizontalHeaderLabels(headersList);
+    resultModel->setVerticalHeaderLabels(makeVLabels(start, maxResult));
+    ui->tableView->setModel(resultModel);
+    setPageCount(m_resultStruct.page+1, _toBint(m_resultStruct.scoring.count()/10.0));
+    resizeTable();
 }
 
 void MainWindow::on_pushGoNext_clicked()
 {
-    QStringList headersList;
-    headersList << trUtf8("سورة") << trUtf8("الآية") << trUtf8("النص") << trUtf8("التطابق");
-
-    resultModel->clear();
+    m_resultStruct.page++;
     displayResults();
-//    resultModel->removeRows(0, 9);
-    resultModel->setHorizontalHeaderLabels(headersList);
-    ui->tableView->setModel(resultModel);
-    //ui->tableView->resizeColumnsToContents();
+}
+
+void MainWindow::on_pushGoPrev_clicked()
+{
+    m_resultStruct.page--;
+    displayResults();
+}
+
+void MainWindow::on_pushGoFirst_clicked()
+{
+    m_resultStruct.page = 0;
+    displayResults();
+}
+
+void MainWindow::on_pushGoLast_clicked()
+{
+    m_resultStruct.page = _toBint(m_resultStruct.scoring.count()/10.0)-1;
+    displayResults();
 }
 
 void MainWindow::on_tableView_doubleClicked(QModelIndex index)
@@ -383,9 +286,22 @@ void MainWindow::on_tableView_doubleClicked(QModelIndex index)
     QDialog *dialog = new QDialog(this);
     QVBoxLayout *layout= new QVBoxLayout(dialog);
     QTextBrowser *textBrowser = new QTextBrowser(0);
+    QString text;
     layout->addWidget(textBrowser);
-    textBrowser->setText(hiText(resultModel->data(index).toString(),ui->lineQuery->text()));
+
+    int rid = (m_resultStruct.page*10)+index.row();
+    rid = m_resultStruct.results.at(rid);
+
+    m_bookQuery->exec(QString(SQL_QUERY).arg(mainName).arg(rid));
+    if(m_bookQuery->first())
+        text = m_bookQuery->value(2).toString();
+
+    text.replace(QRegExp("[\\r|\\n]"),"<br/>");
+    text = hiText(text, ui->lineQuery->text());
+
+    textBrowser->setHtml(text);
     textBrowser->setAlignment(Qt::AlignRight);
+
     dialog->setLayout(layout);
     dialog->resize(500,500);
     dialog->show();
@@ -393,21 +309,14 @@ void MainWindow::on_tableView_doubleClicked(QModelIndex index)
 
 QString MainWindow::hiText(const QString &text, const QString &strToHi)
 {
-//    QTime time;
-//    time.start();
-
     QStringList regExpStr = buildRegExp(strToHi);
     QString finlStr  = text;
-//    QTextDocument *finalDoc  = ui->textBrowser->document();
     QTextCharFormat txtForm;
 
     txtForm.setBackground(Qt::yellow);
     foreach(QString regExp, regExpStr)
-    {
-        //        finalDoc->find(QRegExp(regExp)).setCharFormat(txtForm);
         finlStr = finlStr.replace(QRegExp(regExp), "<span style=\"background-color:yellow\">\\1</span>");
-    }
-//    statusBar()->showMessage(trUtf8("تم البحث في %1 ثانية").arg((double)time.elapsed() / 1000));
+
     return finlStr;
 }
 
@@ -423,8 +332,7 @@ QStringList MainWindow::buildRegExp(const QString &str)
         QString regExpStr;
         regExpStr.append(opPar);
 
-        for (int i=0; i< word.size();i++)
-        {
+        for (int i=0; i< word.size();i++) {
             regExpStr.append(word.at(i));
             regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
         }
@@ -434,4 +342,136 @@ QStringList MainWindow::buildRegExp(const QString &str)
     }
 //    qDebug() << regExpList;
     return regExpList;
+}
+
+void MainWindow::setPageCount(int current, int count)
+{
+    int rCount = _atLeastOne(count);
+    int rCurrent = _atLeastOne(current);
+    ui->label->setText(trUtf8("الصفحة %1 / %2")
+                       .arg(rCount)
+                       .arg(rCurrent));
+    buttonStat(rCurrent, rCount);
+}
+
+void MainWindow::buttonStat(int currentPage, int pageCount)
+{
+    if(currentPage == 1) {
+        ui->pushGoPrev->setEnabled(false);
+        ui->pushGoFirst->setEnabled(false);
+    } else {
+        ui->pushGoPrev->setEnabled(true);
+        ui->pushGoFirst->setEnabled(true);
+    }
+
+    if(currentPage == pageCount){
+        ui->pushGoNext->setEnabled(false);
+        ui->pushGoLast->setEnabled(false);
+    } else {
+        ui->pushGoNext->setEnabled(true);
+        ui->pushGoLast->setEnabled(true);
+    }
+
+
+}
+
+void MainWindow::on_lineQuery_returnPressed()
+{
+    startSearching();
+}
+
+QStringList MainWindow::makeVLabels(int start, int end)
+{
+    QStringList labls;
+    for(int i=start+1; i<=end;i++)
+        labls.append(QString::number(i));
+    return labls;
+}
+
+void MainWindow::resizeTable()
+{
+    ui->tableView->resizeColumnToContents(1);
+    ui->tableView->resizeColumnToContents(2);
+    ui->tableView->resizeColumnToContents(3);
+    ui->tableView->setColumnWidth(0,ui->tableView->width()-
+                                  (ui->tableView->columnWidth(1)+
+                                   ui->tableView->columnWidth(2)+
+                                   ui->tableView->columnWidth(3))-40);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    QString path = QFileDialog::getOpenFileName(this,
+                                 trUtf8("اختر الكتاب المراد البحث فيه"), "",
+                                 tr("Access (*.bok *.mdb);;SQLITE (*.db)"));
+    if(!path.isEmpty()) {
+        ui->lineBook->setText(path);
+        if(QSqlDatabase::contains("shamelaBook"))
+            QSqlDatabase::removeDatabase("shamelaBook");
+        openDB();
+        int rep = QMessageBox::question(this,
+                                        trUtf8("فهرسة الكتاب"),
+                                        trUtf8("هل تريد فهرسة الكتاب ؟"),
+                                        QMessageBox::Yes|QMessageBox::No);
+        if(rep==QMessageBox::Yes)
+            startIndexing();
+    }
+}
+
+void MainWindow::openDB()
+{
+    dbIsOpen = false;
+    QString book = (ui->lineBook->text());
+    QString sqlite_book(book);
+
+    if(book.contains(QRegExp("\\.(mdb|bok)$"))) {
+#ifdef Q_OS_WIN32
+        m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
+        m_bookDB.setDatabaseName(mdbpath);
+
+        if (!m_bookDB.open()) {
+            qDebug() << "Cannot open MDB database.";
+        }
+        m_bookQuery = new QSqlQuery(m_bookDB);
+        dbIsOpen = true;
+#else
+        qDebug() << "Need to convert the database.";
+        sqlite_book.append(".sqlite");
+        if(!QFile::exists(sqlite_book)) {
+            MdbConverter *mdb = new MdbConverter;
+            mdb->exportFromMdb(qPrintable(book), qPrintable(sqlite_book));
+        }
+#endif
+    }
+
+    if(!dbIsOpen) {
+        m_bookDB = QSqlDatabase::addDatabase("QSQLITE", "shamelaBook");
+        m_bookDB.setDatabaseName(sqlite_book);
+
+        if (!m_bookDB.open()) {
+            qDebug() << "Cannot open database.";
+        }
+        m_bookQuery = new QSqlQuery(m_bookDB);
+        dbIsOpen = true;
+    }
+
+    QStringList tables = m_bookDB.tables();
+    foreach(QString ta, tables) {
+        if( ta.contains(QRegExp("(t[0-9]+|title)")) ){
+            tocName = ta;
+        } else if( ta.contains(QRegExp("(b[0-9]+|book)")) ){
+            mainName = ta;
+        }
+    }
+}
+
+QString MainWindow::abbreviate(QString str, int size) {
+        if (str.length() <= size-3)
+                return str;
+        str.simplified();
+        int index = str.lastIndexOf(' ', size-3);
+        if (index <= -1)
+                return "";
+        return str.left(index).append("...");
 }
