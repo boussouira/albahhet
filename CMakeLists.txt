@@ -31,11 +31,13 @@ set ( clucene_qt_SRCS
 
 set ( clucene_qt_UIS
 	mainwindow.ui
+	indexingdialg.ui
 	)
 QT4_WRAP_UI(UIS ${clucene_qt_UIS})
 
 set ( clucene_qt_MOCS
 	mainwindow.h
+  indexingdialg.h
 	)
 QT4_WRAP_CPP(MOCS ${clucene_qt_MOCS})
 

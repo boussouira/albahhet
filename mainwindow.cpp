@@ -467,6 +467,7 @@ void MainWindow::openDB()
     if(!indexDB.open())
         qDebug("Error opning index db");
     QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+    inexQuery->exec("DELETE FROM books");
 
     indexDB.transaction();
     m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
@@ -480,6 +481,10 @@ void MainWindow::openDB()
             qDebug()<< "ERROR:" << inexQuery->lastError().text();
     }
     indexDB.commit();
+
+    IndexingDialg *indexDial = new IndexingDialg(this);
+    indexDial->show();
+
 }
 
 QString MainWindow::abbreviate(QString str, int size) {

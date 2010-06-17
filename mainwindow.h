@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "arabicanalyzer.h"
+#include "indexingdialg.h"
 #include <QMainWindow>
 #include <QtSql>
 #include <QDebug>
