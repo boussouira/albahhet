@@ -1,5 +1,5 @@
 
-QT       += core gui sql
+QT       += core gui sql webkit
 TARGET = clucene_qt
 TEMPLATE = app
 
@@ -29,6 +29,15 @@ unix {
      QMAKE_CXXFLAGS -= -Zc:wchar_t-
      QMAKE_CFLAGS -= -Zc:wchar_t-
  }
+
+exists(.git/HEAD) {
+    GITVERSION=$$system(git log -n1 --pretty=format:%h)
+    !isEmpty(GITVERSION) {
+        GITCHANGENUMBER=$$system(git log --pretty=format:%h | wc -l)
+        DEFINES += GITVERSION=\"\\\"$$GITVERSION\\\"\"
+        DEFINES += GITCHANGENUMBER=\"\\\"$$GITCHANGENUMBER\\\"\"
+    }
+}
 
 DEFINES += _REENTRANT _UCS2 _UNICODE
 INCLUDEPATH += $$CLUCENE_PATH/src/core

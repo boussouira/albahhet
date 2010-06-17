@@ -61,12 +61,10 @@
 	#define SECONDE_AR "جزء من الثانية"
 #endif
 
-#define _toBint(x) (int)(x+0.9)
+#define _toBInt(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
 #define _atLeastOne(x) (x > 0 ? x : 1)
 
 #define INDEX_PATH  "book_index"
-#define SQL_QUERY   "SELECT page, part, nass FROM %1 WHERE id = %2"
-#define SQL_QUERY_INDEX "SELECT id, nass FROM %1 ORDER BY id "
 
 using namespace std;
 using namespace lucene::index;
@@ -81,6 +79,7 @@ struct result{
     QList<int> results;
     QList<float_t> scoring;
     int page;
+	int pageCount;
 };
 
 namespace Ui {
@@ -98,6 +97,10 @@ protected:
     QString hiText(const QString &text, const QString &strToHi);
     QStringList buildRegExp(const QString &str);
     QString abbreviate(QString str, int size);
+    QString getIndexSize();
+    QString getBookSize();
+    void writeLog(int indexingTime);
+    QString getTitleId(int pageID);
 
 public slots:
     void startIndexing();
@@ -111,31 +114,37 @@ public slots:
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
     QStringList makeVLabels(int start, int end);
-    void resizeTable();
     void openDB();
+    void setResultParPage(int count){m_resultParPage = count;}
+    QString buildFilePath(QString bkid);
 
 protected:
     QSqlDatabase m_bookDB;
     QSqlQuery *m_bookQuery;
     QString m_quranDBPath;
-    QString tocName;
-    QString mainName;
-    QString bookPath;
-    QSqlQueryModel *m_resultModel;
-    Ui::MainWindow *ui;
-    QMap<QString, QChar> letterMap;
-    int resultCount;
-    bool dbIsOpen;
+    QString m_titleName;
+    QString m_bookTableName;
+    QString m_bookPath;
+    QString m_bookName;
+    QString m_searchQuery;
+    QString m_highLightRE;
+    QStandardItemModel *m_resultModel;
+    QList<QString> m_colors;
     result m_resultStruct;
-    QStandardItemModel *resultModel;
+    int m_resultCount;
+    int m_resultParPage;
+    bool m_dbIsOpen;
+    bool m_haveMainTable;
+    Ui::MainWindow *ui;
 
 private slots:
+    void on_pushButton_2_clicked();
+    void resultLinkClicked(const QUrl &url);
     void on_pushButton_clicked();
     void on_lineQuery_returnPressed();
     void on_pushGoLast_clicked();
     void on_pushGoFirst_clicked();
     void on_pushGoPrev_clicked();
-    void on_tableView_doubleClicked(QModelIndex index);
     void on_pushGoNext_clicked();
 };
 
