@@ -462,11 +462,24 @@ void MainWindow::openDB()
         }
     }
 */
+    QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
+    indexDB.setDatabaseName("book_index.db");
+    if(!indexDB.open())
+        qDebug("Error opning index db");
+    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+
+    indexDB.transaction();
     m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
     while(m_bookQuery->next()) {
-        m_bookQuery->value(0).toString();
-        qDebug() << buildFilePath(m_bookQuery->value(1).toString());
+        if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5')")
+            .arg(m_bookQuery->value(0).toString())
+            .arg(m_bookQuery->value(1).toString())
+            .arg(buildFilePath(m_bookQuery->value(1).toString()))
+            .arg(m_bookQuery->value(3).toString())
+            .arg(m_bookQuery->value(2).toString())))
+            qDebug()<< "ERROR:" << inexQuery->lastError().text();
     }
+    indexDB.commit();
 }
 
 QString MainWindow::abbreviate(QString str, int size) {
