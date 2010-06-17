@@ -60,3 +60,9 @@ build
 doc/html
 clucene_qt
 quran_index
+*.db
+tafessir_index
+bin
+debug
+letters.txt
+release
