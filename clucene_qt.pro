@@ -7,10 +7,12 @@ TEMPLATE = app
 SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
-    indexingdialg.cpp
+    indexingdialg.cpp \
+    indexthread.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
-    indexingdialg.h
+    indexingdialg.h \
+    indexthread.h
 FORMS += mainwindow.ui \
     indexingdialg.ui
 win32 { 
@@ -46,9 +48,12 @@ exists(.git/HEAD) {
 DEFINES += _REENTRANT \
     _UCS2 \
     _UNICODE
-INCLUDEPATH += $$CLUCENE_PATH/src/core
-INCLUDEPATH += $$CLUCENE_PATH/src/ext
-INCLUDEPATH += $$CLUCENE_PATH/src/shared
+#INCLUDEPATH += $$CLUCENE_PATH/src/core
+#INCLUDEPATH += $$CLUCENE_PATH/src/ext
+#INCLUDEPATH += $$CLUCENE_PATH/src/shared
+INCLUDEPATH += C:/clucene-2.3.2/src/core
+INCLUDEPATH += C:/clucene-2.3.2/src/ext
+INCLUDEPATH += C:/clucene-2.3.2/src/shared
 LIBS += -lclucene-core \
     -lclucene-shared \
     -L$$CLUCENE_LIBS_PATH

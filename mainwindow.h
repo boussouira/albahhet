@@ -3,6 +3,7 @@
 
 #include "arabicanalyzer.h"
 #include "indexingdialg.h"
+#include "indexthread.h"
 #include <QMainWindow>
 #include <QtSql>
 #include <QDebug>
@@ -77,10 +78,11 @@ using namespace lucene::queryParser;
 using namespace lucene::search;
 
 struct result{
-    QList<int> results;
+    QList<int> ids;
+    QList<int> bookid;
     QList<float_t> scoring;
     int page;
-	int pageCount;
+    int pageCount;
 };
 
 namespace Ui {
@@ -102,6 +104,7 @@ protected:
     QString getBookSize();
     void writeLog(int indexingTime);
     QString getTitleId(int pageID);
+    QString getBookName(int bookID);
 
 public slots:
     void startIndexing();
