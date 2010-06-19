@@ -38,12 +38,13 @@ void IndexingThread::startIndexing()
 
         inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
 
-//        QTime time;
-//        time.start();
-//        int count=0;
-
-        writer->setRAMBufferSizeMB(30);
-//        writer->setMaxBufferedDocs(1000);
+        if(m_ramSize)
+            writer->setRAMBufferSizeMB(m_ramSize);
+        if(m_maxDoc)
+            writer->setMaxBufferedDocs(m_maxDoc);
+        qDebug() << "AUTO FLUSH:" << writer->DISABLE_AUTO_FLUSH;
+        qDebug() << "MAX DOC:" << writer->getMaxMergeDocs();
+        qDebug() << "RAM SIZE:" << writer->getRAMBufferSizeMB();
 
         while(inexQuery->next()) {
             if(m_stopIndexing)
@@ -53,13 +54,11 @@ void IndexingThread::startIndexing()
             emit fileIndexed(inexQuery->value(1).toString());
         }
 
-        writer->optimize();
+        if(m_optimizeIndex)
+            writer->optimize();
+
         writer->close();
         _CLDELETE(writer);
-//        int elpasedTime = time.elapsed();
-//        QMessageBox::information(this, trUtf8("تمت الفهرسة بنجاح"), trUtf8("تمت فهرسة %1 كتاب خلال %2 ثانية")
-//                                 .arg(count).arg(miTOsec(elpasedTime)));
-//        writeLog(elpasedTime);
     }
     catch(CLuceneError &err) {
         QMessageBox::warning(0, "Error when Indexing", err.what());
@@ -68,7 +67,6 @@ void IndexingThread::startIndexing()
 
 void IndexingThread::indexBook(IndexWriter *writer,const QString &bookID, const QString &bookPath)
 {
-//    qDebug() << "INDEXING:" << bookPath;
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaIndexBook");
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(bookPath);
@@ -102,4 +100,11 @@ Document* IndexingThread::FileDocument(const QString &id, const QString &bookid,
     doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(text), Field::STORE_NO | Field::INDEX_TOKENIZED) );
 
     return doc;
+}
+
+void IndexingThread::setOptions(bool optimizeIndex, int ramSize, int maxDoc)
+{
+    m_optimizeIndex = optimizeIndex;
+    m_ramSize = ramSize;
+    m_maxDoc = maxDoc;
 }

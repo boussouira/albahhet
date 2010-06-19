@@ -50,7 +50,12 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     m_indexedBooks =0;
 
     ui->pushStartIndexing->setVisible(false);
+    ui->groupBox->setVisible(false);
     ui->pushStopIndexing->setVisible(true);
+
+    m_indexing->setOptions(ui->checkOptimizeIndex->isChecked(),
+                           ui->checkRamSize->isChecked() ? ui->spinRamSize->value() : 0,
+                           ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0);
 
     m_indexing->start();
     indexingTime.start();

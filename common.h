@@ -49,10 +49,10 @@
 
 #ifndef USE_MIL_SEC
         #define miTOsec(x) (x/1000.0)
-        #define SECONDE_AR "ËÇäíÉ"
+        #define SECONDE_AR "Ø«Ø§Ù†ÙŠØ©"
 #else
         #define miTOsec(x) x
-        #define SECONDE_AR "ÌÒÁ ãä ÇáËÇäíÉ"
+        #define SECONDE_AR "Ø¬Ø²Ø¡ Ù…Ù† Ø§Ù„Ø«Ø§Ù†ÙŠØ©"
 #endif
 
 #define _toBInt(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
