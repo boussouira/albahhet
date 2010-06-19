@@ -1,6 +1,6 @@
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
-#include <QStringListModel>
+#include "indexthread.h"
 
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
@@ -8,24 +8,18 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->progressBar->setVisible(false);
+    ui->pushStopIndexing->setVisible(false);
+    ui->pushClose->setVisible(false);
     showBooks();
+
+    m_indexing = new IndexingThread();
+    connect(m_indexing, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
+    connect(m_indexing, SIGNAL(finished()), this, SLOT(doneIndexing()));
 }
 
 IndexingDialg::~IndexingDialg()
 {
     delete ui;
-}
-
-void IndexingDialg::changeEvent(QEvent *e)
-{
-    QDialog::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
 }
 
 void IndexingDialg::showBooks()
@@ -46,26 +40,26 @@ void IndexingDialg::showBooks()
     ui->listWidget->insertItems(0, booksList);
 }
 
-void IndexingDialg::on_pushButton_clicked()
+void IndexingDialg::on_pushStartIndexing_clicked()
 {
     ui->listWidget->clear();
-    IndexThread *indexing = new IndexThread();
     ui->progressBar->setVisible(true);
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(m_booksCount);
     ui->progressBar->setValue(0);
-    connect(indexing, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
-    connect(indexing, SIGNAL(finished()), this, SLOT(doneIndexing()));
+    m_indexedBooks =0;
 
-    indexing->start();
+    ui->pushStartIndexing->setVisible(false);
+    ui->pushStopIndexing->setVisible(true);
+
+    m_indexing->start();
     indexingTime.start();
 }
 
 void IndexingDialg::addBook(const QString &name)
 {
-    int val = ui->progressBar->value();
-    ui->progressBar->setValue(++val);
-    ui->listWidget->insertItem(ui->listWidget->count(), tr("%1 - %2").arg(val).arg(name));
+    ui->progressBar->setValue(++m_indexedBooks);
+    ui->listWidget->insertItem(ui->listWidget->count(), tr("%1 - %2").arg(m_indexedBooks).arg(name));
     ui->listWidget->scrollToBottom();
 }
 
@@ -75,11 +69,14 @@ void IndexingDialg::doneIndexing()
     int seconds = (int) ((elpasedMsec / 1000) % 60);
     int minutes = (int) ((elpasedMsec / 1000) / 60);
 
+    ui->pushStopIndexing->setVisible(false);
+    ui->pushClose->setVisible(true);
     ui->progressBar->setVisible(false);
+
     QMessageBox::information(this,
                              trUtf8("تمت الفهرسة بنجاح"),
                              trUtf8("تمت فهرسة %1 كتابا خلال %2 و %3")
-                             .arg(m_booksCount)
+                             .arg(m_indexedBooks)
                              .arg(formatMinutes(minutes))
                              .arg(formatSecnds(seconds)));
 }
@@ -106,4 +103,22 @@ QString IndexingDialg::formatSecnds(int seconds)
         return trUtf8("%1 ثوان").arg(seconds);
     else
         return trUtf8("%1 ثانية").arg(seconds);
+}
+
+void IndexingDialg::on_pushStopIndexing_clicked()
+{
+    int rep = QMessageBox::question(this,
+                                    trUtf8("فهرسة المكتبة"),
+                                    trUtf8("هل تريد ايقاف فهرسة المكتبة"),
+                                    QMessageBox::Yes|QMessageBox::No);
+    if(rep==QMessageBox::Yes){
+        m_indexing->stop();
+        ui->pushStopIndexing->setEnabled(false);
+        ui->progressBar->setMaximum(0);
+    }
+}
+
+void IndexingDialg::on_pushClose_clicked()
+{
+    done(0);
 }

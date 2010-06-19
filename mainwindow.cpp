@@ -95,8 +95,6 @@ void MainWindow::startSearching()
     if(!m_dbIsOpen)
         openDB();
     try {
-        //Searcher searcher(INDEX_PATH);
-//        standard::StandardAnalyzer analyzer;
         ArabicAnalyzer analyzer;
 
         m_searchQuery = ui->lineQuery->text();
@@ -113,49 +111,52 @@ void MainWindow::startSearching()
             queryWord.replace(trUtf8("؟"), "?");
         }
 
-        IndexSearcher s(INDEX_PATH);
+        IndexSearcher searcher(INDEX_PATH);
 
         // Start building the query
         QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
         queryPareser->setAllowLeadingWildcard(true);
 
         Query* q = queryPareser->parse(QSTRING_TO_TCHAR(queryWord));
-        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-        qDebug() << "Query : " << queryWord;
-        //    _CLDELETE_CARRAY(buf);
+//        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
+//        qDebug() << "Query : " << queryWord;
 
         QTime time;
+        QTime timeBenchMarck;
         QList<int> idsList;
         QList<int> booksIdList;
         QList<float_t> scoreList;
 
         time.start();
-        Hits* h = s.search(q);
-        int timeSearch = time.restart();
+        Hits* hits = searcher.search(q);
+        int timeSearch = time.elapsed();
 
-        m_resultCount = h->length();
+        m_resultCount = hits->length();
+        timeBenchMarck.start();
         for (int i=0;i<m_resultCount;i++ ){
-            Document* doc = &h->doc(i);
-            scoreList.append(h->score(i));
+            Document* doc = &hits->doc(i);
+            scoreList.append(hits->score(i));
             idsList.append(FIELD_TO_INT("id", doc));
             booksIdList.append(FIELD_TO_INT("bookid", doc));
 
             //delete doc;
         }
+        qDebug() << "QLIST:" << timeBenchMarck.elapsed() << "ms";
+
         m_resultStruct.ids = idsList;
         m_resultStruct.bookid = booksIdList;
         m_resultStruct.scoring = scoreList;
         m_resultStruct.pageCount = _toBInt((m_resultStruct.scoring.count()/(double)m_resultParPage));
         m_resultStruct.page = 0;
-        displayResults(/*ResultStrc*/);
+        displayResults();
 
         this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
                                        .arg(m_resultCount));
-        _CLDELETE(h);
+        _CLDELETE(hits);
         _CLDELETE(q);
-        s.close();
+        searcher.close();
     }
 
     catch(CLuceneError &tmp) {
@@ -268,7 +269,7 @@ void MainWindow::displayResults(/*result &pResult*/)
             if(m_bookQuery->first()){
                 resultString.append(trUtf8("<div style=\"margin: 0px; padding: 4px; border-bottom: 1px solid black; background-color: %1 ;\">"
                                            "<h3 style=\"margin: 0px 0px 5px; font-size: 18px; color: rgb(0, 68, 255);\">%2</h3>"
-                                           "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3\">%4</a>"
+                                           "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
                                            "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span style=\"margin-left: 7px; color: green; font-weight: bold;\">%5</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
@@ -278,7 +279,8 @@ void MainWindow::displayResults(/*result &pResult*/)
                                     .arg(hiText(abbreviate(m_bookQuery->value(0).toString(),320), m_searchQuery)) // TEXT
                                     .arg(getBookName(bookID)) // BOOK_NAME
                                     .arg(m_bookQuery->value(1).toString()) // PAGE
-                                    .arg(m_bookQuery->value(2).toString())); // PART
+                                    .arg(m_bookQuery->value(2).toString()) // PART
+									.arg(bookID)); 
                 whiteBG = !whiteBG;
             }
         }
@@ -592,19 +594,31 @@ QString MainWindow::getBookName(int bookID)
 void MainWindow::resultLinkClicked(const QUrl &url)
 {
     int rid = url.queryItems().first().second.toInt();
+    int bookID = url.queryItems().last().second.toInt();
     QDialog *dialog = new QDialog(this);
     QVBoxLayout *layout= new QVBoxLayout(dialog);
     QTextBrowser *textBrowser = new QTextBrowser(0);
     QString text;
     layout->addWidget(textBrowser);
+    {
+        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                          .arg(buildFilePath(QString::number(bookID)));
+        m_bookDB.setDatabaseName(mdbpath);
 
-    m_bookQuery->exec(QString("SELECT page, part, nass FROM %1 WHERE id = %2")
-                      .arg(m_bookTableName)
-                      .arg(rid));
-    if(m_bookQuery->first())
-        text = m_bookQuery->value(2).toString();
+        if (!m_bookDB.open()) {
+            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
+        }
+        QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
 
-    text.replace(QRegExp("[\\r\\n]"),"<br/>");
+        m_bookQuery->exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
+                          .arg(rid));
+        if(m_bookQuery->first())
+            text = m_bookQuery->value(2).toString();
+
+        text.replace(QRegExp("[\\r\\n]"),"<br/>");
+    }
+    QSqlDatabase::removeDatabase("disBook");
 
     textBrowser->setHtml(hiText(text, m_searchQuery));
     textBrowser->setAlignment(Qt::AlignRight);

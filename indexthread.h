@@ -4,12 +4,13 @@
 #include <QThread>
 #include "mainwindow.h"
 
-class IndexThread : public QThread
+class IndexingThread : public QThread
 {
     Q_OBJECT
 public:
-    IndexThread();
+    IndexingThread();
     void run();
+    void stop() { m_stopIndexing = true; }
 
 protected:
     void indexBook(IndexWriter *writer, const QString &bookID, const QString &bookPath);
@@ -18,6 +19,9 @@ protected:
 
 signals:
     void fileIndexed(const QString &bookName);
+
+protected:
+    bool m_stopIndexing;
 };
 
 #endif // INDEXTHREAD_H

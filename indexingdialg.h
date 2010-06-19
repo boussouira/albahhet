@@ -3,12 +3,14 @@
 
 #include <QDialog>
 #include <QTime>
+#include <QStringListModel>
 #include "mainwindow.h"
-#include "indexthread.h"
 
 namespace Ui {
     class IndexingDialg;
 }
+
+class IndexingThread;
 
 class IndexingDialg : public QDialog {
     Q_OBJECT
@@ -17,7 +19,6 @@ public:
     ~IndexingDialg();
 
 protected:
-    void changeEvent(QEvent *e);
     void showBooks();
     QString formatMinutes(int minutes);
     QString formatSecnds(int seconds);
@@ -26,13 +27,17 @@ public slots:
     void addBook(const QString &name);
     void doneIndexing();
 
-private:
+protected:
+    IndexingThread *m_indexing;
     int m_booksCount;
+    int m_indexedBooks;
     QTime indexingTime;
     Ui::IndexingDialg *ui;
 
 private slots:
-    void on_pushButton_clicked();
+    void on_pushClose_clicked();
+    void on_pushStopIndexing_clicked();
+    void on_pushStartIndexing_clicked();
 };
 
 #endif // INDEXINGDIALG_H

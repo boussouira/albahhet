@@ -1,17 +1,16 @@
 #include "indexthread.h"
 
-IndexThread::IndexThread()
+IndexingThread::IndexingThread()
 {
-
+    m_stopIndexing = false;
 }
 
-void IndexThread::run()
+void IndexingThread::run()
 {
     startIndexing();
-//    exec();
 }
 
-void IndexThread::startIndexing()
+void IndexingThread::startIndexing()
 {
     try {
         IndexWriter* writer = NULL;
@@ -43,16 +42,15 @@ void IndexThread::startIndexing()
 //        time.start();
 //        int count=0;
 
-        writer->setRAMBufferSizeMB(30.0);
+        writer->setRAMBufferSizeMB(30);
 //        writer->setMaxBufferedDocs(1000);
 
         while(inexQuery->next()) {
+            if(m_stopIndexing)
+                break;
+
             indexBook(writer, inexQuery->value(0).toString(), inexQuery->value(2).toString());
             emit fileIndexed(inexQuery->value(1).toString());
-//            if(count == 10)
-//                writer->;
-//            else
-//                count++;
         }
 
         writer->optimize();
@@ -68,7 +66,7 @@ void IndexThread::startIndexing()
     }
 }
 
-void IndexThread::indexBook(IndexWriter *writer,const QString &bookID, const QString &bookPath)
+void IndexingThread::indexBook(IndexWriter *writer,const QString &bookID, const QString &bookPath)
 {
 //    qDebug() << "INDEXING:" << bookPath;
     {
@@ -94,7 +92,7 @@ void IndexThread::indexBook(IndexWriter *writer,const QString &bookID, const QSt
     QSqlDatabase::removeDatabase("shamelaIndexBook");
 }
 
-Document* IndexThread::FileDocument(const QString &id, const QString &bookid, const QString &text)
+Document* IndexingThread::FileDocument(const QString &id, const QString &bookid, const QString &text)
 {
     // make a new, empty document
     Document* doc = _CLNEW Document();
