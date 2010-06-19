@@ -3,8 +3,7 @@
 
 #include <QDialog>
 #include <QTime>
-#include <QStringListModel>
-#include "mainwindow.h"
+#include "common.h"
 
 namespace Ui {
     class IndexingDialg;

@@ -1,6 +1,6 @@
+#include "indexthread.h"
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
-#include "indexthread.h"
 
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
