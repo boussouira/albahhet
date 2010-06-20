@@ -28,6 +28,7 @@ void IndexingThread::startIndexing()
         }else{
             writer = _CLNEW IndexWriter( INDEX_PATH ,&analyzer, true);
         }
+		writer->setInfoStream(&std::cout);
         writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
         QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexThread");
@@ -80,11 +81,9 @@ void IndexingThread::indexBook(IndexWriter *writer,const QString &bookID, const 
         m_bookQuery->exec("SELECT id, nass FROM book ORDER BY id ");
         while(m_bookQuery->next())
         {
-            Document* doc = FileDocument(m_bookQuery->value(0).toString(),
-                                         bookID,
-                                         m_bookQuery->value(1).toString());
-            writer->addDocument( doc );
-            _CLDELETE(doc);
+            writer->addDocument( FileDocument(m_bookQuery->value(0).toString(),
+                                              bookID,
+                                              m_bookQuery->value(1).toString()) );
         }
     }
     QSqlDatabase::removeDatabase("shamelaIndexBook");

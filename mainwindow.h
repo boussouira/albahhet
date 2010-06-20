@@ -53,7 +53,7 @@ public slots:
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
     QStringList makeVLabels(int start, int end);
-    void openDB();
+    bool openDB();
     void setResultParPage(int count){m_resultParPage = count;}
     QString buildFilePath(QString bkid);
 

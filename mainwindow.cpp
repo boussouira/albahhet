@@ -425,19 +425,18 @@ void MainWindow::on_pushButton_clicked()
         ui->lineBook->setText(m_bookPath);
         if(QSqlDatabase::contains("shamelaBooks"))
             QSqlDatabase::removeDatabase("shamelaBooks");
-        openDB();
-
-        int rep = QMessageBox::question(this,
-                                        trUtf8("فهرسة المكتبة"),
-                                        trUtf8("هل تريد فهرسة المكتبة ؟"),
-                                        QMessageBox::Yes|QMessageBox::No);
-        if(rep==QMessageBox::Yes)
-            startIndexing();
-
+        if(openDB()){
+            int rep = QMessageBox::question(this,
+                                            trUtf8("فهرسة المكتبة"),
+                                            trUtf8("هل تريد فهرسة المكتبة ؟"),
+                                            QMessageBox::Yes|QMessageBox::No);
+            if(rep==QMessageBox::Yes)
+                startIndexing();
+        }
     }
 }
 
-void MainWindow::openDB()
+bool MainWindow::openDB()
 {
     m_dbIsOpen = false;
     QString book = m_bookPath;
@@ -447,7 +446,7 @@ void MainWindow::openDB()
         QMessageBox::warning(this,
                              trUtf8("خطأ في اختيار مجلد الشاملة"),
                              trUtf8("المرجوا اختيار مجلد المكتبة الشاملة"));
-        return;
+        return false;
     }
     m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
     QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
@@ -455,10 +454,12 @@ void MainWindow::openDB()
 
     if (!m_bookDB.open()) {
         QMessageBox::warning(0, "Error opening database", "Cannot open main.mdb database.");
+        return false;
     }
     m_bookQuery = new QSqlQuery(m_bookDB);
     m_dbIsOpen = true;
 
+    return true;
 }
 
 QString MainWindow::abbreviate(QString str, int size) {

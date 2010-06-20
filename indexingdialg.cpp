@@ -56,6 +56,7 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     m_indexing->setOptions(ui->checkOptimizeIndex->isChecked(),
                            ui->checkRamSize->isChecked() ? ui->spinRamSize->value() : 0,
                            ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0);
+    ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
 
     m_indexing->start();
     indexingTime.start();
