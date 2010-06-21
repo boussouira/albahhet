@@ -21,6 +21,7 @@ protected:
 
 signals:
     void fileIndexed(const QString &bookName);
+    void indexingError();
 
 protected:
     bool m_stopIndexing;

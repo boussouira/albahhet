@@ -25,6 +25,7 @@ protected:
 public slots:
     void addBook(const QString &name);
     void doneIndexing();
+    void indexingError();
 
 protected:
     IndexingThread *m_indexing;

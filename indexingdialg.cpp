@@ -15,6 +15,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexing = new IndexingThread();
     connect(m_indexing, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
     connect(m_indexing, SIGNAL(finished()), this, SLOT(doneIndexing()));
+    connect(m_indexing, SIGNAL(indexingError()), this, SLOT(indexingError()));
 }
 
 IndexingDialg::~IndexingDialg()
@@ -67,6 +68,10 @@ void IndexingDialg::addBook(const QString &name)
     ui->progressBar->setValue(++m_indexedBooks);
     ui->listWidget->insertItem(ui->listWidget->count(), tr("%1 - %2").arg(m_indexedBooks).arg(name));
     ui->listWidget->scrollToBottom();
+    if(ui->progressBar->maximum() == m_indexedBooks) {
+        ui->progressBar->setMaximum(0);
+		ui->pushStopIndexing->setEnabled(false);
+	}
 }
 
 void IndexingDialg::doneIndexing()
@@ -81,10 +86,22 @@ void IndexingDialg::doneIndexing()
 
     QMessageBox::information(this,
                              trUtf8("تمت الفهرسة بنجاح"),
-                             trUtf8("تمت فهرسة %1 كتابا خلال %2 و %3")
+                             trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
                              .arg(m_indexedBooks)
                              .arg(formatMinutes(minutes))
                              .arg(formatSecnds(seconds)));
+}
+
+void IndexingDialg::indexingError()
+{
+    QMessageBox::warning(this,
+                         trUtf8("فهرسة المكتبة"),
+                         trUtf8("لقد حدث خطأ أثناء فهرسة المكتبة.\nالمرجوا اعادة المحاولة"));
+    QDir indexDir(INDEX_PATH);
+    foreach(QString file, indexDir.entryList())
+        indexDir.remove(file);
+//    indexDir.rmdir(INDEX_PATH);
+    done(1);
 }
 
 QString IndexingDialg::formatMinutes(int minutes)

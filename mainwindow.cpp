@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle("CLucene Test");
 
     m_resultModel = new QStandardItemModel();
+    m_results = new Results();
     m_resultCount = 0;
     m_resultParPage = 10;
     m_dbIsOpen = false;
@@ -110,7 +111,7 @@ void MainWindow::startSearching()
             queryWord.replace(trUtf8("؟"), "?");
         }
 
-        IndexSearcher searcher(INDEX_PATH);
+        IndexSearcher *searcher = new IndexSearcher(INDEX_PATH);
 
         // Start building the query
         QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
@@ -121,41 +122,23 @@ void MainWindow::startSearching()
 //        qDebug() << "Query : " << queryWord;
 
         QTime time;
-        QTime timeBenchMarck;
-        QList<int> idsList;
-        QList<int> booksIdList;
-        QList<float_t> scoreList;
 
         time.start();
-        Hits* hits = searcher.search(q);
+        m_results->setHits(searcher->search(q));
         int timeSearch = time.elapsed();
 
-        m_resultCount = hits->length();
-        timeBenchMarck.start();
-        for (int i=0;i<m_resultCount;i++ ){
-            Document* doc = &hits->doc(i);
-            scoreList.append(hits->score(i));
-            idsList.append(FIELD_TO_INT("id", doc));
-            booksIdList.append(FIELD_TO_INT("bookid", doc));
-
-            //delete doc;
-        }
-        qDebug() << "QLIST:" << timeBenchMarck.elapsed() << "ms";
-
-        m_resultStruct.ids = idsList;
-        m_resultStruct.bookid = booksIdList;
-        m_resultStruct.scoring = scoreList;
-        m_resultStruct.pageCount = _toBInt((m_resultStruct.scoring.count()/(double)m_resultParPage));
-        m_resultStruct.page = 0;
+        m_resultCount = m_results->resultsCount();
+        m_results->setPageCount(_toBInt((m_results->resultsCount()/(double)m_resultParPage)));
+        m_results->setCurrentPage(0);
         displayResults();
 
         this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
                                        .arg(m_resultCount));
-        _CLDELETE(hits);
-        _CLDELETE(q);
-        searcher.close();
+//        _CLDELETE(hits);
+//        _CLDELETE(q);
+//        searcher->close();
     }
 
     catch(CLuceneError &tmp) {
@@ -245,13 +228,14 @@ void MainWindow::displayResults(/*result &pResult*/)
 
     QString resultString;
 
-    int start = m_resultStruct.page * m_resultParPage;
-    int maxResult  =  (m_resultStruct.ids.count() >= start+m_resultParPage) ? start+m_resultParPage : m_resultStruct.ids.count();
+    int start = m_results->currentPage() * m_resultParPage;
+    int maxResult  =  (m_results->resultsCount() >= start+m_resultParPage)
+                      ? start+m_resultParPage : m_results->resultsCount();
     bool whiteBG = true;
     int entryID;
     for(int i=start; i < maxResult;i++){
         {
-            int bookID = m_resultStruct.bookid.at(i);
+            int bookID = m_results->bookIdAt(i);
             QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
             QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
                               .arg(buildFilePath(QString::number(bookID)));
@@ -262,7 +246,7 @@ void MainWindow::displayResults(/*result &pResult*/)
             }
             QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
 
-            entryID = m_resultStruct.ids.at(i);
+            entryID = m_results->idAt(i);
             m_bookQuery->exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
                               .arg(entryID));
             if(m_bookQuery->first()){
@@ -279,14 +263,14 @@ void MainWindow::displayResults(/*result &pResult*/)
                                     .arg(getBookName(bookID)) // BOOK_NAME
                                     .arg(m_bookQuery->value(1).toString()) // PAGE
                                     .arg(m_bookQuery->value(2).toString()) // PART
-									.arg(bookID)); 
+                                    .arg(bookID));
                 whiteBG = !whiteBG;
             }
         }
         QSqlDatabase::removeDatabase("resultBook");
     }
 
-    setPageCount(m_resultStruct.page+1, m_resultStruct.pageCount);
+    setPageCount(m_results->currentPage()+1, m_results->pageCount());
     ui->webView->setHtml("<html><head><style>a{text-decoration: none;color:#000000;} a:hover {color:blue}</style></head>"
                          "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
 
@@ -294,25 +278,25 @@ void MainWindow::displayResults(/*result &pResult*/)
 
 void MainWindow::on_pushGoNext_clicked()
 {
-    m_resultStruct.page++;
+    m_results->setCurrentPage(m_results->currentPage()+1);
     displayResults();
 }
 
 void MainWindow::on_pushGoPrev_clicked()
 {
-    m_resultStruct.page--;
+    m_results->setCurrentPage(m_results->currentPage()-1);
     displayResults();
 }
 
 void MainWindow::on_pushGoFirst_clicked()
 {
-    m_resultStruct.page = 0;
+    m_results->setCurrentPage(0);
     displayResults();
 }
 
 void MainWindow::on_pushGoLast_clicked()
 {
-    m_resultStruct.page = m_resultStruct.pageCount-1;
+    m_results->setCurrentPage(m_results->pageCount()-1);
     displayResults();
 }
 

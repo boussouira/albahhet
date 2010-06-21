@@ -62,7 +62,10 @@ void IndexingThread::startIndexing()
         _CLDELETE(writer);
     }
     catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing", err.what());
+        QMessageBox::warning(0, "Error when Indexing",
+                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
+        emit indexingError();
+        terminate();
     }
 }
 

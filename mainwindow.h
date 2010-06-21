@@ -12,19 +12,14 @@
 #include "indexingdialg.h"
 #include "indexthread.h"
 
-struct result{
-    QList<int> ids;
-    QList<int> bookid;
-    QList<float_t> scoring;
-    int page;
-    int pageCount;
-};
-
 namespace Ui {
     class MainWindow;
 }
 
-class MainWindow : public QMainWindow {
+class Results;
+
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = 0);
@@ -69,7 +64,7 @@ protected:
     QString m_highLightRE;
     QStandardItemModel *m_resultModel;
     QList<QString> m_colors;
-    result m_resultStruct;
+    Results *m_results;
     int m_resultCount;
     int m_resultParPage;
     bool m_dbIsOpen;
@@ -85,6 +80,26 @@ private slots:
     void on_pushGoFirst_clicked();
     void on_pushGoPrev_clicked();
     void on_pushGoNext_clicked();
+};
+
+class Results
+{
+public:
+    Results(){};
+    int idAt(int index){ return FIELD_TO_INT("id", (&m_hits->doc(index))); }
+    int bookIdAt(int index){ return FIELD_TO_INT("bookid", (&m_hits->doc(index))); }
+    float_t scoreAt(int index) { return m_hits->score(index); }
+
+    int pageCount() { return m_pageCount; }
+    int currentPage() { return m_page; }
+    void setPageCount(int pageCount) { m_pageCount = pageCount; }
+    void setCurrentPage(int page) { m_page = page; }
+    void setHits(Hits *hit) { m_hits = hit; }
+    int resultsCount() { return m_hits->length(); }
+private:
+    Hits* m_hits;
+    int m_page;
+    int m_pageCount;
 };
 
 #endif // MAINWINDOW_H
