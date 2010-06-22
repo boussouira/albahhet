@@ -16,7 +16,7 @@ void IndexingThread::run()
         dir.mkdir(INDEX_PATH);
     if ( IndexReader::indexExists(INDEX_PATH) ){
         if ( IndexReader::isLocked(INDEX_PATH) ){
-            printf("Index was locked... unlocking it.\n");
+            qDebug() << "Index was locked... unlocking it.";
             IndexReader::unlock(INDEX_PATH);
         }
 
@@ -33,13 +33,12 @@ void IndexingThread::run()
     inexQuery = new QSqlQuery(indexDB);
 
     startIndexing();
+    m_sem->acquire(m_threadCount); // wait child threads
     finishIndexing();
 }
 
 void IndexingThread::startIndexing()
 {
-    //    try {
-
     inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
 
     if(m_ramSize)
@@ -51,25 +50,8 @@ void IndexingThread::startIndexing()
         IndexBookThread *book = new IndexBookThread(writer);
         connect(book, SIGNAL(giveNextBook(IndexBookThread*)), this, SLOT(nextBook(IndexBookThread*)));
         connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(threadFinishBook(QString)));
-//        qDebug() << "RUN THREAD:" << i;
         book->start();
-        //emit fileIndexed(inexQuery->value(1).toString());
     }
-
-    m_sem->acquire(m_threadCount);
-
-//        if(m_stopIndexing)
-//            break;
-//    }
-
-
-    /*}
-    catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing",
-                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
-        emit indexingError();
-        terminate();
-    }*/
 }
 
 void IndexingThread::threadFinishBook(const QString &book)
@@ -134,7 +116,7 @@ void IndexingThread::setOptions(bool optimizeIndex, int ramSize, int maxDoc, int
 
 void IndexingThread::nextBook(IndexBookThread *thread)
 {
-//    qDebug() << "SEM:" << m_sem->available();
+    m_mutex.lock();
     if(inexQuery->next() && !m_stopIndexing) {
         thread->setBook(inexQuery->value(0).toString(),
                         inexQuery->value(1).toString(),
@@ -143,6 +125,7 @@ void IndexingThread::nextBook(IndexBookThread *thread)
         thread->stop();
         m_sem->release();
     }
+    m_mutex.unlock();
 }
 
 // IndexBookThread class
@@ -152,7 +135,6 @@ IndexBookThread::IndexBookThread(IndexWriter *writer)
     m_writer = writer;
     m_indexing = false;
     m_stop = false;
-    start();
 }
 
 void IndexBookThread::setBook(const QString &bookID, const QString &bookName, const QString &bookPath)
@@ -160,13 +142,18 @@ void IndexBookThread::setBook(const QString &bookID, const QString &bookName, co
     m_bookID = bookID;
     m_bookPath = bookPath;
     m_bookName = bookName;
-    if(!m_indexing)
-        indexBoook();
+    if(!m_indexing) {
+        try {
+            indexBoook();
+        } catch(CLuceneError &err) {
+            QMessageBox::warning(0, "Error when Indexing",
+                                 tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
+        }
+    }
 }
 
 void IndexBookThread::indexBoook()
 {
-//    qDebug() << "START INDEXING:" << m_bookPath;
     m_indexing = true;
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaIndexBook");

@@ -34,6 +34,7 @@ protected:
     QSqlDatabase indexDB;
     QSqlQuery *inexQuery;
     QSemaphore *m_sem;
+    QMutex m_mutex;
     bool m_stopIndexing;
     bool m_optimizeIndex;
     int m_ramSize;
