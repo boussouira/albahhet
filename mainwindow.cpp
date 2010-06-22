@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QSpinBox>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
@@ -9,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle("CLucene Test");
 
     m_resultModel = new QStandardItemModel();
+    m_results = new Results();
     m_resultCount = 0;
     m_resultParPage = 10;
     m_dbIsOpen = false;
@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
                        "cluceneTest", "cluceneTestX");
     m_bookPath = settings.value("db").toString();
+    if(!m_bookPath.endsWith('/'))
+        m_bookPath.append('/');
     m_searchQuery = settings.value("lastQuery").toString();
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
     ui->lineBook->setText(m_bookPath);
@@ -62,41 +64,33 @@ void MainWindow::startIndexing()
 {
     if(!m_dbIsOpen)
         openDB();
-    try {
-        IndexWriter* writer = NULL;
-        QDir dir;
-        //SimpleAnalyzer* an = _CLNEW SimpleAnalyzer();
-        //lucene::analysis::standard::StandardAnalyzer an;
-        ArabicAnalyzer analyzer;
-        if(!dir.exists(INDEX_PATH))
-            dir.mkdir(INDEX_PATH);
-        if ( IndexReader::indexExists(INDEX_PATH) ){
-            if ( IndexReader::isLocked(INDEX_PATH) ){
-                printf("Index was locked... unlocking it.\n");
-                IndexReader::unlock(INDEX_PATH);
-            }
 
-            writer = _CLNEW IndexWriter( INDEX_PATH, &analyzer, true);
-        }else{
-            writer = _CLNEW IndexWriter( INDEX_PATH ,&analyzer, true);
-        }
-        writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+    QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
+    indexDB.setDatabaseName("book_index.db");
+    if(!indexDB.open())
+        qDebug("Error opning index db");
+    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+    inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
+                    "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
+                    "fileSize INTEGER, cat INTEGER)");
+    inexQuery->exec("DELETE FROM books");
 
-        QTime time;
-        time.start();
 
-        indexDocs(writer);
-        writer->optimize();
-        writer->close();
-        _CLDELETE(writer);
-        int elpasedTime = time.elapsed();
-        statusBar()->showMessage(trUtf8("تمت الفهرسة خلال %1 "SECONDE_AR)
-                                 .arg(miTOsec(elpasedTime)));
-        writeLog(elpasedTime);
+    indexDB.transaction();
+    m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
+    while(m_bookQuery->next()) {
+        if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
+            .arg(m_bookQuery->value(0).toString())
+            .arg(m_bookQuery->value(1).toString())
+            .arg(buildFilePath(m_bookQuery->value(1).toString()))
+            .arg(m_bookQuery->value(3).toString())
+            .arg(m_bookQuery->value(2).toString())))
+            qDebug()<< "ERROR:" << inexQuery->lastError().text();
     }
-    catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing", err.what());
-    }
+    indexDB.commit();
+
+    IndexingDialg *indexDial = new IndexingDialg(this);
+    indexDial->show();
 }
 
 void MainWindow::startSearching()
@@ -105,8 +99,6 @@ void MainWindow::startSearching()
     if(!m_dbIsOpen)
         openDB();
     try {
-        //Searcher searcher(INDEX_PATH);
-//        standard::StandardAnalyzer analyzer;
         ArabicAnalyzer analyzer;
 
         m_searchQuery = ui->lineQuery->text();
@@ -123,46 +115,34 @@ void MainWindow::startSearching()
             queryWord.replace(trUtf8("؟"), "?");
         }
 
-        IndexSearcher s(INDEX_PATH);
+        IndexSearcher *searcher = new IndexSearcher(INDEX_PATH);
 
         // Start building the query
         QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
         queryPareser->setAllowLeadingWildcard(true);
 
         Query* q = queryPareser->parse(QSTRING_TO_TCHAR(queryWord));
-        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-        qDebug() << "Query : " << queryWord;
-        //    _CLDELETE_CARRAY(buf);
+//        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
+//        qDebug() << "Query : " << queryWord;
 
         QTime time;
-        QList<int> resultList;
-        QList<float_t> scoreList;
 
         time.start();
-        Hits* h = s.search(q);
-        int timeSearch = time.restart();
+        m_results->setHits(searcher->search(q));
+        int timeSearch = time.elapsed();
 
-        m_resultCount = h->length();
-        for (int i=0;i<m_resultCount;i++ ){
-            Document* doc = &h->doc(i);
-            scoreList.append(h->score(i));
-            resultList.append(FIELD_TO_INT("id", doc));
-
-            //delete doc;
-        }
-        m_resultStruct.results = resultList;
-        m_resultStruct.scoring = scoreList;
-        m_resultStruct.pageCount = _toBInt((m_resultStruct.scoring.count()/(double)m_resultParPage));
-        m_resultStruct.page = 0;
-        displayResults(/*ResultStrc*/);
+        m_resultCount = m_results->resultsCount();
+        m_results->setPageCount(_toBInt((m_results->resultsCount()/(double)m_resultParPage)));
+        m_results->setCurrentPage(0);
+        displayResults();
 
         this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
                                        .arg(m_resultCount));
-        _CLDELETE(h);
-        _CLDELETE(q);
-        s.close();
+//        _CLDELETE(hits);
+//        _CLDELETE(q);
+//        searcher->close();
     }
 
     catch(CLuceneError &tmp) {
@@ -249,62 +229,78 @@ void MainWindow::resultsCount()
 
 void MainWindow::displayResults(/*result &pResult*/)
 {
+
     QString resultString;
 
-    int start = m_resultStruct.page * m_resultParPage;
-    int maxResult  =  (m_resultStruct.results.count() >= start+m_resultParPage) ? start+m_resultParPage : m_resultStruct.results.count();
+    int start = m_results->currentPage() * m_resultParPage;
+    int maxResult  =  (m_results->resultsCount() >= start+m_resultParPage)
+                      ? start+m_resultParPage : m_results->resultsCount();
     bool whiteBG = true;
     int entryID;
     for(int i=start; i < maxResult;i++){
-        entryID = m_resultStruct.results.at(i);
-        m_bookQuery->exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
-                          .arg(m_bookTableName)
-                          .arg(entryID));
-        if(m_bookQuery->first()){
-            resultString.append(trUtf8("<div style=\"margin: 0px; padding: 4px; border-bottom: 1px solid black; background-color: %1 ;\">"
-                                       "<h3 style=\"margin: 0px 0px 5px; font-size: 18px; color: rgb(0, 68, 255);\">%2</h3>"
-                                       "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3\">%4</a>"
-                                       "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span style=\"margin-left: 7px; color: green; font-weight: bold;\">%5</span>"
-                                       "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
-                                       "</p></div>")
-                                .arg(whiteBG ? "#FFFFFF" : "#EFEFEF") //BG color
-                                .arg(getTitleId(entryID)) //BAB
-                                .arg(entryID) // entry id
-                                .arg(hiText(abbreviate(m_bookQuery->value(0).toString(),320), m_searchQuery)) // TEXT
-                                .arg(m_bookName) // BOOK_NAME
-                                .arg(m_bookQuery->value(1).toString()) // PAGE
-                                .arg(m_bookQuery->value(2).toString())); // PART
-            whiteBG = !whiteBG;
+        {
+            int bookID = m_results->bookIdAt(i);
+            QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
+            QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                              .arg(buildFilePath(QString::number(bookID)));
+            m_bookDB.setDatabaseName(mdbpath);
+
+            if (!m_bookDB.open()) {
+                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
+            }
+            QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
+
+            entryID = m_results->idAt(i);
+            m_bookQuery->exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
+                              .arg(entryID));
+            if(m_bookQuery->first()){
+                resultString.append(trUtf8("<div style=\"margin: 0px; padding: 4px; border-bottom: 1px solid black; background-color: %1 ;\">"
+                                           "<h3 style=\"margin: 0px 0px 5px; font-size: 18px; color: rgb(0, 68, 255);\">%2</h3>"
+                                           "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
+                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span style=\"margin-left: 7px; color: green; font-weight: bold;\">%5</span>"
+                                           "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
+                                           "</p></div>")
+                                    .arg(whiteBG ? "#FFFFFF" : "#EFEFEF") //BG color
+                                    .arg(getTitleId(entryID)) //BAB
+                                    .arg(entryID) // entry id
+                                    .arg(hiText(abbreviate(m_bookQuery->value(0).toString(),320), m_searchQuery)) // TEXT
+                                    .arg(getBookName(bookID)) // BOOK_NAME
+                                    .arg(m_bookQuery->value(1).toString()) // PAGE
+                                    .arg(m_bookQuery->value(2).toString()) // PART
+                                    .arg(bookID));
+                whiteBG = !whiteBG;
+            }
         }
-        else
-            QMessageBox::warning(0, "Error SQL", m_bookQuery->lastError().text());
+        QSqlDatabase::removeDatabase("resultBook");
     }
-    setPageCount(m_resultStruct.page+1, m_resultStruct.pageCount);
+
+    setPageCount(m_results->currentPage()+1, m_results->pageCount());
     ui->webView->setHtml("<html><head><style>a{text-decoration: none;color:#000000;} a:hover {color:blue}</style></head>"
                          "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
+
 }
 
 void MainWindow::on_pushGoNext_clicked()
 {
-    m_resultStruct.page++;
+    m_results->setCurrentPage(m_results->currentPage()+1);
     displayResults();
 }
 
 void MainWindow::on_pushGoPrev_clicked()
 {
-    m_resultStruct.page--;
+    m_results->setCurrentPage(m_results->currentPage()-1);
     displayResults();
 }
 
 void MainWindow::on_pushGoFirst_clicked()
 {
-    m_resultStruct.page = 0;
+    m_results->setCurrentPage(0);
     displayResults();
 }
 
 void MainWindow::on_pushGoLast_clicked()
 {
-    m_resultStruct.page = m_resultStruct.pageCount-1;
+    m_results->setCurrentPage(m_results->pageCount()-1);
     displayResults();
 }
 
@@ -408,76 +404,50 @@ QStringList MainWindow::makeVLabels(int start, int end)
 
 void MainWindow::on_pushButton_clicked()
 {
-    QString path = QFileDialog::getOpenFileName(this,
-                                 trUtf8("اختر الكتاب المراد البحث فيه"), "",
-                                 tr("Access (*.bok *.mdb);;SQLITE (*.db)"));
+    QString path = QFileDialog::getExistingDirectory(this,
+                                 trUtf8("اختر مجلد المكتبة الشاملة"));
     if(!path.isEmpty()) {
         m_bookPath = path;
+        if(!m_bookPath.endsWith('/'))
+            m_bookPath.append('/');
         ui->lineBook->setText(m_bookPath);
-        if(QSqlDatabase::contains("shamelaBook"))
-            QSqlDatabase::removeDatabase("shamelaBook");
-        openDB();
-        int rep = QMessageBox::question(this,
-                                        trUtf8("فهرسة الكتاب"),
-                                        trUtf8("هل تريد فهرسة الكتاب ؟"),
-                                        QMessageBox::Yes|QMessageBox::No);
-        if(rep==QMessageBox::Yes)
-            startIndexing();
+        if(QSqlDatabase::contains("shamelaBooks"))
+            QSqlDatabase::removeDatabase("shamelaBooks");
+        if(openDB()){
+            int rep = QMessageBox::question(this,
+                                            trUtf8("فهرسة المكتبة"),
+                                            trUtf8("هل تريد فهرسة المكتبة ؟"),
+                                            QMessageBox::Yes|QMessageBox::No);
+            if(rep==QMessageBox::Yes)
+                startIndexing();
+        }
     }
 }
 
-void MainWindow::openDB()
+bool MainWindow::openDB()
 {
     m_dbIsOpen = false;
-    QString book = (m_bookPath);
-    QString sqlite_book(book);
+    QString book = m_bookPath;
+    book.append("Files/main.mdb");
 
-    if(book.contains(QRegExp("\\.(mdb|bok)$"))) {
-#ifdef Q_OS_WIN32
-        m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
-        m_bookDB.setDatabaseName(mdbpath);
-
-        if (!m_bookDB.open()) {
-            qDebug() << "Cannot open MDB database.";
-        }
-        m_bookQuery = new QSqlQuery(m_bookDB);
-        m_dbIsOpen = true;
-#else
-        qDebug() << "Need to convert the database.";
-        sqlite_book.append(".sqlite");
-        if(!QFile::exists(sqlite_book)) {
-            MdbConverter *mdb = new MdbConverter;
-            mdb->exportFromMdb(qPrintable(book), qPrintable(sqlite_book));
-        }
-#endif
+    if(!QFile::exists(book)) {
+        QMessageBox::warning(this,
+                             trUtf8("خطأ في اختيار مجلد الشاملة"),
+                             trUtf8("المرجوا اختيار مجلد المكتبة الشاملة"));
+        return false;
     }
+    m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
+    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
+    m_bookDB.setDatabaseName(mdbpath);
 
-    if(!m_dbIsOpen) {
-        m_bookDB = QSqlDatabase::addDatabase("QSQLITE", "shamelaBook");
-        m_bookDB.setDatabaseName(sqlite_book);
-
-        if (!m_bookDB.open()) {
-            qDebug() << "Cannot open database.";
-        }
-        m_bookQuery = new QSqlQuery(m_bookDB);
-        m_dbIsOpen = true;
+    if (!m_bookDB.open()) {
+        QMessageBox::warning(0, "Error opening database", "Cannot open main.mdb database.");
+        return false;
     }
+    m_bookQuery = new QSqlQuery(m_bookDB);
+    m_dbIsOpen = true;
 
-    QStringList tables = m_bookDB.tables();
-    foreach(QString ta, tables) {
-        if( ta.contains(QRegExp("(t[0-9]+|title)")) ){
-            m_titleName = ta;
-        } else if( ta.contains(QRegExp("(b[0-9]+|book)")) ){
-            m_bookTableName = ta;
-        }
-        else if( ta.contains("Main") ){
-            m_haveMainTable = true;
-        }
-    }
-    m_bookQuery->exec("SELECT Bk FROM Main");
-    if(m_bookQuery->first())
-        m_bookName = m_bookQuery->value(0).toString();
+    return true;
 }
 
 QString MainWindow::abbreviate(QString str, int size) {
@@ -583,15 +553,27 @@ void MainWindow::writeLog(int indexingTime)
 
 QString MainWindow::getTitleId(int pageID)
 {
-#ifdef Q_OS_LINUX
-    m_bookQuery->exec(QString("SELECT tit FROM %1 WHERE id <= %2 ORDER BY id DESC LIMIT 1").arg(m_titleName).arg(pageID));
-#else
-    m_bookQuery->exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC").arg(m_titleName).arg(pageID));
-#endif
+    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("resultBook"));
+    m_bookQuery->exec(QString("SELECT TOP 1 tit FROM title WHERE id <= %1 ORDER BY id DESC").arg(pageID));
+
     if(m_bookQuery->first())
         return m_bookQuery->value(0).toString();
     else {
-        QMessageBox::warning(0, "Error SQL", m_bookQuery->lastError().text());
+        qDebug() << m_bookQuery->lastError().text();
+        return m_bookName;
+    }
+
+}
+
+QString MainWindow::getBookName(int bookID)
+{
+    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("shamelaBook"));
+    m_bookQuery->exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
+
+    if(m_bookQuery->first())
+        return m_bookQuery->value(0).toString();
+    else {
+        qDebug() << m_bookQuery->lastError().text();
         return m_bookName;
     }
 
@@ -600,19 +582,31 @@ QString MainWindow::getTitleId(int pageID)
 void MainWindow::resultLinkClicked(const QUrl &url)
 {
     int rid = url.queryItems().first().second.toInt();
+    int bookID = url.queryItems().last().second.toInt();
     QDialog *dialog = new QDialog(this);
     QVBoxLayout *layout= new QVBoxLayout(dialog);
     QTextBrowser *textBrowser = new QTextBrowser(0);
     QString text;
     layout->addWidget(textBrowser);
+    {
+        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                          .arg(buildFilePath(QString::number(bookID)));
+        m_bookDB.setDatabaseName(mdbpath);
 
-    m_bookQuery->exec(QString("SELECT page, part, nass FROM %1 WHERE id = %2")
-                      .arg(m_bookTableName)
-                      .arg(rid));
-    if(m_bookQuery->first())
-        text = m_bookQuery->value(2).toString();
+        if (!m_bookDB.open()) {
+            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
+        }
+        QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
 
-    text.replace(QRegExp("[\\r\\n]"),"<br/>");
+        m_bookQuery->exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
+                          .arg(rid));
+        if(m_bookQuery->first())
+            text = m_bookQuery->value(2).toString();
+
+        text.replace(QRegExp("[\\r\\n]"),"<br/>");
+    }
+    QSqlDatabase::removeDatabase("disBook");
 
     textBrowser->setHtml(hiText(text, m_searchQuery));
     textBrowser->setAlignment(Qt::AlignRight);
@@ -643,4 +637,9 @@ void MainWindow::on_pushButton_2_clicked()
 
     connect(pushDone, SIGNAL(clicked()), settingDialog, SLOT(accept()));
     connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
+}
+
+QString MainWindow::buildFilePath(QString bkid)
+{
+    return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
 }
