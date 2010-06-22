@@ -10,6 +10,8 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     ui->progressBar->setVisible(false);
     ui->pushStopIndexing->setVisible(false);
     ui->pushClose->setVisible(false);
+    ui->spinThreadCount->setValue(QThread::idealThreadCount());
+
     showBooks();
 
     m_indexing = new IndexingThread();
@@ -25,20 +27,23 @@ IndexingDialg::~IndexingDialg()
 
 void IndexingDialg::showBooks()
 {
-    m_booksCount = 0;
-    QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexDiaog");
-    indexDB.setDatabaseName("book_index.db");
-    if(!indexDB.open())
-        qDebug("Error opning index db");
-    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-    QStringList booksList;
+    {
+        m_booksCount = 0;
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexDiaog");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        QStringList booksList;
 
-    inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
-    while(inexQuery->next()) {
-        booksList.append(inexQuery->value(1).toString());
-        m_booksCount++;
+        inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
+        while(inexQuery->next()) {
+            booksList.append(inexQuery->value(1).toString());
+            m_booksCount++;
+        }
+        ui->listWidget->insertItems(0, booksList);
     }
-    ui->listWidget->insertItems(0, booksList);
+    QSqlDatabase::removeDatabase("bookIndexDiaog");
 }
 
 void IndexingDialg::on_pushStartIndexing_clicked()
@@ -56,7 +61,8 @@ void IndexingDialg::on_pushStartIndexing_clicked()
 
     m_indexing->setOptions(ui->checkOptimizeIndex->isChecked(),
                            ui->checkRamSize->isChecked() ? ui->spinRamSize->value() : 0,
-                           ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0);
+                           ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0,
+                           ui->spinThreadCount->value());
     ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
 
     m_indexing->start();
