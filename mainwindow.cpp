@@ -79,13 +79,19 @@ void MainWindow::startIndexing()
         indexDB.transaction();
         m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
         while(m_bookQuery->next()) {
-            if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
-                .arg(m_bookQuery->value(0).toString())
-                .arg(m_bookQuery->value(1).toString())
-                .arg(buildFilePath(m_bookQuery->value(1).toString()))
-                .arg(m_bookQuery->value(3).toString())
-                .arg(m_bookQuery->value(2).toString())))
-                qDebug()<< "ERROR:" << inexQuery->lastError().text();
+            QString bookPath = buildFilePath(m_bookQuery->value(1).toString());
+            QFile bookFile(bookPath);
+            if(bookFile.exists()){
+                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '')")
+                    .arg(m_bookQuery->value(0).toString())
+                    .arg(m_bookQuery->value(1).toString())
+                    .arg(bookPath)
+                    .arg(m_bookQuery->value(3).toString())
+                    .arg(m_bookQuery->value(2).toString())
+                    .arg(bookFile.size())))
+                    qDebug()<< "ERROR:" << inexQuery->lastError().text();
+            } else
+                qDebug()<< "NOT FOUND:" << bookPath;
         }
         indexDB.commit();
     }

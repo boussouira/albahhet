@@ -36,7 +36,7 @@ void IndexingDialg::showBooks()
         QSqlQuery *inexQuery = new QSqlQuery(indexDB);
         QStringList booksList;
 
-        inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
+        inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize");
         while(inexQuery->next()) {
             booksList.append(inexQuery->value(1).toString());
             m_booksCount++;

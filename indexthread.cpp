@@ -39,7 +39,7 @@ void IndexingThread::run()
 
 void IndexingThread::startIndexing()
 {
-    inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
+    inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize");
 
     if(m_ramSize)
         writer->setRAMBufferSizeMB(m_ramSize);
