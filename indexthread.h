@@ -14,7 +14,6 @@ public:
     void run();
     void stop() { m_stopIndexing = true; }
     void setOptions(bool optimizeIndex, int ramSize, int maxDoc, int threadsCount);
-    static Document* FileDocument(const QString &id, const QString &bookid, const QString &text);
 
 protected:
     void indexBook(IndexWriter *writer, const QString &bookID, const QString &bookPath);
@@ -48,9 +47,10 @@ class IndexBookThread : public QThread
 public:
     IndexBookThread(IndexWriter *writer);
     void setBook(const QString &bookID, const QString &bookName, const QString &bookPath);
+    Document* FileDocument(const QString &id, const QString &bookid, const QString &text);
+    void indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath);
     void run();
     void stop();
-    void indexBoook();
 
 signals:
     void giveNextBook(IndexBookThread *thread);
@@ -60,6 +60,8 @@ protected:
     IndexWriter *m_writer;
     bool m_indexing;
     bool m_stop;
+    QMutex m_mutex;
+    QWaitCondition m_gotBookToIndex;
     QString m_bookID;
     QString m_bookName;
     QString m_bookPath;

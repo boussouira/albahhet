@@ -40,8 +40,6 @@ public slots:
     void startIndexing();
     void startSearching();
     void showStatistic();
-    void indexDocs(IndexWriter* writer);
-    Document* FileDocument(const QString &id, const QString &ayaText);
     QString cleanString(QString str);
     void resultsCount();
     void displayResults(/*result &pResult*/);

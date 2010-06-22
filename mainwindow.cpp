@@ -197,29 +197,6 @@ void MainWindow::showStatistic()
 
 }
 
-void MainWindow::indexDocs(IndexWriter* writer)
-{
-    m_bookQuery->exec(QString("SELECT id, nass FROM %1 ORDER BY id ").arg(m_bookTableName));
-    while(m_bookQuery->next())
-    {
-        Document* doc = FileDocument(m_bookQuery->value(0).toString(),
-                                     m_bookQuery->value(1).toString());
-        writer->addDocument( doc );
-        _CLDELETE(doc);
-    }
-}
-
-Document* MainWindow::FileDocument(const QString &id, const QString &ayaText)
-{
-    // make a new, empty document
-    Document* doc = _CLNEW Document();
-
-    doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(ayaText), Field::STORE_NO | Field::INDEX_TOKENIZED) );
-
-    return doc;
-}
-
 QString MainWindow::cleanString(QString str)
 {
     str.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
