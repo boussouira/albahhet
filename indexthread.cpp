@@ -62,6 +62,8 @@ void IndexingThread::finishIndexing()
 {
     if(m_optimizeIndex)
         writer->optimize();
+    delete inexQuery;
+    indexDB.close();
     QSqlDatabase::removeDatabase("bookIndexThread");
     writer->close();
     _CLDELETE(writer);
