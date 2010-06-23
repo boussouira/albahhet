@@ -308,16 +308,22 @@ QString MainWindow::hiText(const QString &text, const QString &strToHi)
 
 QStringList MainWindow::buildRegExp(const QString &str)
 {
-    QStringList strWords = str.split(" ",  QString::SkipEmptyParts);
-    QStringList regExpList;
+    QStringList strWords;
+    ArabicAnalyzer an;
 
-    QChar opPar('(');
-    QChar clPar(')');
+    TokenStream *streams = an.tokenStream(_T("text"),
+                                          _CLNEW StringReader(QSTRING_TO_TCHAR(str)));
+    Token *token = streams->next();
+    while(token) {
+        strWords.append(TCHAR_TO_QSTRING(token->termText()));
+        token = streams->next();
+    }
+
+    QStringList regExpList;
     foreach(QString word, strWords)
     {
         QString regExpStr;
-        regExpStr.append("\\b");
-        regExpStr.append(opPar);
+        regExpStr.append("\\b(");
 
         for (int i=0; i< word.size();i++) {
             if(word.at(i) == QChar('~'))
@@ -326,19 +332,14 @@ QStringList MainWindow::buildRegExp(const QString &str)
                 regExpStr.append("[\\S]*");
             else if(word.at(i) == QChar('?'))
                 regExpStr.append("\\S");
-            else if( word.at(i) == QChar('"') || word.at(i) == opPar || word.at(i) == opPar )
-                continue;
             else {
                 regExpStr.append(word.at(i));
                 regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
             }
         }
-
-        regExpStr.append(clPar);
-        regExpStr.append("\\b");
+        regExpStr.append(")\\b");
         regExpList.append(regExpStr);
     }
-//    qDebug() << regExpList;
     return regExpList;
 }
 
