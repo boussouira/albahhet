@@ -64,31 +64,38 @@ void MainWindow::startIndexing()
 {
     if(!m_dbIsOpen)
         openDB();
+    {
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
+                        "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
+                        "fileSize INTEGER, cat INTEGER)");
+        inexQuery->exec("DELETE FROM books");
 
-    QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
-    indexDB.setDatabaseName("book_index.db");
-    if(!indexDB.open())
-        qDebug("Error opning index db");
-    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-    inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
-                    "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
-                    "fileSize INTEGER, cat INTEGER)");
-    inexQuery->exec("DELETE FROM books");
 
-
-    indexDB.transaction();
-    m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
-    while(m_bookQuery->next()) {
-        if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
-            .arg(m_bookQuery->value(0).toString())
-            .arg(m_bookQuery->value(1).toString())
-            .arg(buildFilePath(m_bookQuery->value(1).toString()))
-            .arg(m_bookQuery->value(3).toString())
-            .arg(m_bookQuery->value(2).toString())))
-            qDebug()<< "ERROR:" << inexQuery->lastError().text();
+        indexDB.transaction();
+        m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
+        while(m_bookQuery->next()) {
+            QString bookPath = buildFilePath(m_bookQuery->value(1).toString());
+            QFile bookFile(bookPath);
+            if(bookFile.exists()){
+                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '')")
+                    .arg(m_bookQuery->value(0).toString())
+                    .arg(m_bookQuery->value(1).toString())
+                    .arg(bookPath)
+                    .arg(m_bookQuery->value(3).toString())
+                    .arg(m_bookQuery->value(2).toString())
+                    .arg(bookFile.size())))
+                    qDebug()<< "ERROR:" << inexQuery->lastError().text();
+            } else
+                qDebug()<< "NOT FOUND:" << bookPath;
+        }
+        indexDB.commit();
     }
-    indexDB.commit();
-
+    QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
     indexDial->show();
 }
@@ -188,29 +195,6 @@ void MainWindow::showStatistic()
         qDebug() << "Error when opening : " << INDEX_PATH;
     }
 
-}
-
-void MainWindow::indexDocs(IndexWriter* writer)
-{
-    m_bookQuery->exec(QString("SELECT id, nass FROM %1 ORDER BY id ").arg(m_bookTableName));
-    while(m_bookQuery->next())
-    {
-        Document* doc = FileDocument(m_bookQuery->value(0).toString(),
-                                     m_bookQuery->value(1).toString());
-        writer->addDocument( doc );
-        _CLDELETE(doc);
-    }
-}
-
-Document* MainWindow::FileDocument(const QString &id, const QString &ayaText)
-{
-    // make a new, empty document
-    Document* doc = _CLNEW Document();
-
-    doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(ayaText), Field::STORE_NO | Field::INDEX_TOKENIZED) );
-
-    return doc;
 }
 
 QString MainWindow::cleanString(QString str)
@@ -324,16 +308,22 @@ QString MainWindow::hiText(const QString &text, const QString &strToHi)
 
 QStringList MainWindow::buildRegExp(const QString &str)
 {
-    QStringList strWords = str.split(" ",  QString::SkipEmptyParts);
-    QStringList regExpList;
+    QStringList strWords;
+    ArabicAnalyzer an;
 
-    QChar opPar('(');
-    QChar clPar(')');
+    TokenStream *streams = an.tokenStream(_T("text"),
+                                          _CLNEW StringReader(QSTRING_TO_TCHAR(str)));
+    Token *token = streams->next();
+    while(token) {
+        strWords.append(TCHAR_TO_QSTRING(token->termText()));
+        token = streams->next();
+    }
+
+    QStringList regExpList;
     foreach(QString word, strWords)
     {
         QString regExpStr;
-        regExpStr.append("\\b");
-        regExpStr.append(opPar);
+        regExpStr.append("\\b(");
 
         for (int i=0; i< word.size();i++) {
             if(word.at(i) == QChar('~'))
@@ -342,19 +332,14 @@ QStringList MainWindow::buildRegExp(const QString &str)
                 regExpStr.append("[\\S]*");
             else if(word.at(i) == QChar('?'))
                 regExpStr.append("\\S");
-            else if( word.at(i) == QChar('"') || word.at(i) == opPar || word.at(i) == opPar )
-                continue;
             else {
                 regExpStr.append(word.at(i));
                 regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
             }
         }
-
-        regExpStr.append(clPar);
-        regExpStr.append("\\b");
+        regExpStr.append(")\\b");
         regExpList.append(regExpStr);
     }
-//    qDebug() << regExpList;
     return regExpList;
 }
 
