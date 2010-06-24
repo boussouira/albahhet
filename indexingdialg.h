@@ -9,7 +9,7 @@ namespace Ui {
     class IndexingDialg;
 }
 
-class IndexingThread;
+class IndexBookThread;
 
 class IndexingDialg : public QDialog {
     Q_OBJECT
@@ -26,12 +26,19 @@ public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
+    void nextBook(IndexBookThread *thread);
 
 protected:
-    IndexingThread *m_indexing;
+    IndexWriter* m_writer;
+    QSqlDatabase indexDB;
+    QSqlQuery *inexQuery;
+    QSemaphore *m_sem;
+    QMutex m_mutex;
+    QTime indexingTime;
+    int m_threadCount;
     int m_booksCount;
     int m_indexedBooks;
-    QTime indexingTime;
+    bool m_stopIndexing;
     Ui::IndexingDialg *ui;
 
 private slots:
