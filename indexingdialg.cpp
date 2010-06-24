@@ -32,11 +32,12 @@ void IndexingDialg::showBooks()
         QSqlQuery *inexQuery = new QSqlQuery(indexDB);
         QStringList booksList;
 
-        inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize");
-        while(inexQuery->next()) {
-            booksList.append(inexQuery->value(1).toString());
-            m_booksCount++;
-        }
+        inexQuery->exec(QString("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize %1")
+                        .arg(ui->comboBox->currentIndex() ? "DESC" : "ASC"));
+        while(inexQuery->next())
+            booksList.append(tr("%1 - %2").arg(++m_booksCount).arg(inexQuery->value(1).toString()));
+
+        ui->listWidget->clear();
         ui->listWidget->insertItems(0, booksList);
     }
     QSqlDatabase::removeDatabase("bookIndexDiaog");
@@ -55,14 +56,7 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     ui->groupBox->setVisible(false);
     ui->pushStopIndexing->setVisible(true);
     ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
-/*
-    m_indexing->setOptions(ui->checkOptimizeIndex->isChecked(),
-                           ui->checkRamSize->isChecked() ? ui->spinRamSize->value() : 0,
-                           ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0,
-                           ui->spinThreadCount->value());
 
-    m_indexing->start();
-*/
     m_writer = NULL;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
@@ -86,7 +80,8 @@ void IndexingDialg::on_pushStartIndexing_clicked()
         qDebug("Error opning index db");
     inexQuery = new QSqlQuery(indexDB);
 
-    inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize");
+    inexQuery->exec(QString("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize %1")
+                    .arg(ui->comboBox->currentIndex() ? "DESC" : "ASC"));
 
     if(ui->checkRamSize->isChecked())
         m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
@@ -207,4 +202,10 @@ void IndexingDialg::on_pushStopIndexing_clicked()
 void IndexingDialg::on_pushClose_clicked()
 {
     done(0);
+}
+
+void IndexingDialg::on_comboBox_currentIndexChanged(int index)
+{
+    Q_UNUSED(index);
+    showBooks();
 }

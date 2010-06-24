@@ -42,6 +42,7 @@ protected:
     Ui::IndexingDialg *ui;
 
 private slots:
+    void on_comboBox_currentIndexChanged(int index);
     void on_pushClose_clicked();
     void on_pushStopIndexing_clicked();
     void on_pushStartIndexing_clicked();
