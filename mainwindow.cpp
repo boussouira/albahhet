@@ -62,6 +62,11 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::startIndexing()
 {
+    int const MAX_GROUP_SIZE = 550 * 1024 * 1024;
+    int currentGroup = 1;
+    int currentGroupSize = 0;
+    int bookSize = 0;
+    int totalBooksSize = 0;
     if(!m_dbIsOpen)
         openDB();
     {
@@ -82,19 +87,29 @@ void MainWindow::startIndexing()
             QString bookPath = buildFilePath(m_bookQuery->value(1).toString());
             QFile bookFile(bookPath);
             if(bookFile.exists()){
-                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '')")
+                bookSize = bookFile.size();
+                if(currentGroupSize+bookSize < MAX_GROUP_SIZE)
+                    currentGroupSize += bookSize;
+                else {
+                    currentGroup++;
+                    currentGroupSize = 0;
+                }
+                totalBooksSize += bookSize;
+                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '%7')")
                     .arg(m_bookQuery->value(0).toString())
                     .arg(m_bookQuery->value(1).toString())
                     .arg(bookPath)
                     .arg(m_bookQuery->value(3).toString())
                     .arg(m_bookQuery->value(2).toString())
-                    .arg(bookFile.size())))
+                    .arg(bookSize)
+                    .arg(currentGroup)))
                     qDebug()<< "ERROR:" << inexQuery->lastError().text();
             } else
                 qDebug()<< "NOT FOUND:" << bookPath;
         }
         indexDB.commit();
     }
+    ui->statusBar->showMessage(trUtf8("حجم المكتبة: %1 عدد المجموعات: %2").arg(totalBooksSize).arg(currentGroup));
     QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
     indexDial->show();
@@ -107,25 +122,22 @@ void MainWindow::startSearching()
         openDB();
     try {
         ArabicAnalyzer analyzer;
-
         m_searchQuery = ui->lineQuery->text();
+
+        m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
+        m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
+        m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
+        m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
+        m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
+        m_searchQuery.replace(trUtf8("؟"), "?");
+
         QString queryWord = m_searchQuery;
-
-        if(ui->checkBox->isChecked()) {
-            queryWord = queryWord.trimmed().replace(" ", " AND ");
-        } else {
-            queryWord.replace(QRegExp(trUtf8("ـفق")), "(");
-            queryWord.replace(QRegExp(trUtf8("ـغق")), ")");
-            queryWord.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
-            queryWord.replace(QRegExp(trUtf8("ـو")), "AND");
-            queryWord.replace(QRegExp(trUtf8("ـبدون")), "NOT");
-            queryWord.replace(trUtf8("؟"), "?");
-        }
-
         IndexSearcher *searcher = new IndexSearcher(INDEX_PATH);
 
         // Start building the query
         QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
+        if(ui->checkBox->isChecked())
+            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
         queryPareser->setAllowLeadingWildcard(true);
 
         Query* q = queryPareser->parse(QSTRING_TO_TCHAR(queryWord));
@@ -308,9 +320,9 @@ QString MainWindow::hiText(const QString &text, const QString &strToHi)
 
 QStringList MainWindow::buildRegExp(const QString &str)
 {
-    QStringList strWords;
+    QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"{}\\[\\]]")), QString::SkipEmptyParts);
+/*
     ArabicAnalyzer an;
-
     TokenStream *streams = an.tokenStream(_T("text"),
                                           _CLNEW StringReader(QSTRING_TO_TCHAR(str)));
     Token *token = streams->next();
@@ -318,7 +330,7 @@ QStringList MainWindow::buildRegExp(const QString &str)
         strWords.append(TCHAR_TO_QSTRING(token->termText()));
         token = streams->next();
     }
-
+*/
     QStringList regExpList;
     foreach(QString word, strWords)
     {
