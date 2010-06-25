@@ -62,6 +62,11 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::startIndexing()
 {
+    int const MAX_GROUP_SIZE = 550 * 1024 * 1024;
+    int currentGroup = 1;
+    int currentGroupSize = 0;
+    int bookSize = 0;
+    int totalBooksSize = 0;
     if(!m_dbIsOpen)
         openDB();
     {
@@ -82,19 +87,29 @@ void MainWindow::startIndexing()
             QString bookPath = buildFilePath(m_bookQuery->value(1).toString());
             QFile bookFile(bookPath);
             if(bookFile.exists()){
-                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '')")
+                bookSize = bookFile.size();
+                if(currentGroupSize+bookSize < MAX_GROUP_SIZE)
+                    currentGroupSize += bookSize;
+                else {
+                    currentGroup++;
+                    currentGroupSize = 0;
+                }
+                totalBooksSize += bookSize;
+                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '%7')")
                     .arg(m_bookQuery->value(0).toString())
                     .arg(m_bookQuery->value(1).toString())
                     .arg(bookPath)
                     .arg(m_bookQuery->value(3).toString())
                     .arg(m_bookQuery->value(2).toString())
-                    .arg(bookFile.size())))
+                    .arg(bookSize)
+                    .arg(currentGroup)))
                     qDebug()<< "ERROR:" << inexQuery->lastError().text();
             } else
                 qDebug()<< "NOT FOUND:" << bookPath;
         }
         indexDB.commit();
     }
+    ui->statusBar->showMessage(trUtf8("حجم المكتبة: %1 عدد المجموعات: %2").arg(totalBooksSize).arg(currentGroup));
     QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
     indexDial->show();
