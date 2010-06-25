@@ -26,18 +26,19 @@ public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
-    void nextBook(IndexBookThread *thread);
+    void catIndexed(const QString &indexFolder);
+    void compineIndexs();
 
 protected:
     IndexWriter* m_writer;
-    QSqlDatabase indexDB;
-    QSqlQuery *inexQuery;
+    QStringList m_tempIndexs;
     QSemaphore *m_sem;
     QMutex m_mutex;
     QTime indexingTime;
     int m_threadCount;
     int m_booksCount;
     int m_indexedBooks;
+    int m_catsCount;
     bool m_stopIndexing;
     Ui::IndexingDialg *ui;
 

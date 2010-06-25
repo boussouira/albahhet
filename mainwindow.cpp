@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_results = new Results();
     m_resultCount = 0;
     m_resultParPage = 10;
+    m_groupSize = 550;
     m_dbIsOpen = false;
 
     m_colors.append("#FFFF63");
@@ -26,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
         m_bookPath.append('/');
     m_searchQuery = settings.value("lastQuery").toString();
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
+    m_groupSize = settings.value("groupSize", m_groupSize).toInt();
+    ui->lineBook->setReadOnly(true);
     ui->lineBook->setText(m_bookPath);
     ui->lineQuery->setText(m_searchQuery);
 
@@ -45,6 +48,7 @@ MainWindow::~MainWindow()
     settings.setValue("db", m_bookPath);
     settings.setValue("lastQuery", ui->lineQuery->text());
     settings.setValue("resultPeerPage", m_resultParPage);
+    settings.setValue("groupSize", m_groupSize);
     delete ui;
 }
 
@@ -62,7 +66,7 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::startIndexing()
 {
-    int const MAX_GROUP_SIZE = 550 * 1024 * 1024;
+    int const MAX_GROUP_SIZE = m_groupSize * 1024 * 1024;
     int currentGroup = 1;
     int currentGroupSize = 0;
     int bookSize = 0;
@@ -112,6 +116,7 @@ void MainWindow::startIndexing()
     ui->statusBar->showMessage(trUtf8("حجم المكتبة: %1 عدد المجموعات: %2").arg(totalBooksSize).arg(currentGroup));
     QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
+    indexDial->setModal(true);
     indexDial->show();
 }
 
@@ -479,10 +484,20 @@ QString MainWindow::getIndexSize()
     else if(size >= 1024*1024)
         sizeStr = tr("%1 MB").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = tr("%1 ??").arg(size);
+        sizeStr = tr("%1 GB").arg(size);
 
-    QFileInfo fileInfo(m_bookPath);
-    int bookSize = fileInfo.size();
+    int bookSize = 0;
+    {
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookSize");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        inexQuery->exec("SELECT fileSize FROM books");
+        while(inexQuery->next())
+            bookSize += inexQuery->value(0).toInt();
+    }
+    QSqlDatabase::removeDatabase("bookSize");
 
     sizeStr.append(tr(" (%1%)").arg(((double)size/(double)bookSize)*100.0, 2));
     return sizeStr;
@@ -490,20 +505,28 @@ QString MainWindow::getIndexSize()
 
 QString MainWindow::getBookSize()
 {
-    QString sizeStr;
-    QFileInfo fileInfo(m_bookPath);
-    int size = fileInfo.size();
+
+    int size = 0;
+    {
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookSize");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        inexQuery->exec("SELECT fileSize FROM books");
+        while(inexQuery->next())
+            size += inexQuery->value(0).toInt();
+    }
+    QSqlDatabase::removeDatabase("bookSize");
 
     if(size <= 1024)
-        sizeStr = tr("%1 B").arg(size);
+        return tr("%1 B").arg(size);
     else if(1024 <= size && size <= 1024*1024)
-        sizeStr = tr("%1 KB").arg(size/(1024.0), 4);
+        return tr("%1 KB").arg(size/(1024.0), 4);
     else if(size >= 1024*1024)
-        sizeStr = tr("%1 MB").arg(size/(1024.0*1024.0), 4);
+        return tr("%1 MB").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = tr("%1 ??").arg(size);
-
-    return sizeStr;
+        return tr("%1 GB").arg(size);
 }
 
 void MainWindow::writeLog(int indexingTime)
@@ -617,6 +640,7 @@ void MainWindow::on_pushButton_2_clicked()
 {
     QDialog *settingDialog =  new QDialog(this);
     QVBoxLayout *vLayout= new QVBoxLayout(settingDialog);
+
     QHBoxLayout *hLayout= new QHBoxLayout(settingDialog);
     QLabel *label = new QLabel(trUtf8(":عدد النتائج في كل صفحة"), settingDialog);
     QSpinBox *spinPage = new QSpinBox(settingDialog);
@@ -627,13 +651,27 @@ void MainWindow::on_pushButton_2_clicked()
     spinPage->setValue(m_resultParPage);
     hLayout->addWidget(spinPage);
     hLayout->addWidget(label);
+
+    QHBoxLayout *hLayout2= new QHBoxLayout(settingDialog);
+    QLabel *label2 = new QLabel(trUtf8("حجم كل مجموعة"), settingDialog);
+    QSpinBox *spinPage2 = new QSpinBox(settingDialog);
+
+    spinPage2->setMaximum(1000);
+    spinPage2->setMinimum(1);
+    spinPage2->setSuffix(" MB");
+    spinPage2->setValue(m_groupSize);
+    hLayout2->addWidget(spinPage2);
+    hLayout2->addWidget(label2);
+
     vLayout->addLayout(hLayout);
+    vLayout->addLayout(hLayout2);
     vLayout->addWidget(pushDone);
     settingDialog->setLayout(vLayout);
     settingDialog->show();
 
     connect(pushDone, SIGNAL(clicked()), settingDialog, SLOT(accept()));
     connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
+    connect(spinPage2, SIGNAL(valueChanged(int)), this, SLOT(setGroupSize(int)));
 }
 
 QString MainWindow::buildFilePath(QString bkid)
