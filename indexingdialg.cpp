@@ -1,7 +1,6 @@
 #include "indexthread.h"
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
-
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::IndexingDialg)
@@ -39,12 +38,15 @@ void IndexingDialg::showBooks()
 
         ui->listWidget->clear();
         ui->listWidget->insertItems(0, booksList);
+//        qDebug() << "[1]:" << inexQuery->lastError().text();
     }
     QSqlDatabase::removeDatabase("bookIndexDiaog");
 }
 
 void IndexingDialg::on_pushStartIndexing_clicked()
 {
+    m_catsCount = 0;
+    m_tempIndexs.clear();
     ui->listWidget->clear();
     ui->progressBar->setVisible(true);
     ui->progressBar->setMinimum(0);
@@ -56,7 +58,108 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     ui->groupBox->setVisible(false);
     ui->pushStopIndexing->setVisible(true);
     ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
+/*
+    m_writer = NULL;
+    QDir dir;
+    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    if(!dir.exists(INDEX_PATH))
+        dir.mkdir(INDEX_PATH);
+    if ( IndexReader::indexExists(INDEX_PATH) ){
+        if ( IndexReader::isLocked(INDEX_PATH) ){
+            qDebug() << "Index was locked... unlocking it.";
+            IndexReader::unlock(INDEX_PATH);
+        }
 
+        m_writer = _CLNEW IndexWriter( INDEX_PATH, analyzer, true);
+    }else{
+        m_writer = _CLNEW IndexWriter( INDEX_PATH ,analyzer, true);
+    }
+    m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+*/
+    {
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexDiaog");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+
+        inexQuery->exec("SELECT MAX(cat) FROM books");
+        if(inexQuery->next())
+            m_catsCount = inexQuery->value(0).toInt();
+    }
+    QSqlDatabase::removeDatabase("bookIndexDiaog");
+
+    indexingTime.start();
+    m_threadCount = (ui->spinThreadCount->value() < m_catsCount)
+                    ? ui->spinThreadCount->value() : m_catsCount;
+    for(int i=0; i<m_threadCount;i++){
+        IndexBookThread *book = new IndexBookThread();
+        connect(book, SIGNAL(doneCatIndexing(QString)), this, SLOT(catIndexed(QString)));
+        connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
+        book->setCat(m_catsCount--);
+        book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
+        book->start();
+    }
+}
+
+void IndexingDialg::addBook(const QString &name)
+{
+    ui->progressBar->setValue(++m_indexedBooks);
+    ui->listWidget->insertItem(ui->listWidget->count(), tr("%1 - %2").arg(m_indexedBooks).arg(name));
+    ui->listWidget->scrollToBottom();
+    if(ui->progressBar->maximum() == m_indexedBooks) {
+        ui->progressBar->setMaximum(0);
+        ui->pushStopIndexing->setEnabled(false);
+    }
+}
+
+void IndexingDialg::catIndexed(const QString &indexFolder)
+{
+    m_mutex.lock();
+//    qDebug() << "GOT INDEX:" << indexFolder;
+    m_tempIndexs.append(indexFolder);
+    if(m_catsCount > 0) {
+        IndexBookThread *book = new IndexBookThread();
+        connect(book, SIGNAL(doneCatIndexing(QString)), this, SLOT(catIndexed(QString)));
+        connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
+        book->setCat(m_catsCount--);
+        book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
+        book->start();
+    } else {
+        if(--m_threadCount <= 0)
+            doneIndexing();
+    }
+    m_mutex.unlock();
+}
+
+void IndexingDialg::doneIndexing()
+{
+    compineIndexs();
+    int elpasedMsec = indexingTime.elapsed();
+    int seconds = (int) ((elpasedMsec / 1000) % 60);
+    int minutes = (int) ((elpasedMsec / 1000) / 60);
+
+    ui->pushStopIndexing->setVisible(false);
+    ui->pushClose->setVisible(true);
+    ui->progressBar->setVisible(false);
+
+    QMessageBox::information(this,
+                             trUtf8("تمت الفهرسة بنجاح"),
+                             trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
+                             .arg(m_indexedBooks)
+                             .arg(formatMinutes(minutes))
+                             .arg(formatSecnds(seconds)));
+    /*
+    delete inexQuery;
+    indexDB.close();
+    QSqlDatabase::removeDatabase("bookIndexThread");
+    m_writer->close();
+    _CLDELETE(m_writer);
+    */
+}
+
+void IndexingDialg::compineIndexs()
+{
     m_writer = NULL;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
@@ -74,80 +177,30 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     }
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
-    indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexThread");
-    indexDB.setDatabaseName("book_index.db");
-    if(!indexDB.open())
-        qDebug("Error opning index db");
-    inexQuery = new QSqlQuery(indexDB);
-
-    inexQuery->exec(QString("SELECT shamelaID, bookName, filePath FROM books ORDER BY fileSize %1")
-                    .arg(ui->comboBox->currentIndex() ? "DESC" : "ASC"));
-
     if(ui->checkRamSize->isChecked())
         m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
-    if(ui->checkMaxDoc->isChecked())
-        m_writer->setMaxBufferedDocs(ui->spinMaxDoc->value());
 
-    indexingTime.start();
-    m_threadCount = ui->spinThreadCount->value();
-    for(int i=0; i<m_threadCount;i++){
-        IndexBookThread *book = new IndexBookThread(m_writer);
-        connect(book, SIGNAL(giveNextBook(IndexBookThread*)), this, SLOT(nextBook(IndexBookThread*)));
-        connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
-        book->start();
-    }
-}
-
-void IndexingDialg::addBook(const QString &name)
-{
-    ui->progressBar->setValue(++m_indexedBooks);
-    ui->listWidget->insertItem(ui->listWidget->count(), tr("%1 - %2").arg(m_indexedBooks).arg(name));
-    ui->listWidget->scrollToBottom();
-    if(ui->progressBar->maximum() == m_indexedBooks) {
-        ui->progressBar->setMaximum(0);
-        ui->pushStopIndexing->setEnabled(false);
-    }
-}
-
-void IndexingDialg::nextBook(IndexBookThread *thread)
-{
-    m_mutex.lock();
-    if(inexQuery->next() && !m_stopIndexing) {
-        thread->indexBoook(inexQuery->value(0).toString(),
-                           inexQuery->value(1).toString(),
-                           inexQuery->value(2).toString());
-    } else {
-        thread->stop();
-        if(--m_threadCount <= 0)
-            doneIndexing();
-    }
-    m_mutex.unlock();
-}
-
-void IndexingDialg::doneIndexing()
-{
     if(ui->checkOptimizeIndex->isChecked())
-        m_writer->optimize();
+    m_writer->optimize();
 
-    int elpasedMsec = indexingTime.elapsed();
-    int seconds = (int) ((elpasedMsec / 1000) % 60);
-    int minutes = (int) ((elpasedMsec / 1000) / 60);
+    ValueArray<Directory*> dirs(m_tempIndexs.size());
+    for(int i=0; i<m_tempIndexs.size();i++){
+        FSDirectory *dir = FSDirectory::getDirectory(qPrintable(m_tempIndexs.at(i)));
+        dirs[i] = static_cast<Directory*>(dir);
+    }
 
-    ui->pushStopIndexing->setVisible(false);
-    ui->pushClose->setVisible(true);
-    ui->progressBar->setVisible(false);
-
-    QMessageBox::information(this,
-                             trUtf8("تمت الفهرسة بنجاح"),
-                             trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
-                             .arg(m_indexedBooks)
-                             .arg(formatMinutes(minutes))
-                             .arg(formatSecnds(seconds)));
-    delete inexQuery;
-    indexDB.close();
-    QSqlDatabase::removeDatabase("bookIndexThread");
+    m_writer->addIndexesNoOptimize(dirs);
     m_writer->close();
     _CLDELETE(m_writer);
+    dirs.deleteAll();
+
+    foreach(QString childDir, m_tempIndexs) {
+        QDir indexDir(childDir);
+        foreach(QString file, indexDir.entryList(QDir::NoDotAndDotDot|QDir::Files))
+            indexDir.remove(file);
+        indexDir.cdUp();
+        indexDir.rmdir(childDir);
+    }
 }
 
 void IndexingDialg::indexingError()

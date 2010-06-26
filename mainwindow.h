@@ -48,6 +48,7 @@ public slots:
     QStringList makeVLabels(int start, int end);
     bool openDB();
     void setResultParPage(int count){m_resultParPage = count;}
+    void setGroupSize(int size){m_groupSize = size;}
     QString buildFilePath(QString bkid);
 
 protected:
@@ -65,6 +66,7 @@ protected:
     Results *m_results;
     int m_resultCount;
     int m_resultParPage;
+    int m_groupSize;
     bool m_dbIsOpen;
     bool m_haveMainTable;
     Ui::MainWindow *ui;
