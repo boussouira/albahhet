@@ -164,8 +164,8 @@ void MainWindow::startSearching()
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
                                        .arg(m_resultCount));
-//        _CLDELETE(hits);
-//        _CLDELETE(q);
+//        _CLLDELETE(hits);
+//        _CLLDELETE(q);
 //        searcher->close();
     }
 
@@ -199,10 +199,10 @@ void MainWindow::showStatistic()
         txt.append(tr("Term count: %1<br/>").arg(nterms));
         txt.append(tr("Index size: %1<br/>").arg(getIndexSize()));
         txt.append(tr("Book size: %1").arg(getBookSize()));
-        _CLDELETE(te);
+        _CLLDELETE(te);
 
         r->close();
-        _CLDELETE(r);
+        _CLLDELETE(r);
         QMessageBox::information(0, "Statistics", txt);
     }
     catch(CLuceneError &err) {
@@ -555,10 +555,10 @@ void MainWindow::writeLog(int indexingTime)
         txt.append(tr("[+] Index size: %1\n").arg(getIndexSize()));
         txt.append(tr("[+] Book size: %1\n").arg(getBookSize()));
         txt.append("===========================================\n\n");
-        _CLDELETE(te);
+        _CLLDELETE(te);
 
         r->close();
-        _CLDELETE(r);
+        _CLLDELETE(r);
 
         QFile logFile("statistic.txt");
         if(logFile.open(QIODevice::Append)) {

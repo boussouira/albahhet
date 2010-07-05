@@ -5,15 +5,18 @@ IndexBookThread::IndexBookThread()
     m_stop = false;
 }
 
+IndexBookThread::~IndexBookThread()
+{
+    qDebug("DESTROCTE ME!");
+}
+
 void IndexBookThread::indexCat()
 {
-    m_writer = NULL;
+    IndexWriter *writer= NULL;
     QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    ArabicAnalyzer an;// = new ArabicAnalyzer();
     QString m_indexPath = randFolderName(2, "tmp_");
-//    const char *indexPath = qPrintable(m_indexPath);
-//    qDebug() << "m_indexPath:" << indexPath;
-//    qDebug() << "QPATH:" << m_indexPath;
+
     if(!dir.exists(m_indexPath))
         dir.mkdir(m_indexPath);
     if ( IndexReader::indexExists(qPrintable(m_indexPath)) ){
@@ -22,13 +25,14 @@ void IndexBookThread::indexCat()
             IndexReader::unlock(qPrintable(m_indexPath));
         }
 
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexPath), analyzer, true);
+        writer = _CLNEW IndexWriter( qPrintable(m_indexPath), &an, true);
     }else{
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexPath), analyzer, true);
+        writer = _CLNEW IndexWriter( qPrintable(m_indexPath), &an, true);
     }
-    m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+    writer->setMaxFieldLength(0x7FFFFFFFL);
+    writer->setUseCompoundFile(false);
     if(m_ramFlushSize)
-        m_writer->setRAMBufferSizeMB(m_ramFlushSize);
+        writer->setRAMBufferSizeMB(m_ramFlushSize);
     {
         QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", m_indexPath);
         indexDB.setDatabaseName("book_index.db");
@@ -43,27 +47,24 @@ void IndexBookThread::indexCat()
         while(inexQuery->next() && !m_stop)
             indexBoook(inexQuery->value(0).toString(),
                        inexQuery->value(1).toString(),
-                       inexQuery->value(2).toString());
+                       inexQuery->value(2).toString(),
+                       writer);
     }
     QSqlDatabase::removeDatabase(m_indexPath);
 
+    writer->setUseCompoundFile(true);
     if(m_optimizeIndex)
-        m_writer->optimize();
-    m_writer->close();
-    _CLDELETE(m_writer);
+        writer->optimize();
+    writer->close();
+    _CLLDELETE(writer);
+
     emit doneCatIndexing(m_indexPath);
-    /*
-    try {
-        indexBoook();
-    } catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing",
-                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
-    }*/
 }
 
-void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath)
+void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath,
+                                 IndexWriter *pWriter)
 {
-    try {
+    {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC",
                                                           QString("shamelaIndexBook_%1").arg(bookID));
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
@@ -76,39 +77,42 @@ void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName,
         QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
 
         m_bookQuery->exec("SELECT id, nass FROM book ORDER BY id ");
+        Document doc;
         while(m_bookQuery->next())
         {
-            m_writer->addDocument( FileDocument(m_bookQuery->value(0).toString(),
-                                                bookID,
-                                                m_bookQuery->value(1).toString()) );
+            doc.clear();
+            FileDocument(m_bookQuery->value(0).toString(),
+                         bookID,
+                         m_bookQuery->value(1).toString(),
+                         &doc);
+            pWriter->addDocument( &doc );
         }
-    } catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing",
-                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
     }
 
     QSqlDatabase::removeDatabase(QString("shamelaIndexBook_%1").arg(bookID));
     emit bookIsIndexed(bookName);
 }
 
-Document* IndexBookThread::FileDocument(const QString &id, const QString &bookid, const QString &text)
+void IndexBookThread::FileDocument(const QString &id, const QString &bookid, const QString &text,
+                                        Document *doc)
 {
-    // make a new, empty document
-    Document* doc = _CLNEW Document();
-
     doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,
                             Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
     doc->add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookid) ,
                             Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
     doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(text),
                             Field::STORE_NO | Field::INDEX_TOKENIZED) );
-
-    return doc;
 }
 
 void IndexBookThread::run()
 {
-    indexCat();
+    try {
+        indexCat();
+    } catch(CLuceneError &err) {
+        QMessageBox::warning(0, "Error when Indexing",
+                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
+    }
+    finished();
 }
 
 void IndexBookThread::stop()

@@ -30,7 +30,6 @@ public slots:
     void compineIndexs();
 
 protected:
-    IndexWriter* m_writer;
     QStringList m_tempIndexs;
     QSemaphore *m_sem;
     QMutex m_mutex;

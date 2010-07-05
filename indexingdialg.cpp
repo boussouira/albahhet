@@ -154,15 +154,15 @@ void IndexingDialg::doneIndexing()
     indexDB.close();
     QSqlDatabase::removeDatabase("bookIndexThread");
     m_writer->close();
-    _CLDELETE(m_writer);
+    _CLLDELETE(m_writer);
     */
 }
 
 void IndexingDialg::compineIndexs()
 {
-    m_writer = NULL;
+    IndexWriter* writer = NULL;
     QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    ArabicAnalyzer an;
     if(!dir.exists(INDEX_PATH))
         dir.mkdir(INDEX_PATH);
     if ( IndexReader::indexExists(INDEX_PATH) ){
@@ -171,27 +171,30 @@ void IndexingDialg::compineIndexs()
             IndexReader::unlock(INDEX_PATH);
         }
 
-        m_writer = _CLNEW IndexWriter( INDEX_PATH, analyzer, true);
+        writer = _CLNEW IndexWriter( INDEX_PATH, &an, true);
     }else{
-        m_writer = _CLNEW IndexWriter( INDEX_PATH ,analyzer, true);
+        writer = _CLNEW IndexWriter( INDEX_PATH ,&an, true);
     }
-    m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+    writer->setMaxFieldLength(0x7FFFFFFFL);
+    writer->setUseCompoundFile(false);
 
     if(ui->checkRamSize->isChecked())
-        m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
-
-    if(ui->checkOptimizeIndex->isChecked())
-    m_writer->optimize();
+        writer->setRAMBufferSizeMB(ui->spinRamSize->value());
 
     ValueArray<Directory*> dirs(m_tempIndexs.size());
     for(int i=0; i<m_tempIndexs.size();i++){
-        FSDirectory *dir = FSDirectory::getDirectory(qPrintable(m_tempIndexs.at(i)));
-        dirs[i] = static_cast<Directory*>(dir);
+        Directory *dir = FSDirectory::getDirectory(qPrintable(m_tempIndexs.at(i)));
+        dirs[i] = dir;
     }
 
-    m_writer->addIndexesNoOptimize(dirs);
-    m_writer->close();
-    _CLDELETE(m_writer);
+    writer->addIndexesNoOptimize(dirs);
+
+    writer->setUseCompoundFile(true);
+    if(ui->checkOptimizeIndex->isChecked())
+        writer->optimize();
+
+    writer->close();
+    _CLLDELETE(writer);
     dirs.deleteAll();
 
     foreach(QString childDir, m_tempIndexs) {

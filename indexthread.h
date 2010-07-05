@@ -10,9 +10,11 @@ class IndexBookThread : public QThread
     Q_OBJECT
 public:
     IndexBookThread();
+    ~IndexBookThread();
     void indexCat();
-    Document* FileDocument(const QString &id, const QString &bookid, const QString &text);
-    void indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath);
+    void FileDocument(const QString &id, const QString &bookid, const QString &text, Document *doc);
+    void indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath,
+                    IndexWriter *writer);
     void run();
     void stop();
     QString randFolderName(int len, const QString &prefix=0);
@@ -24,7 +26,6 @@ signals:
     void doneCatIndexing(const QString &indexFolder);
 
 protected:
-    IndexWriter *m_writer;
     QSqlDatabase indexDB;
     QSqlQuery *inexQuery;
     int m_currentCat;
