@@ -86,22 +86,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushRCount">
-          <property name="maximumSize">
-           <size>
-            <width>85</width>
-            <height>27</height>
-           </size>
-          </property>
+         <widget class="QPushButton" name="pushButton_2">
           <property name="text">
-           <string>نتائج البحث</string>
+           <string>اعدادات</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="pushButton_3">
           <property name="text">
-           <string>اعدادات</string>
+           <string>حذف الفهارس</string>
           </property>
          </widget>
         </item>

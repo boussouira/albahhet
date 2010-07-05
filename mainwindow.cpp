@@ -37,7 +37,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
-    connect(ui->pushRCount, SIGNAL(clicked()), this, SLOT(resultsCount()));
     connect(ui->webView, SIGNAL(linkClicked(QUrl)), this, SLOT(resultLinkClicked(QUrl)));
 }
 
@@ -677,4 +676,20 @@ void MainWindow::on_pushButton_2_clicked()
 QString MainWindow::buildFilePath(QString bkid)
 {
     return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    QDir dir;
+    foreach(QString childDir, dir.entryList(QDir::NoDotAndDotDot|QDir::Dirs)) {
+        if(childDir.contains(QRegExp("(index_book|tmp_[a-f0-9]*)"))) {
+            QDir indexDir(childDir);
+            foreach(QString file, indexDir.entryList(QDir::NoDotAndDotDot|QDir::Files))
+                indexDir.remove(file);
+            indexDir.cdUp();
+            indexDir.rmdir(childDir);
+        }
+    }
+    statusBar()->showMessage(trUtf8("تم حذف الفهارس"),
+                             3000);
 }
