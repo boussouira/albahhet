@@ -14,7 +14,7 @@ void IndexBookThread::indexCat()
 {
     IndexWriter *writer= NULL;
     QDir dir;
-    ArabicAnalyzer an;// = new ArabicAnalyzer();
+    ArabicAnalyzer an;
     QString m_indexPath = randFolderName(2, "tmp_");
 
     if(!dir.exists(m_indexPath))

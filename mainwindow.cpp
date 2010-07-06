@@ -325,16 +325,6 @@ QString MainWindow::hiText(const QString &text, const QString &strToHi)
 QStringList MainWindow::buildRegExp(const QString &str)
 {
     QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"{}\\[\\]]")), QString::SkipEmptyParts);
-/*
-    ArabicAnalyzer an;
-    TokenStream *streams = an.tokenStream(_T("text"),
-                                          _CLNEW StringReader(QSTRING_TO_TCHAR(str)));
-    Token *token = streams->next();
-    while(token) {
-        strWords.append(TCHAR_TO_QSTRING(token->termText()));
-        token = streams->next();
-    }
-*/
     QStringList regExpList;
     foreach(QString word, strWords)
     {

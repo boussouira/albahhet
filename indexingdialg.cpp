@@ -58,24 +58,7 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     ui->groupBox->setVisible(false);
     ui->pushStopIndexing->setVisible(true);
     ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
-/*
-    m_writer = NULL;
-    QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(INDEX_PATH))
-        dir.mkdir(INDEX_PATH);
-    if ( IndexReader::indexExists(INDEX_PATH) ){
-        if ( IndexReader::isLocked(INDEX_PATH) ){
-            qDebug() << "Index was locked... unlocking it.";
-            IndexReader::unlock(INDEX_PATH);
-        }
 
-        m_writer = _CLNEW IndexWriter( INDEX_PATH, analyzer, true);
-    }else{
-        m_writer = _CLNEW IndexWriter( INDEX_PATH ,analyzer, true);
-    }
-    m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-*/
     {
         QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexDiaog");
         indexDB.setDatabaseName("book_index.db");
@@ -117,7 +100,6 @@ void IndexingDialg::addBook(const QString &name)
 void IndexingDialg::catIndexed(const QString &indexFolder, IndexBookThread *thread)
 {
     m_mutex.lock();
-//    qDebug() << "GOT INDEX:" << indexFolder;
     m_tempIndexs.append(indexFolder);
     if(m_catsCount > 0) {
         IndexBookThread *book = new IndexBookThread();
@@ -154,13 +136,6 @@ void IndexingDialg::doneIndexing()
                              .arg(m_indexedBooks)
                              .arg(formatMinutes(minutes))
                              .arg(formatSecnds(seconds)));
-    /*
-    delete inexQuery;
-    indexDB.close();
-    QSqlDatabase::removeDatabase("bookIndexThread");
-    m_writer->close();
-    _CLLDELETE(m_writer);
-    */
 }
 
 void IndexingDialg::compineIndexs()
