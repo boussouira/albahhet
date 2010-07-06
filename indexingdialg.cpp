@@ -94,7 +94,8 @@ void IndexingDialg::on_pushStartIndexing_clicked()
                     ? ui->spinThreadCount->value() : m_catsCount;
     for(int i=0; i<m_threadCount;i++){
         IndexBookThread *book = new IndexBookThread();
-        connect(book, SIGNAL(doneCatIndexing(QString)), this, SLOT(catIndexed(QString)));
+        connect(book, SIGNAL(doneCatIndexing(QString,IndexBookThread*)),
+                this, SLOT(catIndexed(QString,IndexBookThread*)));
         connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
         book->setCat(m_catsCount--);
         book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
@@ -113,14 +114,15 @@ void IndexingDialg::addBook(const QString &name)
     }
 }
 
-void IndexingDialg::catIndexed(const QString &indexFolder)
+void IndexingDialg::catIndexed(const QString &indexFolder, IndexBookThread *thread)
 {
     m_mutex.lock();
 //    qDebug() << "GOT INDEX:" << indexFolder;
     m_tempIndexs.append(indexFolder);
     if(m_catsCount > 0) {
         IndexBookThread *book = new IndexBookThread();
-        connect(book, SIGNAL(doneCatIndexing(QString)), this, SLOT(catIndexed(QString)));
+        connect(book, SIGNAL(doneCatIndexing(QString,IndexBookThread*)),
+                this, SLOT(catIndexed(QString,IndexBookThread*)));
         connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
         book->setCat(m_catsCount--);
         book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
@@ -129,6 +131,9 @@ void IndexingDialg::catIndexed(const QString &indexFolder)
         if(--m_threadCount <= 0)
             doneIndexing();
     }
+//    thread->terminate();
+    thread->wait();
+    delete thread;
     m_mutex.unlock();
 }
 

@@ -26,7 +26,7 @@ public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
-    void catIndexed(const QString &indexFolder);
+    void catIndexed(const QString &indexFolder, IndexBookThread *thread);
     void compineIndexs();
 
 protected:

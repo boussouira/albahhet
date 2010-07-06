@@ -23,7 +23,7 @@ public:
 
 signals:
     void bookIsIndexed(const QString &bookName);
-    void doneCatIndexing(const QString &indexFolder);
+    void doneCatIndexing(const QString &indexFolder, IndexBookThread *thread);
 
 protected:
     QSqlDatabase indexDB;

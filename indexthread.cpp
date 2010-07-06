@@ -49,6 +49,8 @@ void IndexBookThread::indexCat()
                        inexQuery->value(1).toString(),
                        inexQuery->value(2).toString(),
                        writer);
+        delete inexQuery;
+        indexDB.close();
     }
     QSqlDatabase::removeDatabase(m_indexPath);
 
@@ -58,7 +60,7 @@ void IndexBookThread::indexCat()
     writer->close();
     _CLLDELETE(writer);
 
-    emit doneCatIndexing(m_indexPath);
+    emit doneCatIndexing(m_indexPath, this);
 }
 
 void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath,
@@ -87,6 +89,8 @@ void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName,
                          &doc);
             pWriter->addDocument( &doc );
         }
+        delete m_bookQuery;
+        m_bookDB.close();
     }
 
     QSqlDatabase::removeDatabase(QString("shamelaIndexBook_%1").arg(bookID));
@@ -108,6 +112,7 @@ void IndexBookThread::run()
 {
     try {
         indexCat();
+        quit();
     } catch(CLuceneError &err) {
         QMessageBox::warning(0, "Error when Indexing",
                              tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
