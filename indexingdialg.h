@@ -28,6 +28,8 @@ public slots:
     void indexingError();
     void catIndexed(const QString &indexFolder, IndexBookThread *thread);
     void compineIndexs();
+signals:
+    void stopIndexing();
 
 protected:
     QStringList m_tempIndexs;

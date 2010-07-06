@@ -68,10 +68,9 @@ void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName,
 {
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC",
-                                                          QString("shamelaIndexBook_%1").arg(bookID));
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                          .arg(bookPath);
-        m_bookDB.setDatabaseName(mdbpath);
+                                                          bookID);
+        m_bookDB.setDatabaseName(QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                                 .arg(bookPath));
 
         if (!m_bookDB.open()) {
             qDebug() << "Cannot open" << bookPath << "database.";
@@ -83,29 +82,27 @@ void IndexBookThread::indexBoook(const QString &bookID, const QString &bookName,
         while(m_bookQuery->next())
         {
             doc.clear();
-            FileDocument(m_bookQuery->value(0).toString(),
-                         bookID,
-                         m_bookQuery->value(1).toString(),
-                         &doc);
+
+            doc.add( *_CLNEW Field(_T("id"),
+                                   QSTRING_TO_TCHAR(m_bookQuery->value(0).toString()),
+                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+
+            doc.add( *_CLNEW Field(_T("bookid"),
+                                   QSTRING_TO_TCHAR(bookID),
+                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+
+            doc.add( *_CLNEW Field(_T("text"),
+                                   QSTRING_TO_TCHAR(m_bookQuery->value(1).toString()),
+                                   Field::STORE_NO | Field::INDEX_TOKENIZED) );
+
             pWriter->addDocument( &doc );
         }
         delete m_bookQuery;
         m_bookDB.close();
     }
 
-    QSqlDatabase::removeDatabase(QString("shamelaIndexBook_%1").arg(bookID));
+    QSqlDatabase::removeDatabase(bookID);
     emit bookIsIndexed(bookName);
-}
-
-void IndexBookThread::FileDocument(const QString &id, const QString &bookid, const QString &text,
-                                        Document *doc)
-{
-    doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,
-                            Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookid) ,
-                            Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(text),
-                            Field::STORE_NO | Field::INDEX_TOKENIZED) );
 }
 
 void IndexBookThread::run()

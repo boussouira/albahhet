@@ -39,6 +39,9 @@ void IndexingDialg::showBooks()
         ui->listWidget->clear();
         ui->listWidget->insertItems(0, booksList);
 //        qDebug() << "[1]:" << inexQuery->lastError().text();
+
+        delete inexQuery;
+        indexDB.close();
     }
     QSqlDatabase::removeDatabase("bookIndexDiaog");
 }
@@ -69,6 +72,9 @@ void IndexingDialg::on_pushStartIndexing_clicked()
         inexQuery->exec("SELECT MAX(cat) FROM books");
         if(inexQuery->next())
             m_catsCount = inexQuery->value(0).toInt();
+
+        delete inexQuery;
+        indexDB.close();
     }
     QSqlDatabase::removeDatabase("bookIndexDiaog");
 
@@ -80,6 +86,7 @@ void IndexingDialg::on_pushStartIndexing_clicked()
         connect(book, SIGNAL(doneCatIndexing(QString,IndexBookThread*)),
                 this, SLOT(catIndexed(QString,IndexBookThread*)));
         connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
+        connect(this, SIGNAL(stopIndexing()), book, SLOT(stop()));
         book->setCat(m_catsCount--);
         book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
         book->start();
@@ -106,6 +113,7 @@ void IndexingDialg::catIndexed(const QString &indexFolder, IndexBookThread *thre
         connect(book, SIGNAL(doneCatIndexing(QString,IndexBookThread*)),
                 this, SLOT(catIndexed(QString,IndexBookThread*)));
         connect(book, SIGNAL(bookIsIndexed(QString)), this, SLOT(addBook(QString)));
+        connect(this, SIGNAL(stopIndexing()), book, SLOT(stop()));
         book->setCat(m_catsCount--);
         book->setOptions(ui->spinRamSize->value(), ui->checkOptChildIndexes->isChecked());
         book->start();
@@ -230,6 +238,7 @@ void IndexingDialg::on_pushStopIndexing_clicked()
                                     QMessageBox::Yes|QMessageBox::No);
     if(rep==QMessageBox::Yes){
         m_stopIndexing = true;
+        emit stopIndexing();
         ui->pushStopIndexing->setEnabled(false);
         ui->progressBar->setMaximum(0);
     }
