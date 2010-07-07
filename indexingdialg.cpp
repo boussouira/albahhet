@@ -108,7 +108,7 @@ void IndexingDialg::catIndexed(const QString &indexFolder, IndexBookThread *thre
 {
     m_mutex.lock();
     m_tempIndexs.append(indexFolder);
-    if(m_catsCount > 0) {
+    if(m_catsCount > 0 && !m_stopIndexing) {
         IndexBookThread *book = new IndexBookThread();
         connect(book, SIGNAL(doneCatIndexing(QString,IndexBookThread*)),
                 this, SLOT(catIndexed(QString,IndexBookThread*)));
