@@ -1,4 +1,5 @@
 #include "indexthread.h"
+#include <exception>
 
 IndexBookThread::IndexBookThread()
 {
@@ -111,10 +112,15 @@ void IndexBookThread::run()
         indexCat();
         quit();
     } catch(CLuceneError &err) {
-        QMessageBox::warning(0, "Error when Indexing",
-                             tr("Error code: %1\n%2").arg(err.number()).arg(err.what()));
+        QMessageBox::critical(0, "Error when Indexing", tr("Error code: %1\n%2")
+                             .arg(err.number()).arg(err.what()));
+    } catch(exception &e) {
+        QMessageBox::critical(0, "Error when Indexing", tr("Error: %1")
+                             .arg(e.what()));
+    } catch(...) {
+        QMessageBox::critical(0, "Error when Indexing", tr("Unknow error\nFile: %1\nLine: %2")
+                             .arg(__FILE__).arg(__LINE__));
     }
-    finished();
 }
 
 void IndexBookThread::stop()
