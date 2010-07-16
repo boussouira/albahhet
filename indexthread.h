@@ -16,7 +16,6 @@ public:
 
 protected:
     void indexBook(IndexWriter *writer, const QString &bookID, const QString &bookPath);
-    Document* FileDocument(const QString &id, const QString &bookid, const QString &text);
     void startIndexing();
 
 signals:

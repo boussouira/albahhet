@@ -64,31 +64,35 @@ void MainWindow::startIndexing()
 {
     if(!m_dbIsOpen)
         openDB();
+    {
+        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
+        indexDB.setDatabaseName("book_index.db");
+        if(!indexDB.open())
+            qDebug("Error opning index db");
+        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
+                        "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
+                        "fileSize INTEGER, cat INTEGER)");
+        inexQuery->exec("DELETE FROM books");
 
-    QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
-    indexDB.setDatabaseName("book_index.db");
-    if(!indexDB.open())
-        qDebug("Error opning index db");
-    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-    inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
-                    "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
-                    "fileSize INTEGER, cat INTEGER)");
-    inexQuery->exec("DELETE FROM books");
 
+        indexDB.transaction();
+        m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
+        while(m_bookQuery->next()) {
+            if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
+                .arg(m_bookQuery->value(0).toString())
+                .arg(m_bookQuery->value(1).toString())
+                .arg(buildFilePath(m_bookQuery->value(1).toString()))
+                .arg(m_bookQuery->value(3).toString())
+                .arg(m_bookQuery->value(2).toString())))
+                qDebug()<< "ERROR:" << inexQuery->lastError().text();
+        }
+        indexDB.commit();
 
-    indexDB.transaction();
-    m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
-    while(m_bookQuery->next()) {
-        if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
-            .arg(m_bookQuery->value(0).toString())
-            .arg(m_bookQuery->value(1).toString())
-            .arg(buildFilePath(m_bookQuery->value(1).toString()))
-            .arg(m_bookQuery->value(3).toString())
-            .arg(m_bookQuery->value(2).toString())))
-            qDebug()<< "ERROR:" << inexQuery->lastError().text();
+        delete inexQuery;
+        indexDB.close();
     }
-    indexDB.commit();
-
+    QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
     indexDial->show();
 }

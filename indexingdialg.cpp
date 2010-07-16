@@ -20,6 +20,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 
 IndexingDialg::~IndexingDialg()
 {
+    delete m_indexing;
     delete ui;
 }
 

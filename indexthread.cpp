@@ -8,6 +8,7 @@ IndexingThread::IndexingThread()
 void IndexingThread::run()
 {
     startIndexing();
+    QSqlDatabase::removeDatabase("bookIndexThread");
 }
 
 void IndexingThread::startIndexing()
@@ -28,29 +29,24 @@ void IndexingThread::startIndexing()
         }else{
             writer = _CLNEW IndexWriter( INDEX_PATH ,&analyzer, true);
         }
-		writer->setInfoStream(&std::cout);
         writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
         QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndexThread");
         indexDB.setDatabaseName("book_index.db");
-        if(!indexDB.open())
-            qDebug("Error opning index db");
+        if(!indexDB.open()){
+            qDebug("Error opening index db");
+            return;
+        }
         QSqlQuery *inexQuery = new QSqlQuery(indexDB);
 
         inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
 
         if(m_ramSize)
             writer->setRAMBufferSizeMB(m_ramSize);
-        if(m_maxDoc)
-            writer->setMaxBufferedDocs(m_maxDoc);
-        qDebug() << "AUTO FLUSH:" << writer->DISABLE_AUTO_FLUSH;
-        qDebug() << "MAX DOC:" << writer->getMaxMergeDocs();
-        qDebug() << "RAM SIZE:" << writer->getRAMBufferSizeMB();
+        //if(m_maxDoc)
+        //    writer->setMaxBufferedDocs(m_maxDoc);
 
-        while(inexQuery->next()) {
-            if(m_stopIndexing)
-                break;
-
+        while(inexQuery->next() && !m_stopIndexing) {
             indexBook(writer, inexQuery->value(0).toString(), inexQuery->value(2).toString());
             emit fileIndexed(inexQuery->value(1).toString());
         }
@@ -59,7 +55,10 @@ void IndexingThread::startIndexing()
             writer->optimize();
 
         writer->close();
-        _CLDELETE(writer);
+        _CLLDELETE(writer);
+
+        delete inexQuery;
+        indexDB.close();
     }
     catch(CLuceneError &err) {
         QMessageBox::warning(0, "Error when Indexing",
@@ -67,41 +66,41 @@ void IndexingThread::startIndexing()
         emit indexingError();
         terminate();
     }
+    QSqlDatabase::removeDatabase("bookIndexThread");
 }
 
 void IndexingThread::indexBook(IndexWriter *writer,const QString &bookID, const QString &bookPath)
 {
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaIndexBook");
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(bookPath);
-        m_bookDB.setDatabaseName(mdbpath);
+        m_bookDB.setDatabaseName(QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                                 .arg(bookPath));
 
         if (!m_bookDB.open()) {
             qDebug() << "Cannot open MDB database.";
+            return;
         }
         QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
 
         m_bookQuery->exec("SELECT id, nass FROM book ORDER BY id ");
+        Document doc;
         while(m_bookQuery->next())
         {
-            writer->addDocument( FileDocument(m_bookQuery->value(0).toString(),
-                                              bookID,
-                                              m_bookQuery->value(1).toString()) );
+            doc.clear();
+            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(m_bookQuery->value(0).toString()),
+                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+            doc.add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookID),
+                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(m_bookQuery->value(1).toString()),
+                                   Field::STORE_NO | Field::INDEX_TOKENIZED) );
+
+            writer->addDocument(&doc);
         }
+
+        delete m_bookQuery;
+        m_bookDB.close();
     }
     QSqlDatabase::removeDatabase("shamelaIndexBook");
-}
-
-Document* IndexingThread::FileDocument(const QString &id, const QString &bookid, const QString &text)
-{
-    // make a new, empty document
-    Document* doc = _CLNEW Document();
-
-    doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookid) ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(text), Field::STORE_NO | Field::INDEX_TOKENIZED) );
-
-    return doc;
 }
 
 void IndexingThread::setOptions(bool optimizeIndex, int ramSize, int maxDoc)
