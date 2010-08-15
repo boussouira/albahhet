@@ -37,7 +37,7 @@ public:
     ArabicAnalyzer();
     virtual ~ArabicAnalyzer();
     TokenStream* tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
-//    TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
+    TokenStream* reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader);
 };
 
 class ArabicTokenizer: public CharTokenizer {

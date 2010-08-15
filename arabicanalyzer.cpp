@@ -49,12 +49,12 @@ TokenStream* ArabicAnalyzer::tokenStream(const TCHAR* /*fieldName*/, Reader* rea
 
     ret = _CLNEW ArabicFilter( _CLNEW ArabicTokenizer(reader), true );
 
-    ret = _CLNEW ::standard::StandardFilter(ret,true);
-    ret = _CLNEW LowerCaseFilter(ret,true);
+    /*ret = _CLNEW ::standard::StandardFilter(ret,true);
+    ret = _CLNEW LowerCaseFilter(ret,true);*/
     return ret;
 
 }
-/*
+
 TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
 {
         Tokenizer* tokenizer = static_cast<Tokenizer*>(getPreviousTokenStream());
@@ -65,7 +65,7 @@ TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(u
                 tokenizer->reset(reader);
         return tokenizer;
 }
-*/
+
 ArabicFilter::ArabicFilter(TokenStream* input, bool deleteTs):
         TokenFilter(input,deleteTs)
 {
