@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 
+    ui->lineQuery->setLayoutDirection(Qt::LeftToRight);
+    ui->lineQuery->setLayoutDirection(Qt::RightToLeft);
+
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));

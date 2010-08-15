@@ -2,8 +2,8 @@
 #define INDEXTHREAD_H
 
 #include <QThread>
-#include "arabicanalyzer.h"
 #include "common.h"
+#include "arabicanalyzer.h"
 
 class IndexingThread : public QThread
 {

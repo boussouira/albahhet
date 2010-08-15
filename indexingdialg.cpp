@@ -31,12 +31,12 @@ void IndexingDialg::showBooks()
     indexDB.setDatabaseName("book_index.db");
     if(!indexDB.open())
         qDebug("Error opning index db");
-    QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+    QSqlQuery inexQuery(indexDB);
     QStringList booksList;
 
-    inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
-    while(inexQuery->next()) {
-        booksList.append(inexQuery->value(1).toString());
+    inexQuery.exec("SELECT shamelaID, bookName, filePath FROM books");
+    while(inexQuery.next()) {
+        booksList.append(inexQuery.value(1).toString());
         m_booksCount++;
     }
     ui->listWidget->insertItems(0, booksList);

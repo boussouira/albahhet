@@ -37,18 +37,18 @@ void IndexingThread::startIndexing()
             qDebug("Error opening index db");
             return;
         }
-        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        QSqlQuery inexQuery(indexDB);
 
-        inexQuery->exec("SELECT shamelaID, bookName, filePath FROM books");
+        inexQuery.exec("SELECT shamelaID, bookName, filePath FROM books");
 
         if(m_ramSize)
             writer->setRAMBufferSizeMB(m_ramSize);
         //if(m_maxDoc)
         //    writer->setMaxBufferedDocs(m_maxDoc);
 
-        while(inexQuery->next() && !m_stopIndexing) {
-            indexBook(writer, inexQuery->value(0).toString(), inexQuery->value(2).toString());
-            emit fileIndexed(inexQuery->value(1).toString());
+        while(inexQuery.next() && !m_stopIndexing) {
+            indexBook(writer, inexQuery.value(0).toString(), inexQuery.value(2).toString());
+            emit fileIndexed(inexQuery.value(1).toString());
         }
 
         if(m_optimizeIndex)
@@ -57,7 +57,6 @@ void IndexingThread::startIndexing()
         writer->close();
         _CLLDELETE(writer);
 
-        delete inexQuery;
         indexDB.close();
     }
     catch(CLuceneError &err) {
@@ -80,24 +79,23 @@ void IndexingThread::indexBook(IndexWriter *writer,const QString &bookID, const 
             qDebug() << "Cannot open MDB database.";
             return;
         }
-        QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
+        QSqlQuery m_bookQuery(m_bookDB);
 
-        m_bookQuery->exec("SELECT id, nass FROM book ORDER BY id ");
+        m_bookQuery.exec("SELECT id, nass FROM book ORDER BY id ");
         Document doc;
-        while(m_bookQuery->next())
+        while(m_bookQuery.next())
         {
             doc.clear();
-            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(m_bookQuery->value(0).toString()),
+            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(m_bookQuery.value(0).toString()),
                                    Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
             doc.add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookID),
                                    Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(m_bookQuery->value(1).toString()),
+            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(m_bookQuery.value(1).toString()),
                                    Field::STORE_NO | Field::INDEX_TOKENIZED) );
 
             writer->addDocument(&doc);
         }
 
-        delete m_bookQuery;
         m_bookDB.close();
     }
     QSqlDatabase::removeDatabase("shamelaIndexBook");
