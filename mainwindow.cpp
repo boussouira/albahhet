@@ -34,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineQuery->setLayoutDirection(Qt::LeftToRight);
     ui->lineQuery->setLayoutDirection(Qt::RightToLeft);
 
+    ui->pushStatstic->hide();
+
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
@@ -197,29 +199,6 @@ void MainWindow::showStatistic()
 
 }
 
-void MainWindow::indexDocs(IndexWriter* writer)
-{
-    m_bookQuery->exec(QString("SELECT id, nass FROM %1 ORDER BY id ").arg(m_bookTableName));
-    while(m_bookQuery->next())
-    {
-        Document* doc = FileDocument(m_bookQuery->value(0).toString(),
-                                     m_bookQuery->value(1).toString());
-        writer->addDocument( doc );
-        _CLDELETE(doc);
-    }
-}
-
-Document* MainWindow::FileDocument(const QString &id, const QString &ayaText)
-{
-    // make a new, empty document
-    Document* doc = _CLNEW Document();
-
-    doc->add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(id) ,Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(ayaText), Field::STORE_NO | Field::INDEX_TOKENIZED) );
-
-    return doc;
-}
-
 QString MainWindow::cleanString(QString str)
 {
     str.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
@@ -255,25 +234,25 @@ void MainWindow::displayResults(/*result &pResult*/)
             if (!m_bookDB.open()) {
                 qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
             }
-            QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
+            QSqlQuery m_bookQuery(m_bookDB);
 
             entryID = m_results->idAt(i);
-            m_bookQuery->exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
+            m_bookQuery.exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
                               .arg(entryID));
-            if(m_bookQuery->first()){
-                resultString.append(trUtf8("<div style=\"margin: 0px; padding: 4px; border-bottom: 1px solid black; background-color: %1 ;\">"
-                                           "<h3 style=\"margin: 0px 0px 5px; font-size: 18px; color: rgb(0, 68, 255);\">%2</h3>"
-                                           "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
-                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span style=\"margin-left: 7px; color: green; font-weight: bold;\">%5</span>"
+            if(m_bookQuery.first()){
+                resultString.append(trUtf8("<div class=\"result\" class=\"%1\">"
+                                           "<h3>%2</h3>"
+                                           "<a href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
+                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
-                                    .arg(whiteBG ? "#FFFFFF" : "#EFEFEF") //BG color
+                                    .arg(whiteBG ? "whiteBG" : "grayBG") //BG color
                                     .arg(getTitleId(entryID)) //BAB
                                     .arg(entryID) // entry id
-                                    .arg(hiText(abbreviate(m_bookQuery->value(0).toString(),320), m_searchQuery)) // TEXT
+                                    .arg(hiText(abbreviate(m_bookQuery.value(0).toString(),320), m_searchQuery)) // TEXT
                                     .arg(getBookName(bookID)) // BOOK_NAME
-                                    .arg(m_bookQuery->value(1).toString()) // PAGE
-                                    .arg(m_bookQuery->value(2).toString()) // PART
+                                    .arg(m_bookQuery.value(1).toString()) // PAGE
+                                    .arg(m_bookQuery.value(2).toString()) // PART
                                     .arg(bookID));
                 whiteBG = !whiteBG;
             }
@@ -282,7 +261,14 @@ void MainWindow::displayResults(/*result &pResult*/)
     }
 
     setPageCount(m_results->currentPage()+1, m_results->pageCount());
-    ui->webView->setHtml("<html><head><style>a{text-decoration: none;color:#000000;} a:hover {color:blue}</style></head>"
+    ui->webView->setHtml("<html><head><style>"
+                         "a{text-decoration: none;color:#000000;} a:hover {color:blue}"
+                         ".result{margin:0px;padding:4px;border-bottom:1px solid black;} "
+                         ".whiteBG{background-color:#FFFFFF;} .grayBG{background-color:#EFEFEF;} "
+                         ".result h3{margin:0px 0px 5px;font-size:18px;color:rgb(0, 68, 255);} "
+                         ".result a{margin:0px;padding:0px 5px;} "
+                         ".bookName{margin-left:7px;color:green;font-weight:bold}"
+                         "</style></head>"
                          "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
 
 }
@@ -399,14 +385,6 @@ void MainWindow::buttonStat(int currentPage, int pageCount)
 void MainWindow::on_lineQuery_returnPressed()
 {
     startSearching();
-}
-
-QStringList MainWindow::makeVLabels(int start, int end)
-{
-    QStringList labls;
-    for(int i=start+1; i<=end;i++)
-        labls.append(QString::number(i));
-    return labls;
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -560,13 +538,13 @@ void MainWindow::writeLog(int indexingTime)
 
 QString MainWindow::getTitleId(int pageID)
 {
-    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("resultBook"));
-    m_bookQuery->exec(QString("SELECT TOP 1 tit FROM title WHERE id <= %1 ORDER BY id DESC").arg(pageID));
+    QSqlQuery m_bookQuery(QSqlDatabase::database("resultBook"));
+    m_bookQuery.exec(QString("SELECT TOP 1 tit FROM title WHERE id <= %1 ORDER BY id DESC").arg(pageID));
 
-    if(m_bookQuery->first())
-        return m_bookQuery->value(0).toString();
+    if(m_bookQuery.first())
+        return m_bookQuery.value(0).toString();
     else {
-        qDebug() << m_bookQuery->lastError().text();
+        qDebug() << m_bookQuery.lastError().text();
         return m_bookName;
     }
 
@@ -574,13 +552,13 @@ QString MainWindow::getTitleId(int pageID)
 
 QString MainWindow::getBookName(int bookID)
 {
-    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("shamelaBook"));
-    m_bookQuery->exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
+    QSqlQuery m_bookQuery(QSqlDatabase::database("shamelaBook"));
+    m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
 
-    if(m_bookQuery->first())
-        return m_bookQuery->value(0).toString();
+    if(m_bookQuery.first())
+        return m_bookQuery.value(0).toString();
     else {
-        qDebug() << m_bookQuery->lastError().text();
+        qDebug() << m_bookQuery.lastError().text();
         return m_bookName;
     }
 
@@ -604,12 +582,12 @@ void MainWindow::resultLinkClicked(const QUrl &url)
         if (!m_bookDB.open()) {
             qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
         }
-        QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
+        QSqlQuery m_bookQuery(m_bookDB);
 
-        m_bookQuery->exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
+        m_bookQuery.exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
                           .arg(rid));
-        if(m_bookQuery->first())
-            text = m_bookQuery->value(2).toString();
+        if(m_bookQuery.first())
+            text = m_bookQuery.value(2).toString();
 
         text.replace(QRegExp("[\\r\\n]"),"<br/>");
     }

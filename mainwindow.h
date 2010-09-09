@@ -40,14 +40,11 @@ public slots:
     void startIndexing();
     void startSearching();
     void showStatistic();
-    void indexDocs(IndexWriter* writer);
-    Document* FileDocument(const QString &id, const QString &ayaText);
     QString cleanString(QString str);
     void resultsCount();
     void displayResults(/*result &pResult*/);
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
-    QStringList makeVLabels(int start, int end);
     bool openDB();
     void setResultParPage(int count){m_resultParPage = count;}
     QString buildFilePath(QString bkid);
