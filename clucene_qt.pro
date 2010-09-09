@@ -8,12 +8,14 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
     indexingdialg.cpp \
-    indexthread.cpp
+    indexthread.cpp \
+    booksdb.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
     indexthread.h \
-    common.h
+    common.h \
+    booksdb.h
 FORMS += mainwindow.ui \
     indexingdialg.ui
 win32 { 

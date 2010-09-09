@@ -1,4 +1,3 @@
-#include "indexthread.h"
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
 
@@ -11,16 +10,14 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     ui->pushStopIndexing->setVisible(false);
     ui->pushClose->setVisible(false);
     showBooks();
+    m_bookDB = new BooksDB();
+    m_stopIndexing = false;
 
-    m_indexing = new IndexingThread();
-    connect(m_indexing, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
-    connect(m_indexing, SIGNAL(finished()), this, SLOT(doneIndexing()));
-    connect(m_indexing, SIGNAL(indexingError()), this, SLOT(indexingError()));
+    ui->spinThreadCount->setValue(QThread::idealThreadCount());
 }
 
 IndexingDialg::~IndexingDialg()
 {
-    delete m_indexing;
     delete ui;
 }
 
@@ -49,19 +46,49 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(m_booksCount);
     ui->progressBar->setValue(0);
-    m_indexedBooks =0;
+
+    m_indexedBooks = 0;
+    m_threadCount = ui->spinThreadCount->value();
 
     ui->pushStartIndexing->setVisible(false);
     ui->groupBox->setVisible(false);
     ui->pushStopIndexing->setVisible(true);
 
-    m_indexing->setOptions(ui->checkOptimizeIndex->isChecked(),
-                           ui->checkRamSize->isChecked() ? ui->spinRamSize->value() : 0,
-                           ui->checkMaxDoc->isChecked() ? ui->spinMaxDoc->value() : 0);
     ui->label->setText(trUtf8("الكتب التي تمت فهرستها:"));
+// Writer
+    m_writer = NULL;
+    QDir dir;
+    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    if(!dir.exists(INDEX_PATH))
+        dir.mkdir(INDEX_PATH);
+    if ( IndexReader::indexExists(INDEX_PATH) ){
+        if ( IndexReader::isLocked(INDEX_PATH) ){
+            printf("Index was locked... unlocking it.\n");
+            IndexReader::unlock(INDEX_PATH);
+        }
 
-    m_indexing->start();
+        m_writer = _CLNEW IndexWriter( INDEX_PATH, analyzer, true);
+    }else{
+        m_writer = _CLNEW IndexWriter( INDEX_PATH ,analyzer, true);
+    }
+    m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
+
+    if(ui->checkRamSize->isChecked())
+        m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
+
     indexingTime.start();
+
+    for(int i=0;i<m_threadCount;i++) {
+        IndexingThread *indexThread = new IndexingThread();
+        connect(indexThread, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
+        connect(indexThread, SIGNAL(finished()), this, SLOT(doneIndexing()));
+        connect(indexThread, SIGNAL(indexingError()), this, SLOT(indexingError()));
+
+        indexThread->setWirter(m_writer);
+        indexThread->setBookDB(m_bookDB);
+
+        indexThread->start();
+    }
 }
 
 void IndexingDialg::addBook(const QString &name)
@@ -77,20 +104,29 @@ void IndexingDialg::addBook(const QString &name)
 
 void IndexingDialg::doneIndexing()
 {
-    int elpasedMsec = indexingTime.elapsed();
-    int seconds = (int) ((elpasedMsec / 1000) % 60);
-    int minutes = (int) ((elpasedMsec / 1000) / 60);
+    if(--m_threadCount <= 0) {
+        if(ui->checkOptimizeIndex->isChecked())
+            m_writer->optimize();
 
-    ui->pushStopIndexing->setVisible(false);
-    ui->pushClose->setVisible(true);
-    ui->progressBar->setVisible(false);
+        m_writer->close();
 
-    QMessageBox::information(this,
-                             trUtf8("تمت الفهرسة بنجاح"),
-                             trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
-                             .arg(m_indexedBooks)
-                             .arg(formatMinutes(minutes))
-                             .arg(formatSecnds(seconds)));
+        int elpasedMsec = indexingTime.elapsed();
+        int seconds = (int) ((elpasedMsec / 1000) % 60);
+        int minutes = (int) ((elpasedMsec / 1000) / 60);
+
+        ui->pushStopIndexing->setVisible(false);
+        ui->pushClose->setVisible(true);
+        ui->progressBar->setVisible(false);
+
+        QMessageBox::information(this,
+                                 trUtf8("تمت الفهرسة بنجاح"),
+                                 trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
+                                 .arg(m_indexedBooks)
+                                 .arg(formatMinutes(minutes))
+                                 .arg(formatSecnds(seconds)));
+
+        _CLLDELETE(m_writer);
+    }
 }
 
 void IndexingDialg::indexingError()
@@ -136,9 +172,10 @@ void IndexingDialg::on_pushStopIndexing_clicked()
                                     trUtf8("هل تريد ايقاف فهرسة المكتبة"),
                                     QMessageBox::Yes|QMessageBox::No);
     if(rep==QMessageBox::Yes){
-        m_indexing->stop();
         ui->pushStopIndexing->setEnabled(false);
         ui->progressBar->setMaximum(0);
+        m_stopIndexing = true;
+        m_bookDB->clear();
     }
 }
 

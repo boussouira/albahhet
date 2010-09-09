@@ -4,12 +4,12 @@
 #include <QDialog>
 #include <QTime>
 #include "common.h"
+#include "booksdb.h"
+#include "indexthread.h"
 
 namespace Ui {
     class IndexingDialg;
 }
-
-class IndexingThread;
 
 class IndexingDialg : public QDialog {
     Q_OBJECT
@@ -28,10 +28,13 @@ public slots:
     void indexingError();
 
 protected:
-    IndexingThread *m_indexing;
+    IndexWriter* m_writer;
+    BooksDB *m_bookDB;
+    QTime indexingTime;
     int m_booksCount;
     int m_indexedBooks;
-    QTime indexingTime;
+    int m_threadCount;
+    bool m_stopIndexing;
     Ui::IndexingDialg *ui;
 
 private slots:
