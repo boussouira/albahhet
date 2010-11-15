@@ -77,19 +77,24 @@ void MainWindow::startIndexing()
         QSqlQuery *inexQuery = new QSqlQuery(indexDB);
         inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
                         "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
-                        "fileSize INTEGER, cat INTEGER)");
+                        "fileSize INTEGER, cat INTEGER, archive INTEGER, titleTable TEXT, bookTable TEXT)");
         inexQuery->exec("DELETE FROM books");
 
 
         indexDB.transaction();
-        m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
+        m_bookQuery->exec("SELECT Bk, bkid, auth, authno, Archive FROM 0bok ");
         while(m_bookQuery->next()) {
-            if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '', '')")
+            int archive = m_bookQuery->value(4).toInt();
+            if(!inexQuery->exec(QString("INSERT INTO books VALUES "
+                                        "(NULL, '%1', %2, '%3', %4, '%5', '', '', %6, '%7', '%8')")
                 .arg(m_bookQuery->value(0).toString())
                 .arg(m_bookQuery->value(1).toString())
-                .arg(buildFilePath(m_bookQuery->value(1).toString()))
+                .arg(buildFilePath(m_bookQuery->value(1).toString(), archive))
                 .arg(m_bookQuery->value(3).toString())
-                .arg(m_bookQuery->value(2).toString())))
+                .arg(m_bookQuery->value(2).toString())
+                .arg(archive)
+                .arg((!archive) ? "title" : QString("t%1").arg(m_bookQuery->value(1).toInt()))
+                .arg((!archive) ? "book" : QString("b%1").arg(m_bookQuery->value(1).toInt()))))
                 qDebug()<< "ERROR:" << inexQuery->lastError().text();
         }
         indexDB.commit();
@@ -226,23 +231,25 @@ void MainWindow::displayResults(/*result &pResult*/)
     for(int i=start; i < maxResult;i++){
         {
             int bookID = m_results->bookIdAt(i);
+            int archive = m_results->ArchiveAt(i);
             QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
             QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                              .arg(buildFilePath(QString::number(bookID)));
+                              .arg(buildFilePath(QString::number(bookID), archive));
             m_bookDB.setDatabaseName(mdbpath);
 
             if (!m_bookDB.open()) {
-                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
+                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
             }
             QSqlQuery m_bookQuery(m_bookDB);
 
             entryID = m_results->idAt(i);
-            m_bookQuery.exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
-                              .arg(entryID));
+            m_bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
+                             .arg((!archive) ? "book" : QString("b%1").arg(archive))
+                             .arg(entryID));
             if(m_bookQuery.first()){
                 resultString.append(trUtf8("<div class=\"result\" class=\"%1\">"
                                            "<h3>%2</h3>"
-                                           "<a href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
+                                           "<a href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
                                            "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
@@ -253,7 +260,9 @@ void MainWindow::displayResults(/*result &pResult*/)
                                     .arg(getBookName(bookID)) // BOOK_NAME
                                     .arg(m_bookQuery.value(1).toString()) // PAGE
                                     .arg(m_bookQuery.value(2).toString()) // PART
-                                    .arg(bookID));
+                                    .arg(bookID)
+                                    .arg(archive)
+                                    );
                 whiteBG = !whiteBG;
             }
         }
@@ -566,8 +575,10 @@ QString MainWindow::getBookName(int bookID)
 
 void MainWindow::resultLinkClicked(const QUrl &url)
 {
-    int rid = url.queryItems().first().second.toInt();
-    int bookID = url.queryItems().last().second.toInt();
+    int rid = url.queryItems().at(0).second.toInt();
+    int bookID = url.queryItems().at(1).second.toInt();
+    int archive = url.queryItems().at(2).second.toInt();
+
     QDialog *dialog = new QDialog(this);
     QVBoxLayout *layout= new QVBoxLayout(dialog);
     QTextBrowser *textBrowser = new QTextBrowser(0);
@@ -576,16 +587,17 @@ void MainWindow::resultLinkClicked(const QUrl &url)
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                          .arg(buildFilePath(QString::number(bookID)));
+                          .arg(buildFilePath(QString::number(bookID), archive));
         m_bookDB.setDatabaseName(mdbpath);
 
         if (!m_bookDB.open()) {
-            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
+            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
         }
         QSqlQuery m_bookQuery(m_bookDB);
 
-        m_bookQuery.exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
-                          .arg(rid));
+        m_bookQuery.exec(QString("SELECT page, part, nass FROM %1 WHERE id = %2")
+                         .arg((!archive) ? "book" : QString("b%1").arg(archive))
+                         .arg(rid));
         if(m_bookQuery.first())
             text = m_bookQuery.value(2).toString();
 
@@ -624,7 +636,10 @@ void MainWindow::on_pushButton_2_clicked()
     connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
 }
 
-QString MainWindow::buildFilePath(QString bkid)
+QString MainWindow::buildFilePath(QString bkid, int archive)
 {
-    return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
+    if(!archive)
+        return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
+    else
+        return QString("%1Books/Archive/%2.mdb").arg(m_bookPath).arg(archive);
 }

@@ -20,7 +20,7 @@ void IndexingThread::startIndexing()
     try {
         BookInfo *book = m_bookDB->next();
         while(book != 0) {
-            indexBook(book->id(), book->path());
+            indexBook(book->id(), book->path(), book->arhive());
             emit fileIndexed(book->name());
 //            qDebug() << "FILE:" << book->id() << "THREAD:" << currentThreadId();
             delete book;
@@ -48,7 +48,7 @@ void IndexingThread::startIndexing()
     }
 }
 
-void IndexingThread::indexBook(const QString &bookID, const QString &bookPath)
+void IndexingThread::indexBook(const QString &bookID, const QString &bookPath, const QString &archive)
 {
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", QString("INDEX_%1").arg(bookID));
@@ -61,7 +61,8 @@ void IndexingThread::indexBook(const QString &bookID, const QString &bookPath)
         }
         QSqlQuery m_bookQuery(m_bookDB);
 
-        m_bookQuery.exec("SELECT id, nass FROM book ORDER BY id ");
+        m_bookQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ")
+                         .arg((!archive.toInt()) ? "book" : QString("b%1").arg(archive)));
         Document doc;
         while(m_bookQuery.next())
         {
@@ -69,6 +70,8 @@ void IndexingThread::indexBook(const QString &bookID, const QString &bookPath)
             doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(m_bookQuery.value(0).toString()),
                                    Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
             doc.add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(bookID),
+                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+            doc.add( *_CLNEW Field(_T("archive"), QSTRING_TO_TCHAR(archive),
                                    Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
             doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(m_bookQuery.value(1).toString()),
                                    Field::STORE_NO | Field::INDEX_TOKENIZED) );

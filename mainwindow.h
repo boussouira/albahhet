@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QSpinBox>
 #include <QStandardItemModel>
+
 #include "common.h"
 #include "arabicanalyzer.h"
 #include "indexingdialg.h"
@@ -47,7 +48,7 @@ public slots:
     void buttonStat(int currentPage, int pageCount);
     bool openDB();
     void setResultParPage(int count){m_resultParPage = count;}
-    QString buildFilePath(QString bkid);
+    QString buildFilePath(QString bkid, int archive);
 
 protected:
     QSqlDatabase m_bookDB;
@@ -85,6 +86,7 @@ public:
     Results(){};
     int idAt(int index){ return FIELD_TO_INT("id", (&m_hits->doc(index))); }
     int bookIdAt(int index){ return FIELD_TO_INT("bookid", (&m_hits->doc(index))); }
+    int ArchiveAt(int index){ return FIELD_TO_INT("archive", (&m_hits->doc(index))); }
     float_t scoreAt(int index) { return m_hits->score(index); }
 
     int pageCount() { return m_pageCount; }

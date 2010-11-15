@@ -10,7 +10,7 @@ BooksDB::BooksDB()
     }
 
     m_query = new QSqlQuery(m_db);
-    m_query->exec("SELECT shamelaID, bookName, filePath FROM books");
+    m_query->exec("SELECT shamelaID, bookName, filePath, archive FROM books");
 }
 
 BookInfo *BooksDB::next()
@@ -19,7 +19,8 @@ BookInfo *BooksDB::next()
 
     return (m_query->next()) ? new BookInfo(m_query->value(0).toString(),
                                             m_query->value(1).toString(),
-                                            m_query->value(2).toString()) : 0;
+                                            m_query->value(2).toString(),
+                                            m_query->value(3).toString()) : 0;
 
 }
 

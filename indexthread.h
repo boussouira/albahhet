@@ -19,7 +19,7 @@ public:
     void stop() { m_stopIndexing = true; }
 
 protected:
-    void indexBook(const QString &bookID, const QString &bookPath);
+    void indexBook(const QString &bookID, const QString &bookPath, const QString &archive);
     void startIndexing();
 
 signals:
