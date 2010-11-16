@@ -75,15 +75,15 @@ void MainWindow::startIndexing()
         if(!indexDB.open())
             qDebug("Error opning index db");
         QSqlQuery *inexQuery = new QSqlQuery(indexDB);
+        inexQuery->exec("DROP TABLE IF EXISTS books");
         inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
                         "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
                         "fileSize INTEGER, cat INTEGER, archive INTEGER, titleTable TEXT, bookTable TEXT)");
-        inexQuery->exec("DELETE FROM books");
 
 
         indexDB.transaction();
-        m_bookQuery->exec("SELECT Bk, bkid, auth, authno, Archive FROM 0bok ");
-        while(m_bookQuery->next()) {
+        if(m_bookQuery->exec("SELECT Bk, bkid, auth, authno, Archive FROM 0bok"))
+            while(m_bookQuery->next()) {
             int archive = m_bookQuery->value(4).toInt();
             if(!inexQuery->exec(QString("INSERT INTO books VALUES "
                                         "(NULL, '%1', %2, '%3', %4, '%5', '', '', %6, '%7', '%8')")
@@ -244,17 +244,17 @@ void MainWindow::displayResults(/*result &pResult*/)
 
             entryID = m_results->idAt(i);
             m_bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
-                             .arg((!archive) ? "book" : QString("b%1").arg(archive))
+                             .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                              .arg(entryID));
             if(m_bookQuery.first()){
                 resultString.append(trUtf8("<div class=\"result\" class=\"%1\">"
                                            "<h3>%2</h3>"
                                            "<a href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
-                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
+                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5(%9)</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
                                     .arg(whiteBG ? "whiteBG" : "grayBG") //BG color
-                                    .arg(getTitleId(entryID)) //BAB
+                                    .arg(getTitleId(entryID, archive, bookID)) //BAB
                                     .arg(entryID) // entry id
                                     .arg(hiText(abbreviate(m_bookQuery.value(0).toString(),320), m_searchQuery)) // TEXT
                                     .arg(getBookName(bookID)) // BOOK_NAME
@@ -545,10 +545,12 @@ void MainWindow::writeLog(int indexingTime)
 
 }
 
-QString MainWindow::getTitleId(int pageID)
+QString MainWindow::getTitleId(int pageID, int archive, int bookID)
 {
     QSqlQuery m_bookQuery(QSqlDatabase::database("resultBook"));
-    m_bookQuery.exec(QString("SELECT TOP 1 tit FROM title WHERE id <= %1 ORDER BY id DESC").arg(pageID));
+    m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
+                     .arg((!archive) ? "title" : QString("t%1").arg(bookID))
+                     .arg(pageID));
 
     if(m_bookQuery.first())
         return m_bookQuery.value(0).toString();
@@ -596,7 +598,7 @@ void MainWindow::resultLinkClicked(const QUrl &url)
         QSqlQuery m_bookQuery(m_bookDB);
 
         m_bookQuery.exec(QString("SELECT page, part, nass FROM %1 WHERE id = %2")
-                         .arg((!archive) ? "book" : QString("b%1").arg(archive))
+                         .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                          .arg(rid));
         if(m_bookQuery.first())
             text = m_bookQuery.value(2).toString();

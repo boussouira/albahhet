@@ -27,14 +27,12 @@ include_directories (
 	${CLUCENE_INLUDE_DIRS})
 link_directories (${CLUCENE_PATH}/bin)
 set ( clucene_qt_HDRS
-	arabicanalyzer.h
-	mdbconverter.h)
+	arabicanalyzer.h)
 
 set ( clucene_qt_SRCS
 	main.cpp
 	mainwindow.cpp
 	arabicanalyzer.cpp
-	mdbconverter.cpp
 	indexingdialg.cpp
 	indexthread.cpp)
 

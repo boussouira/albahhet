@@ -62,7 +62,7 @@ void IndexingThread::indexBook(const QString &bookID, const QString &bookPath, c
         QSqlQuery m_bookQuery(m_bookDB);
 
         m_bookQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ")
-                         .arg((!archive.toInt()) ? "book" : QString("b%1").arg(archive)));
+                         .arg((!archive.toInt()) ? "book" : QString("b%1").arg(bookID)));
         Document doc;
         while(m_bookQuery.next())
         {

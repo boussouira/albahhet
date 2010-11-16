@@ -18,9 +18,14 @@ HEADERS += mainwindow.h \
     booksdb.h
 FORMS += mainwindow.ui \
     indexingdialg.ui
-win32 { 
-    CLUCENE_PATH = "C:/clucene-2.3.2"
-    CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+win32 {
+    win32-msvc* {
+        CLUCENE_PATH = "C:/clucene-2.3.2"
+        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+    } else {
+        CLUCENE_PATH = "C:/clucene-2.3.2_mingw"
+        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
+    }
     DESTDIR = bin
     RC_FILE = win_rc.rc
 }
@@ -52,12 +57,10 @@ DEFINES += _REENTRANT \
     _UCS2 \
     _UNICODE
 
-# INCLUDEPATH += $$CLUCENE_PATH/src/core
-# INCLUDEPATH += $$CLUCENE_PATH/src/ext
-# INCLUDEPATH += $$CLUCENE_PATH/src/shared
-INCLUDEPATH += C:/clucene-2.3.2/src/core
-INCLUDEPATH += C:/clucene-2.3.2/src/ext
-INCLUDEPATH += C:/clucene-2.3.2/src/shared
+INCLUDEPATH += $$CLUCENE_PATH/src/core
+INCLUDEPATH += $$CLUCENE_PATH/src/ext
+INCLUDEPATH += $$CLUCENE_PATH/src/shared
+
 LIBS += -lclucene-core \
     -lclucene-shared \
     -L$$CLUCENE_LIBS_PATH

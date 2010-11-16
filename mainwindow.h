@@ -34,7 +34,7 @@ protected:
     QString getIndexSize();
     QString getBookSize();
     void writeLog(int indexingTime);
-    QString getTitleId(int pageID);
+    QString getTitleId(int pageID, int archive, int bookID);
     QString getBookName(int bookID);
 
 public slots:
