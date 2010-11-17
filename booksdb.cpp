@@ -13,6 +13,11 @@ BooksDB::BooksDB()
     m_query->exec("SELECT shamelaID, bookName, filePath, archive FROM books");
 }
 
+BooksDB::~BooksDB()
+{
+    delete m_query;
+}
+
 BookInfo *BooksDB::next()
 {
     QMutexLocker locker(&m_mutex);

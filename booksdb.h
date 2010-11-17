@@ -34,6 +34,7 @@ class BooksDB
 {
 public:
     BooksDB();
+    ~BooksDB();
     BookInfo *next();
     void clear();
 
