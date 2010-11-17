@@ -32,7 +32,8 @@ protected:
     QStringList buildRegExp(const QString &str);
     QString abbreviate(QString str, int size);
     QString getIndexSize();
-    QString getBookSize();
+    QString getBooksSize();
+    int getDirSize(const QString &path);
     void writeLog(int indexingTime);
     QString getTitleId(int pageID, int archive, int bookID);
     QString getBookName(int bookID);

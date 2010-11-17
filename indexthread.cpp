@@ -22,7 +22,7 @@ void IndexingThread::startIndexing()
         while(book != 0) {
             indexBook(book->id(), book->path(), book->arhive());
             emit fileIndexed(book->name());
-//            qDebug() << "FILE:" << book->id() << "THREAD:" << currentThreadId();
+           qDebug() << "FILE:" << book->path();
             delete book;
 
             book = m_bookDB->next();

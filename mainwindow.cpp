@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineQuery->setLayoutDirection(Qt::LeftToRight);
     ui->lineQuery->setLayoutDirection(Qt::RightToLeft);
 
-    ui->pushStatstic->hide();
+//    ui->pushStatstic->hide();
 
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
@@ -82,7 +82,11 @@ void MainWindow::startIndexing()
 
 
         indexDB.transaction();
-        if(m_bookQuery->exec("SELECT Bk, bkid, auth, authno, Archive FROM 0bok"))
+//        QStringList books;
+//        books << "75" << "79" << "10";
+//        qDebug() << books.join(", ");
+        if(m_bookQuery->exec(QString("SELECT Bk, bkid, auth, authno, Archive FROM 0bok")));
+                                     /*"WHERE bkid IN (%1)").arg(books.join(", "))))*/
             while(m_bookQuery->next()) {
             int archive = m_bookQuery->value(4).toInt();
             if(!inexQuery->exec(QString("INSERT INTO books VALUES "
@@ -102,6 +106,7 @@ void MainWindow::startIndexing()
         delete inexQuery;
         indexDB.close();
     }
+
     QSqlDatabase::removeDatabase("bookIndex");
     IndexingDialg *indexDial = new IndexingDialg(this);
     indexDial->show();
@@ -183,12 +188,27 @@ void MainWindow::showStatistic()
 
         TermEnum* te = r->terms();
         int32_t nterms;
-        for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
+
+        bool writeToFile = false;
+
+        if(writeToFile) {
+            QFile logFile("terms.txt");
+            if(logFile.open(QIODevice::WriteOnly|QIODevice::Text)) {
+                QTextStream log(&logFile);
+                for (nterms = 0; te->next() == true; nterms++) {
+                    /* if(_wcsicmp(te->term()->field(), _T("bookid")) == 0) */
+                    log << TCHAR_TO_QSTRING(te->term()->toString()) << "\n";
+                }
+            }
+        } else {
+            for (nterms = 0; te->next() == true; nterms++) {
+                /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
+            }
         }
+
         txt.append(tr("Term count: %1<br/>").arg(nterms));
         txt.append(tr("Index size: %1<br/>").arg(getIndexSize()));
-        txt.append(tr("Book size: %1").arg(getBookSize()));
+        txt.append(tr("Books size: %1").arg(getBooksSize()));
         _CLDELETE(te);
 
         r->close();
@@ -478,18 +498,15 @@ QString MainWindow::getIndexSize()
     else
         sizeStr = tr("%1 ??").arg(size);
 
-    QFileInfo fileInfo(m_bookPath);
-    int bookSize = fileInfo.size();
-
-    sizeStr.append(tr(" (%1%)").arg(((double)size/(double)bookSize)*100.0, 2));
+    sizeStr.append(tr(" (%1%)").arg(((double)size/getBooksSize().toDouble())*100.0, 2));
     return sizeStr;
 }
 
-QString MainWindow::getBookSize()
+QString MainWindow::getBooksSize()
 {
     QString sizeStr;
-    QFileInfo fileInfo(m_bookPath);
-    int size = fileInfo.size();
+//    QFileInfo fileInfo(m_bookPath);
+    int size = getDirSize(m_bookPath);
 
     if(size <= 1024)
         sizeStr = tr("%1 B").arg(size);
@@ -501,6 +518,24 @@ QString MainWindow::getBookSize()
         sizeStr = tr("%1 ??").arg(size);
 
     return sizeStr;
+}
+
+int MainWindow::getDirSize(const QString &path)
+{
+    QFileInfo info(path);
+    int size=0;
+
+    if(info.isDir()){
+        QDir dir(path);
+        foreach(QFileInfo fieInfo, dir.entryInfoList(QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot)) {
+            if(fieInfo.isFile() && fieInfo.suffix() == "mdb")
+                size += fieInfo.size();
+            else if(fieInfo.isDir())
+                size += getDirSize(fieInfo.absoluteFilePath());
+        }
+    }
+
+    return size;
 }
 
 void MainWindow::writeLog(int indexingTime)
@@ -527,7 +562,7 @@ void MainWindow::writeLog(int indexingTime)
         txt.append(tr("[+] Indexing took: %1 s\n").arg(miTOsec(indexingTime)));
         txt.append(tr("[+] Term count: %1\n").arg(nterms));
         txt.append(tr("[+] Index size: %1\n").arg(getIndexSize()));
-        txt.append(tr("[+] Book size: %1\n").arg(getBookSize()));
+        txt.append(tr("[+] Books size: %1\n").arg(getBooksSize()));
         txt.append("===========================================\n\n");
         _CLDELETE(te);
 
@@ -535,7 +570,7 @@ void MainWindow::writeLog(int indexingTime)
         _CLDELETE(r);
 
         QFile logFile("statistic.txt");
-        if(logFile.open(QIODevice::Append)) {
+        if(logFile.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text)) {
              QTextStream log(&logFile);
              log << txt;
         }

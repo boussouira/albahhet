@@ -19,6 +19,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 IndexingDialg::~IndexingDialg()
 {
     delete ui;
+    delete m_bookDB;
 }
 
 void IndexingDialg::showBooks()
