@@ -55,13 +55,14 @@ protected:
 
 class ArabicFilter: public TokenFilter {
 public:
-        ArabicFilter(TokenStream* input, bool deleteTs);
-
-        /**
-         * To replace accented characters in a String by unaccented equivalents.
-         */
-        Token* next(Token* token);
+        ArabicFilter(TokenStream* _input, bool deleteTs);
         virtual ~ArabicFilter();
+
+        Token* next(Token* token);
+        void reset(CL_NS(util)::Reader* _input);
+        ArabicTokenizer* tokenizer() { return m_input; }
+protected:
+        ArabicTokenizer* m_input;
 };
 
 #endif // ARABICANALYZER_H
