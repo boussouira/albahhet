@@ -135,6 +135,53 @@
          </widget>
         </item>
         <item>
+         <widget class="QComboBox" name="comboBox">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>100 MB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>200 MB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>300 MB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>500 MB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1 GB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1.5 GB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2 GB</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3 GB</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>

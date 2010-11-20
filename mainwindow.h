@@ -33,8 +33,8 @@ protected:
     QString abbreviate(QString str, int size);
     QString getIndexSize();
     QString getBooksSize();
-    int getDirSize(const QString &path);
-    void writeLog(int indexingTime);
+    qint64 getDirSize(const QString &path);
+    void doneIndexing(int indexingTime);
     QString getTitleId(int pageID, int archive, int bookID);
     QString getBookName(int bookID);
 
@@ -61,7 +61,6 @@ protected:
     QString m_bookName;
     QString m_searchQuery;
     QString m_highLightRE;
-    QStandardItemModel *m_resultModel;
     QList<QString> m_colors;
     Results *m_results;
     int m_resultCount;
@@ -84,7 +83,31 @@ private slots:
 class Results
 {
 public:
-    Results(){};
+    Results()
+    {
+        m_hits = NULL;
+        m_query = NULL;
+        m_searcher = NULL;
+        m_page = 0;
+        m_pageCount = 0;
+    }
+    void clear()
+    {
+        if(m_hits != NULL)
+            _CLDELETE(m_hits)
+
+        if(m_query != NULL)
+            _CLDELETE(m_query)
+
+        if(m_searcher != NULL) {
+            m_searcher->close();
+            _CLDELETE(m_searcher)
+        }
+
+        m_page = 0;
+        m_pageCount = 0;
+    }
+
     int idAt(int index){ return FIELD_TO_INT("id", (&m_hits->doc(index))); }
     int bookIdAt(int index){ return FIELD_TO_INT("bookid", (&m_hits->doc(index))); }
     int ArchiveAt(int index){ return FIELD_TO_INT("archive", (&m_hits->doc(index))); }
@@ -95,9 +118,14 @@ public:
     void setPageCount(int pageCount) { m_pageCount = pageCount; }
     void setCurrentPage(int page) { m_page = page; }
     void setHits(Hits *hit) { m_hits = hit; }
+    void setQuery(Query* q) { m_query = q; }
+    void setSearcher(IndexSearcher *searcher) { m_searcher = searcher; }
     int resultsCount() { return m_hits->length(); }
+
 private:
     Hits* m_hits;
+    Query* m_query;
+    IndexSearcher *m_searcher;
     int m_page;
     int m_pageCount;
 };

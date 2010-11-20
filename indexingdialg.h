@@ -19,13 +19,13 @@ public:
 
 protected:
     void showBooks();
-    QString formatMinutes(int minutes);
-    QString formatSecnds(int seconds);
+    QString formatTime(int milsec);
 
 public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
+    void setRamSize();
 
 protected:
     IndexWriter* m_writer;

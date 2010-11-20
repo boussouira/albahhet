@@ -6,14 +6,22 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     ui(new Ui::IndexingDialg)
 {
     ui->setupUi(this);
+    setWindowTitle(parent->windowTitle());
+
     ui->progressBar->setVisible(false);
     ui->pushStopIndexing->setVisible(false);
     ui->pushClose->setVisible(false);
+
     showBooks();
+
     m_bookDB = new BooksDB();
     m_stopIndexing = false;
 
     ui->spinThreadCount->setValue(QThread::idealThreadCount());
+
+    setRamSize();
+    ui->spinRamSize->hide();
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setRamSize()));
 }
 
 IndexingDialg::~IndexingDialg()
@@ -38,6 +46,9 @@ void IndexingDialg::showBooks()
         m_booksCount++;
     }
     ui->listWidget->insertItems(0, booksList);
+    ui->label->setText(trUtf8("الكتب التي ستتم فهرستها،"
+                              "\n"
+                              "عدد الكتب %1:").arg(m_booksCount));
 }
 
 void IndexingDialg::on_pushStartIndexing_clicked()
@@ -106,25 +117,37 @@ void IndexingDialg::addBook(const QString &name)
 void IndexingDialg::doneIndexing()
 {
     if(--m_threadCount <= 0) {
-        if(ui->checkOptimizeIndex->isChecked())
+        // Indexing benchmarking
+        int elpasedMsec = indexingTime.elapsed();
+
+        // Optimize Index benchmarking
+        int optimizeTime = -1;
+
+        if(ui->checkOptimizeIndex->isChecked()) {
+            QTime optTime;
+            optTime.start();
             m_writer->optimize();
 
-        m_writer->close();
+            optimizeTime = optTime.elapsed();
+        }
 
-        int elpasedMsec = indexingTime.elapsed();
-        int seconds = (int) ((elpasedMsec / 1000) % 60);
-        int minutes = (int) ((elpasedMsec / 1000) / 60);
+        m_writer->close();
 
         ui->pushStopIndexing->setVisible(false);
         ui->pushClose->setVisible(true);
         ui->progressBar->setVisible(false);
 
+        QString msg = trUtf8("تمت فهرسة %1 كتابا خلال %2")
+                      .arg(m_indexedBooks)
+                      .arg(formatTime(elpasedMsec));
+
+        if(optimizeTime != -1)
+          msg.append(trUtf8("\n""تم ضغط الفهرس خلال %1")
+                     .arg(formatTime(optimizeTime)));
+
         QMessageBox::information(this,
                                  trUtf8("تمت الفهرسة بنجاح"),
-                                 trUtf8("تمت فهرسة %1 كتابا خلال <b>%2</b> و <b>%3</b>")
-                                 .arg(m_indexedBooks)
-                                 .arg(formatMinutes(minutes))
-                                 .arg(formatSecnds(seconds)));
+                                 msg);
 
         _CLLDELETE(m_writer);
     }
@@ -142,28 +165,23 @@ void IndexingDialg::indexingError()
     done(1);
 }
 
-QString IndexingDialg::formatMinutes(int minutes)
+QString IndexingDialg::formatTime(int milsec)
 {
-    if(minutes == 1)
-        return trUtf8("دقيقة");
-    else if(minutes == 2)
-        return trUtf8("دقيقتين");
-    else if(9 >= minutes && minutes > 2)
-        return trUtf8("%1 دقائق").arg(minutes);
-    else
-        return trUtf8("%1 دقيقة").arg(minutes);
-}
+    QString time;
 
-QString IndexingDialg::formatSecnds(int seconds)
-{
-    if(seconds == 1)
-        return trUtf8("ثانية");
-    else if(seconds == 2)
-        return trUtf8("ثانيتين");
-    else if(9 >= seconds && seconds > 2)
-        return trUtf8("%1 ثوان").arg(seconds);
-    else
-        return trUtf8("%1 ثانية").arg(seconds);
+    int seconde = (int) ((milsec / 1000) % 60);
+    int minutes = (int) (((milsec / 1000) / 60) % 60);
+    int hours   = (int) (((milsec / 1000) / 60) / 60);
+
+    if(hours > 0)
+    time.append(trUtf8("%1س").arg(hours));
+
+    if(minutes > 0)
+        time.append(trUtf8("%1د").arg(minutes));
+
+    time.append(trUtf8("%1ث").arg(seconde));
+
+    return time;
 }
 
 void IndexingDialg::on_pushStopIndexing_clicked()
@@ -183,4 +201,35 @@ void IndexingDialg::on_pushStopIndexing_clicked()
 void IndexingDialg::on_pushClose_clicked()
 {
     done(0);
+}
+
+void IndexingDialg::setRamSize()
+{
+    switch(ui->comboBox->currentIndex()) {
+    case 0:
+        ui->spinRamSize->setValue(100);
+        break;
+    case 1:
+        ui->spinRamSize->setValue(200);
+        break;
+    case 2:
+        ui->spinRamSize->setValue(300);
+        break;
+    case 3:
+        ui->spinRamSize->setValue(500);
+        break;
+    case 4:
+        ui->spinRamSize->setValue(1000);
+        break;
+    case 5:
+        ui->spinRamSize->setValue(1500);
+        break;
+    case 6:
+        ui->spinRamSize->setValue(2000);
+        break;
+    case 7:
+        ui->spinRamSize->setValue(3000);
+        break;
+
+    }
 }

@@ -1,13 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <Windows.h>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowTitle("CLucene Test");
 
-    m_resultModel = new QStandardItemModel();
     m_results = new Results();
     m_resultCount = 0;
     m_resultParPage = 10;
@@ -67,6 +66,8 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::startIndexing()
 {
+    m_results->clear();
+
     if(!m_dbIsOpen)
         openDB();
     {
@@ -85,7 +86,7 @@ void MainWindow::startIndexing()
 //        QStringList books;
 //        books << "75" << "79" << "10";
 //        qDebug() << books.join(", ");
-        if(m_bookQuery->exec(QString("SELECT Bk, bkid, auth, authno, Archive FROM 0bok")));
+        m_bookQuery->exec(QString("SELECT Bk, bkid, auth, authno, Archive FROM 0bok"));
                                      /*"WHERE bkid IN (%1)").arg(books.join(", "))))*/
             while(m_bookQuery->next()) {
             int archive = m_bookQuery->value(4).toInt();
@@ -101,6 +102,10 @@ void MainWindow::startIndexing()
                 .arg((!archive) ? "book" : QString("b%1").arg(m_bookQuery->value(1).toInt()))))
                 qDebug()<< "ERROR:" << inexQuery->lastError().text();
         }
+            if(!m_bookQuery->lastError().text().trimmed().isEmpty())
+                QMessageBox::critical(this,
+                                      "CLucene Test",
+                                      m_bookQuery->lastError().text());
         indexDB.commit();
 
         delete inexQuery;
@@ -114,25 +119,22 @@ void MainWindow::startIndexing()
 
 void MainWindow::startSearching()
 {
-    m_resultModel->clear();
+    m_results->clear();
+
     if(!m_dbIsOpen)
         openDB();
+
     try {
         ArabicAnalyzer analyzer;
 
         m_searchQuery = ui->lineQuery->text();
-        QString queryWord = m_searchQuery;
 
-        if(ui->checkBox->isChecked()) {
-            queryWord = queryWord.trimmed().replace(" ", " AND ");
-        } else {
-            queryWord.replace(QRegExp(trUtf8("ـفق")), "(");
-            queryWord.replace(QRegExp(trUtf8("ـغق")), ")");
-            queryWord.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
-            queryWord.replace(QRegExp(trUtf8("ـو")), "AND");
-            queryWord.replace(QRegExp(trUtf8("ـبدون")), "NOT");
-            queryWord.replace(trUtf8("؟"), "?");
-        }
+        m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
+        m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
+        m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
+        m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
+        m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
+        m_searchQuery.replace(trUtf8("؟"), "?");
 
         IndexSearcher *searcher = new IndexSearcher(INDEX_PATH);
 
@@ -140,7 +142,10 @@ void MainWindow::startSearching()
         QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
         queryPareser->setAllowLeadingWildcard(true);
 
-        Query* q = queryPareser->parse(QSTRING_TO_TCHAR(queryWord));
+        if(ui->checkBox->isChecked())
+            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+
+        Query* q = queryPareser->parse(QSTRING_TO_TCHAR(m_searchQuery));
 //        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
 //        qDebug() << "Query : " << queryWord;
 
@@ -153,6 +158,10 @@ void MainWindow::startSearching()
         m_resultCount = m_results->resultsCount();
         m_results->setPageCount(_toBInt((m_results->resultsCount()/(double)m_resultParPage)));
         m_results->setCurrentPage(0);
+
+        m_results->setQuery(q);
+        m_results->setSearcher(searcher);
+
         displayResults();
 
         this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
@@ -209,10 +218,10 @@ void MainWindow::showStatistic()
         txt.append(tr("Term count: %1<br/>").arg(nterms));
         txt.append(tr("Index size: %1<br/>").arg(getIndexSize()));
         txt.append(tr("Books size: %1").arg(getBooksSize()));
-        _CLDELETE(te);
+        _CLLDELETE(te);
 
         r->close();
-        _CLDELETE(r);
+        _CLLDELETE(r);
         QMessageBox::information(0, "Statistics", txt);
     }
     catch(CLuceneError &err) {
@@ -252,6 +261,8 @@ void MainWindow::displayResults(/*result &pResult*/)
         {
             int bookID = m_results->bookIdAt(i);
             int archive = m_results->ArchiveAt(i);
+            int score = (int) (m_results->scoreAt(i) * 100.0);
+
             QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
             QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
                               .arg(buildFilePath(QString::number(bookID), archive));
@@ -269,8 +280,11 @@ void MainWindow::displayResults(/*result &pResult*/)
             if(m_bookQuery.first()){
                 resultString.append(trUtf8("<div class=\"result\" class=\"%1\">"
                                            "<h3>%2</h3>"
+                                           "<span style=\"float: left; height: 10px; width: %10px; background-color: rgb(167, 239, 170);\">"
+                                           "<span style=\"float: left; height: 9px; width: 99px;border:1px solid #999999;\"></span>"
+                                           "</span>"
                                            "<a href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
-                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5(%9)</span>"
+                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
                                     .arg(whiteBG ? "whiteBG" : "grayBG") //BG color
@@ -282,6 +296,7 @@ void MainWindow::displayResults(/*result &pResult*/)
                                     .arg(m_bookQuery.value(2).toString()) // PART
                                     .arg(bookID)
                                     .arg(archive)
+                                    .arg(score)
                                     );
                 whiteBG = !whiteBG;
             }
@@ -294,8 +309,8 @@ void MainWindow::displayResults(/*result &pResult*/)
                          "a{text-decoration: none;color:#000000;} a:hover {color:blue}"
                          ".result{margin:0px;padding:4px;border-bottom:1px solid black;} "
                          ".whiteBG{background-color:#FFFFFF;} .grayBG{background-color:#EFEFEF;} "
-                         ".result h3{margin:0px 0px 5px;font-size:18px;color:rgb(0, 68, 255);} "
-                         ".result a{margin:0px;padding:0px 5px;} "
+                         ".result h3{margin:0px 0px 5px;font-size:18px;color:rgb(0, 68, 255);display:inline-block;} "
+                         ".result a{margin:0px;padding:0px 5px;display:block;} "
                          ".bookName{margin-left:7px;color:green;font-weight:bold}"
                          "</style></head>"
                          "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
@@ -346,9 +361,8 @@ QString MainWindow::hiText(const QString &text, const QString &strToHi)
 
 QStringList MainWindow::buildRegExp(const QString &str)
 {
-    QStringList strWords = str.split(" ",  QString::SkipEmptyParts);
-    QStringList regExpList;
-
+QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
+QStringList regExpList;
     QChar opPar('(');
     QChar clPar(')');
     foreach(QString word, strWords)
@@ -483,22 +497,21 @@ QString MainWindow::getIndexSize()
 
     QFileInfoList list = dir.entryInfoList();
     QString sizeStr;
-    int size = 0;
+    qint64 size = 0;
     for (int i = 0; i < list.size(); ++i) {
         QFileInfo fileInfo = list.at(i);
         size += fileInfo.size();
     }
 
-    if(size <= 1024)
+    if(size < 1024)
         sizeStr = tr("%1 B").arg(size);
-    else if(1024 <= size && size <= 1024*1024)
+    else if(1024 <= size && size < 1024*1024)
         sizeStr = tr("%1 KB").arg(size/(1024.0), 4);
-    else if(size >= 1024*1024)
+    else if( 1024*1024 <= size && size < 1024*1024*1024)
         sizeStr = tr("%1 MB").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = tr("%1 ??").arg(size);
+        sizeStr = tr("%1 GB").arg(size/(1024.0*1024.0*1024.0), 4);
 
-    sizeStr.append(tr(" (%1%)").arg(((double)size/getBooksSize().toDouble())*100.0, 2));
     return sizeStr;
 }
 
@@ -506,24 +519,24 @@ QString MainWindow::getBooksSize()
 {
     QString sizeStr;
 //    QFileInfo fileInfo(m_bookPath);
-    int size = getDirSize(m_bookPath);
+    qint64 size = getDirSize(m_bookPath);
 
-    if(size <= 1024)
+    if(size < 1024)
         sizeStr = tr("%1 B").arg(size);
-    else if(1024 <= size && size <= 1024*1024)
+    else if(1024 <= size && size < 1024*1024)
         sizeStr = tr("%1 KB").arg(size/(1024.0), 4);
-    else if(size >= 1024*1024)
+    else if( 1024*1024 <= size && size < 1024*1024*1024)
         sizeStr = tr("%1 MB").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = tr("%1 ??").arg(size);
+        sizeStr = tr("%1 GB").arg(size/(1024.0*1024.0*1024.0), 4);
 
     return sizeStr;
 }
 
-int MainWindow::getDirSize(const QString &path)
+qint64 MainWindow::getDirSize(const QString &path)
 {
     QFileInfo info(path);
-    int size=0;
+    qint64 size=0;
 
     if(info.isDir()){
         QDir dir(path);
@@ -538,7 +551,7 @@ int MainWindow::getDirSize(const QString &path)
     return size;
 }
 
-void MainWindow::writeLog(int indexingTime)
+void MainWindow::doneIndexing(int indexingTime)
 {
     try {
         IndexReader* r = IndexReader::open(INDEX_PATH);
@@ -549,7 +562,7 @@ void MainWindow::writeLog(int indexingTime)
 #ifdef GITVERSION
         txt.append(tr("[+] Git: %1 - Change number: %2\n").arg(GITVERSION).arg(GITCHANGENUMBER));
 #endif
-        txt.append(tr("[+] Statistics for \"%1\"\n").arg(INDEX_PATH));
+        txt.append(tr("[+] Statistics for \"%1\"\n").arg(ui->lineBook->text()));
         txt.append(tr("[+] Book: \"%1\"\n").arg(m_bookPath));
         txt.append(tr("[+] Current Version: %1\n").arg(ver)) ;
         txt.append(tr("[+] Num Docs: %1\n").arg(r->numDocs()));
@@ -563,11 +576,11 @@ void MainWindow::writeLog(int indexingTime)
         txt.append(tr("[+] Term count: %1\n").arg(nterms));
         txt.append(tr("[+] Index size: %1\n").arg(getIndexSize()));
         txt.append(tr("[+] Books size: %1\n").arg(getBooksSize()));
-        txt.append("===========================================\n\n");
-        _CLDELETE(te);
+        txt.append("\n");
+        _CLLDELETE(te);
 
         r->close();
-        _CLDELETE(r);
+        _CLLDELETE(r);
 
         QFile logFile("statistic.txt");
         if(logFile.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text)) {
