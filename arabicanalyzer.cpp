@@ -80,7 +80,8 @@ Token* ArabicFilter::next(Token* token)
                 const TCHAR* chars = token->termBuffer();
                 bool doProcess = false;
                 for (int32_t i = 0; i < l; ++i) {
-                        if ( chars[i] >= 0x0620 && chars[i] <= 0x06DF ) {
+                        if ( (0x064B <= chars[i] && chars[i] <=0x0653) || chars[i] == 0x0640 ) {
+//                        if ( chars[i] >= 0x0620 && chars[i] <= 0x06DF ) {
                                 doProcess = true;
                                 break;
                         }
