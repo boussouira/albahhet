@@ -35,7 +35,7 @@ protected:
     QString getBooksSize();
     qint64 getDirSize(const QString &path);
     void doneIndexing(int indexingTime);
-    QString getTitleId(int pageID, int archive, int bookID);
+    QString getTitleId(const QSqlDatabase &db, int pageID, int archive, int bookID);
     QString getBookName(int bookID);
 
 public slots:
@@ -44,12 +44,18 @@ public slots:
     void showStatistic();
     QString cleanString(QString str);
     void resultsCount();
-    void displayResults(/*result &pResult*/);
+    void displayResults();
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
     bool openDB();
     void setResultParPage(int count){m_resultParPage = count;}
     QString buildFilePath(QString bkid, int archive);
+    void populateJavaScriptWindowObject();
+
+    QString getPage(QString href);
+    QString formNextUrl(QString href);
+    QString formPrevUrl(QString href);
+    void updateNavgitionLinks(QString href);
 
 protected:
     QSqlDatabase m_bookDB;
@@ -65,6 +71,7 @@ protected:
     Results *m_results;
     int m_resultCount;
     int m_resultParPage;
+    int m_currentShownId;
     bool m_dbIsOpen;
     bool m_haveMainTable;
     Ui::MainWindow *ui;

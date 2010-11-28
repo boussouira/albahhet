@@ -39,10 +39,10 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
+      <enum>Qt::RightToLeft</enum>
      </property>
      <property name="title">
-      <string>Options</string>
+      <string>خيارات الفهرسة</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -51,12 +51,18 @@
          <widget class="QLabel" name="label_2">
           <property name="minimumSize">
            <size>
-            <width>160</width>
+            <width>130</width>
             <height>0</height>
            </size>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>130</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="text">
-           <string>Thread count</string>
+           <string>عدد خطوط الفهرسة:</string>
           </property>
          </widget>
         </item>
@@ -94,18 +100,15 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QCheckBox" name="checkRamSize">
+         <widget class="QLabel" name="label_3">
           <property name="minimumSize">
            <size>
-            <width>160</width>
+            <width>130</width>
             <height>0</height>
            </size>
           </property>
           <property name="text">
-           <string>Max memory before flushing</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
+           <string>حجم الذاكرة المستخدمة:</string>
           </property>
          </widget>
         </item>
@@ -199,7 +202,7 @@
       <item>
        <widget class="QCheckBox" name="checkOptimizeIndex">
         <property name="text">
-         <string>Optimize the index</string>
+         <string>ضغط الفهرس</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -264,6 +267,9 @@
     <widget class="QProgressBar" name="progressBar">
      <property name="alignment">
       <set>Qt::AlignCenter</set>
+     </property>
+     <property name="format">
+      <string>%v/%m (%p%)</string>
      </property>
     </widget>
    </item>

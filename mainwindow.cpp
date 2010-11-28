@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <Windows.h>
+#include "QWebFrame"
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_results = new Results();
     m_resultCount = 0;
     m_resultParPage = 10;
+    m_currentShownId = 0;
     m_dbIsOpen = false;
 
     m_colors.append("#FFFF63");
@@ -33,13 +34,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineQuery->setLayoutDirection(Qt::LeftToRight);
     ui->lineQuery->setLayoutDirection(Qt::RightToLeft);
 
-//    ui->pushStatstic->hide();
-
     connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
     connect(ui->pushRCount, SIGNAL(clicked()), this, SLOT(resultsCount()));
     connect(ui->webView, SIGNAL(linkClicked(QUrl)), this, SLOT(resultLinkClicked(QUrl)));
+    connect(ui->webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
+            this, SLOT(populateJavaScriptWindowObject()));
 }
 
 MainWindow::~MainWindow()
@@ -83,11 +84,8 @@ void MainWindow::startIndexing()
 
 
         indexDB.transaction();
-//        QStringList books;
-//        books << "75" << "79" << "10";
-//        qDebug() << books.join(", ");
+
         m_bookQuery->exec(QString("SELECT Bk, bkid, auth, authno, Archive FROM 0bok"));
-                                     /*"WHERE bkid IN (%1)").arg(books.join(", "))))*/
             while(m_bookQuery->next()) {
             int archive = m_bookQuery->value(4).toInt();
             if(!inexQuery->exec(QString("INSERT INTO books VALUES "
@@ -168,9 +166,6 @@ void MainWindow::startSearching()
                                                "نتائج البحث %2")
                                        .arg(miTOsec(timeSearch))
                                        .arg(m_resultCount));
-//        _CLDELETE(hits);
-//        _CLDELETE(q);
-//        searcher->close();
     }
 
     catch(CLuceneError &tmp) {
@@ -189,11 +184,11 @@ void MainWindow::showStatistic()
         IndexReader* r = IndexReader::open(INDEX_PATH);
         int64_t ver = r->getCurrentVersion(INDEX_PATH);
 
-        QString txt;
-        txt.append(tr("Statistics for <strong>%1</strong><br/>").arg(INDEX_PATH));
+        QString txt("<p dir=\"rtl\" style=\"padding:5px;\">");
+        txt.append(trUtf8("معلومات حول الفهرس:" "<br />"));
         //txt.append(tr("Max Docs: %1<br/>").arg(r->maxDoc()));
-        txt.append(tr("Current Version: %1<br/><br/>").arg(ver)) ;
-        txt.append(tr("Num Docs: %1<br/>").arg(r->numDocs()));
+//        txt.append(tr("Current Version: %1<br/><br/>").arg(ver)) ;
+        txt.append(trUtf8("عدد الصفحات: %1" "<br />").arg(r->numDocs()));
 
         TermEnum* te = r->terms();
         int32_t nterms;
@@ -215,14 +210,15 @@ void MainWindow::showStatistic()
             }
         }
 
-        txt.append(tr("Term count: %1<br/>").arg(nterms));
-        txt.append(tr("Index size: %1<br/>").arg(getIndexSize()));
-        txt.append(tr("Books size: %1").arg(getBooksSize()));
+        txt.append(trUtf8("عدد الكلمات: %1" "<br />").arg(nterms));
+        txt.append(trUtf8("حجم الفهرس: %1" "<br />").arg(getIndexSize()));
+        txt.append(trUtf8("حجم الكتب المفهرسة: %1" "<br />").arg(getBooksSize()));
+        txt.append("</p>");
         _CLLDELETE(te);
 
         r->close();
         _CLLDELETE(r);
-        QMessageBox::information(0, "Statistics", txt);
+        QMessageBox::information(this, trUtf8("معلومات"), txt);
     }
     catch(CLuceneError &err) {
         QMessageBox::warning(0, "Error search", err.what());
@@ -247,7 +243,7 @@ void MainWindow::resultsCount()
                                    .arg(m_resultCount));
 }
 
-void MainWindow::displayResults(/*result &pResult*/)
+void MainWindow::displayResults()
 {
 
     QString resultString;
@@ -258,42 +254,50 @@ void MainWindow::displayResults(/*result &pResult*/)
     bool whiteBG = true;
     int entryID;
     for(int i=start; i < maxResult;i++){
+
+        int bookID = m_results->bookIdAt(i);
+        int archive = m_results->ArchiveAt(i);
+        int score = (int) (m_results->scoreAt(i) * 100.0);
+
+        QString connName = (archive) ? QString("bid_%1").arg(archive) : QString("bid_%1_%2").arg(archive).arg(bookID);
+
         {
-            int bookID = m_results->bookIdAt(i);
-            int archive = m_results->ArchiveAt(i);
-            int score = (int) (m_results->scoreAt(i) * 100.0);
-
-            QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
-            QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                              .arg(buildFilePath(QString::number(bookID), archive));
-            m_bookDB.setDatabaseName(mdbpath);
-
-            if (!m_bookDB.open()) {
-                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+            QSqlDatabase bookDB;
+            if(archive && QSqlDatabase::contains(connName)) {
+                bookDB = QSqlDatabase::database(connName);
+            } else {
+                bookDB = QSqlDatabase::addDatabase("QODBC", connName);
+                QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                                  .arg(buildFilePath(QString::number(bookID), archive));
+                bookDB.setDatabaseName(mdbpath);
             }
-            QSqlQuery m_bookQuery(m_bookDB);
+
+            if (!bookDB.open())
+                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+
+            QSqlQuery bookQuery(bookDB);
 
             entryID = m_results->idAt(i);
-            m_bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
+            bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
                              .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                              .arg(entryID));
-            if(m_bookQuery.first()){
+            if(bookQuery.first()){
                 resultString.append(trUtf8("<div class=\"result\" class=\"%1\">"
                                            "<h3>%2</h3>"
-                                           "<span style=\"float: left; height: 10px; width: %10px; background-color: rgb(167, 239, 170);\">"
-                                           "<span style=\"float: left; height: 9px; width: 99px;border:1px solid #999999;\"></span>"
+                                           "<span class=\"progSpan\" style=\"width: %10px;\">"
+                                           "<span class=\"progSpanContainre\"></span>"
                                            "</span>"
-                                           "<a href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
+                                           "<a class=\"bookLink\" href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
                                            "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
                                            "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
                                            "</p></div>")
                                     .arg(whiteBG ? "whiteBG" : "grayBG") //BG color
-                                    .arg(getTitleId(entryID, archive, bookID)) //BAB
+                                    .arg(getTitleId(bookDB, entryID, archive, bookID)) //BAB
                                     .arg(entryID) // entry id
-                                    .arg(hiText(abbreviate(m_bookQuery.value(0).toString(),320), m_searchQuery)) // TEXT
+                                    .arg(hiText(abbreviate(bookQuery.value(0).toString(),320), m_searchQuery)) // TEXT
                                     .arg(getBookName(bookID)) // BOOK_NAME
-                                    .arg(m_bookQuery.value(1).toString()) // PAGE
-                                    .arg(m_bookQuery.value(2).toString()) // PART
+                                    .arg(bookQuery.value(1).toString()) // PAGE
+                                    .arg(bookQuery.value(2).toString()) // PART
                                     .arg(bookID)
                                     .arg(archive)
                                     .arg(score)
@@ -301,20 +305,23 @@ void MainWindow::displayResults(/*result &pResult*/)
                 whiteBG = !whiteBG;
             }
         }
-        QSqlDatabase::removeDatabase("resultBook");
+        if(!archive)
+            QSqlDatabase::removeDatabase(connName);
     }
 
     setPageCount(m_results->currentPage()+1, m_results->pageCount());
-    ui->webView->setHtml("<html><head><style>"
-                         "a{text-decoration: none;color:#000000;} a:hover {color:blue}"
-                         ".result{margin:0px;padding:4px;border-bottom:1px solid black;} "
-                         ".whiteBG{background-color:#FFFFFF;} .grayBG{background-color:#EFEFEF;} "
-                         ".result h3{margin:0px 0px 5px;font-size:18px;color:rgb(0, 68, 255);display:inline-block;} "
-                         ".result a{margin:0px;padding:0px 5px;display:block;} "
-                         ".bookName{margin-left:7px;color:green;font-weight:bold}"
-                         "</style></head>"
-                         "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
 
+    QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
+
+    ui->webView->setHtml(QString("<html><head><title></title>"
+                                 "<link href=\"%2/data/default.css\"  rel=\"stylesheet\" type=\"text/css\" />"
+                                 "</head>"
+                                 "<body>%1</body>"
+                                 "<script type=\"text/javascript\" src=\"%2/data/jquery-1.4.2.min.js\" />"
+                                 "<script type=\"text/javascript\" src=\"%2/data/scripts.js\" />"
+                                 "</html>")
+                         .arg(resultString)
+                         .arg(appPath));
 }
 
 void MainWindow::on_pushGoNext_clicked()
@@ -390,7 +397,7 @@ QStringList regExpList;
         regExpStr.append("\\b");
         regExpList.append(regExpStr);
     }
-//    qDebug() << regExpList;
+
     return regExpList;
 }
 
@@ -518,7 +525,6 @@ QString MainWindow::getIndexSize()
 QString MainWindow::getBooksSize()
 {
     QString sizeStr;
-//    QFileInfo fileInfo(m_bookPath);
     qint64 size = getDirSize(m_bookPath);
 
     if(size < 1024)
@@ -593,9 +599,9 @@ void MainWindow::doneIndexing(int indexingTime)
 
 }
 
-QString MainWindow::getTitleId(int pageID, int archive, int bookID)
+QString MainWindow::getTitleId(const QSqlDatabase &db, int pageID, int archive, int bookID)
 {
-    QSqlQuery m_bookQuery(QSqlDatabase::database("resultBook"));
+    QSqlQuery m_bookQuery(db);
     m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
                      .arg((!archive) ? "title" : QString("t%1").arg(bookID))
                      .arg(pageID));
@@ -625,6 +631,7 @@ QString MainWindow::getBookName(int bookID)
 
 void MainWindow::resultLinkClicked(const QUrl &url)
 {
+    return;
     int rid = url.queryItems().at(0).second.toInt();
     int bookID = url.queryItems().at(1).second.toInt();
     int archive = url.queryItems().at(2).second.toInt();
@@ -692,4 +699,76 @@ QString MainWindow::buildFilePath(QString bkid, int archive)
         return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
     else
         return QString("%1Books/Archive/%2.mdb").arg(m_bookPath).arg(archive);
+}
+
+void MainWindow::populateJavaScriptWindowObject()
+{
+    ui->webView->page()->mainFrame()->addToJavaScriptWindowObject("MainWindow", this);
+}
+
+QString MainWindow::getPage(QString href)
+{
+    QUrl url(href);
+    int rid = url.queryItems().at(0).second.toInt();
+    int bookID = url.queryItems().at(1).second.toInt();
+    int archive = url.queryItems().at(2).second.toInt();
+
+
+    QString text;
+    {
+        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                          .arg(buildFilePath(QString::number(bookID), archive));
+        m_bookDB.setDatabaseName(mdbpath);
+
+        if (!m_bookDB.open()) {
+            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+        }
+        QSqlQuery m_bookQuery(m_bookDB);
+
+        m_bookQuery.exec(QString("SELECT id, nass FROM %1 WHERE id = %2")
+                         .arg((!archive) ? "book" : QString("b%1").arg(bookID))
+                         .arg(rid));
+        if(m_bookQuery.first()) {
+            text = m_bookQuery.value(1).toString();
+            m_currentShownId = m_bookQuery.value(0).toInt();
+        }
+        text.replace(QRegExp("[\\r\\n]"),"<br/>");
+    }
+    QSqlDatabase::removeDatabase("disBook");
+
+    return hiText(text, m_searchQuery);
+}
+
+QString MainWindow::formNextUrl(QString href)
+{
+    QUrl url(href);
+    int rid = m_currentShownId+1;
+    int bookID = url.queryItems().at(1).second.toInt();
+    int archive = url.queryItems().at(2).second.toInt();
+
+    return QString("http://localhost/book.html?id=%1&bookid=%2&archive=%3")
+            .arg(rid)
+            .arg(bookID)
+            .arg(archive);
+}
+
+QString MainWindow::formPrevUrl(QString href)
+{
+    QUrl url(href);
+    int rid = m_currentShownId-1;
+    int bookID = url.queryItems().at(1).second.toInt();
+    int archive = url.queryItems().at(2).second.toInt();
+
+    return QString("http://localhost/book.html?id=%1&bookid=%2&archive=%3")
+            .arg(rid)
+            .arg(bookID)
+            .arg(archive);
+}
+
+void MainWindow::updateNavgitionLinks(QString href)
+{
+    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("updateLinks('%1', '%2');")
+                                                         .arg(formNextUrl(href))
+                                                         .arg(formPrevUrl(href)));
 }

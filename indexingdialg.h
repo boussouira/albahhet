@@ -16,6 +16,7 @@ class IndexingDialg : public QDialog {
 public:
     IndexingDialg(QWidget *parent = 0);
     ~IndexingDialg();
+    static QString arPlural(int count, int word);
 
 protected:
     void showBooks();

@@ -1,6 +1,12 @@
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
 
+enum {
+    SECOND  = 1,
+    MINUTE  = 2,
+    HOUR    = 3
+};
+
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::IndexingDialg)
@@ -85,8 +91,7 @@ void IndexingDialg::on_pushStartIndexing_clicked()
     }
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
-    if(ui->checkRamSize->isChecked())
-        m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
+    m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
 
     indexingTime.start();
 
@@ -173,13 +178,17 @@ QString IndexingDialg::formatTime(int milsec)
     int minutes = (int) (((milsec / 1000) / 60) % 60);
     int hours   = (int) (((milsec / 1000) / 60) / 60);
 
-    if(hours > 0)
-    time.append(trUtf8("%1س").arg(hours));
+    if(hours > 0){
+        time.append(arPlural(hours, HOUR));
+        time.append(trUtf8(" و "));
+    }
 
-    if(minutes > 0)
-        time.append(trUtf8("%1د").arg(minutes));
+    if(minutes > 0 || hours > 0) {
+        time.append(arPlural(minutes, MINUTE));
+        time.append(trUtf8(" و "));
+    }
 
-    time.append(trUtf8("%1ث").arg(seconde));
+    time.append(arPlural(seconde, SECOND));
 
     return time;
 }
@@ -232,4 +241,26 @@ void IndexingDialg::setRamSize()
         break;
 
     }
+}
+
+QString IndexingDialg::arPlural(int count, int word)
+{
+    QStringList list;
+    if(word == SECOND)
+        list <<  trUtf8("ثانية") << trUtf8("ثانيتين") << trUtf8("ثوان") << trUtf8("ثانية");
+    else if(word == MINUTE)
+        list <<  trUtf8("دقيقة") << trUtf8("دقيقتين") << trUtf8("دقائق") << trUtf8("دقيقة");
+    else if(word == HOUR)
+        list <<  trUtf8("ساعة") << trUtf8("ساعتين") << trUtf8("ساعات") << trUtf8("ساعة");
+
+    if(count == 1)
+        return list.at(0);
+    else if(count == 2)
+        return list.at(1);
+    else if (count > 2 && count <= 10)
+        return QString("%1 %2").arg(count).arg(list.at(2));
+    else if (count > 10)
+        return QString("%1 %2").arg(count).arg(list.at(3));
+    else
+        return QString();
 }
