@@ -47,18 +47,10 @@
         #include "mdbconverter.h"
 #endif
 
-#ifndef USE_MIL_SEC
-        #define miTOsec(x) (x/1000.0)
-        #define SECONDE_AR "ثانية"
-#else
-        #define miTOsec(x) x
-        #define SECONDE_AR "جزء من الثانية"
-#endif
+#define _ceil(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
 
-#define _toBInt(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
-#define _atLeastOne(x) (x > 0 ? x : 1)
-
-#define INDEX_PATH  "book_index"
+#define SETTINGS_FILE qApp->applicationDirPath()+"/settings.ini"
+#define NEW_QSETTINGS QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
 using namespace std;
 using namespace lucene::index;

@@ -34,7 +34,8 @@ set ( clucene_qt_SRCS
 	mainwindow.cpp
 	arabicanalyzer.cpp
 	indexingdialg.cpp
-	indexthread.cpp)
+	indexthread.cpp
+    indexinfo.cpp)
 
 set ( clucene_qt_UIS
 	mainwindow.ui

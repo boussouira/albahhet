@@ -1,0 +1,99 @@
+a 
+{
+    text-decoration: none;
+    color:#000000;
+}
+a:hover 
+{
+    color:#000000;
+}
+body
+{
+    direction: rtl;
+    margin: 0pt;
+    padding: 2px;
+}
+.result
+{
+    margin:0px;
+    padding:4px;
+    border-bottom:1px solid black;
+} 
+.whiteBG
+{
+    background-color:#FFFFFF;
+}
+.grayBG
+{
+    background-color:#EFEFEF;
+} 
+.result h3
+{
+    margin:0px 0px 5px;
+    font-size:18px;
+    color:rgb(0, 68, 255);
+    display:inline-block;
+} 
+.result a
+{
+    margin:0px;
+    padding:0px 5px;
+    display:block;
+} 
+.currentResult 
+{
+    font-weight:bold;
+    margin:0px;
+    padding:10px;
+    background-color:#EEFFFF;
+    border:1px solid black;
+}
+
+.bookName
+{
+    margin-left:7px;
+    color:green;
+    font-weight:bold
+}
+
+.progSpan 
+{
+    float: left;
+    height: 10px;
+    background-color: rgb(167, 239, 170);
+}
+
+.progSpanContainre
+{
+    float: left;
+    height: 9px;
+    width: 99px;
+    border:1px solid #999999;
+}
+
+.prev{
+    font-style:oblique;
+    float:right;
+    color:#8c8a8c;
+}
+
+.next  {
+    font-style:oblique;
+    float:left;
+    color:#8c8a8c;
+}
+
+.pageNav {
+    font-style:oblique;
+    margin:0 10px;
+    display:block;
+}
+
+.parText{
+    color:black;
+    padding-top:20px;
+}
+
+.clearDiv{
+    clear:both;
+}

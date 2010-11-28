@@ -6,15 +6,16 @@
 #include "indexthread.h"
 #include "arabicanalyzer.h"
 #include "booksdb.h"
+#include "indexinfo.h"
 
 class IndexingThread : public QThread
 {
     Q_OBJECT
 public:
     IndexingThread();
-    IndexingThread(BooksDB *bookDB);
     void setBookDB(BooksDB *bookDB) { m_bookDB = bookDB; }
     void setWirter(IndexWriter* writer) { m_writer = writer;}
+    void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
     void run();
     void stop() { m_stopIndexing = true; }
 
@@ -29,6 +30,7 @@ signals:
 protected:
     BooksDB *m_bookDB;
     IndexWriter* m_writer;
+    IndexInfo* m_indexInfo;
     bool m_stopIndexing;
 };
 

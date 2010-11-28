@@ -1,7 +1,8 @@
 #ifndef BOOKSDB_H
 #define BOOKSDB_H
 
-#include <QMutex>
+#include "indexinfo.h"
+#include <qthread.h>
 #include <QMutexLocker>
 #include <QVariant>
 #include <QSqlDatabase>
@@ -30,17 +31,28 @@ protected:
     QString m_archive;
 };
 
-class BooksDB
+class BooksDB : public QThread
 {
 public:
     BooksDB();
     ~BooksDB();
     BookInfo *next();
+    void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
+    void openIndexDB();
+    void openShamelaDB();
+    void queryBooksToIndex();
+    void importBooksListFromShamela();
+    void run();
     void clear();
 
 protected:
-    QSqlDatabase m_db;
-    QSqlQuery *m_query;
+    IndexInfo* m_indexInfo;
+    QSqlDatabase m_indexDB;
+    QSqlQuery *m_indexQuery;
+    QSqlDatabase m_shamelaDB;
+    QSqlQuery *m_shamelaQuery;
+    bool m_indexDbIsOpen;
+    bool m_shamelaDbIsOpen;
     QMutex m_mutex;
 };
 

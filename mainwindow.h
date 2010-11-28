@@ -7,6 +7,8 @@
 #include <QSettings>
 #include <QSpinBox>
 #include <QStandardItemModel>
+#include <QAction>
+#include <QHash>
 
 #include "common.h"
 #include "arabicanalyzer.h"
@@ -25,6 +27,11 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void loadIndexesList();
+    void selectIndex(QString name);
+    void selectIndex(QAction *act);
+    void indexChanged();
+    void updateIndexesMenu();
 
 protected:
     void changeEvent(QEvent *e);
@@ -39,7 +46,8 @@ protected:
     QString getBookName(int bookID);
 
 public slots:
-    void startIndexing();
+    void changeIndex();
+    void newIndex();
     void startSearching();
     void showStatistic();
     QString cleanString(QString str);
@@ -60,15 +68,16 @@ public slots:
 protected:
     QSqlDatabase m_bookDB;
     QSqlQuery *m_bookQuery;
-    QString m_quranDBPath;
     QString m_titleName;
     QString m_bookTableName;
-    QString m_bookPath;
-    QString m_bookName;
     QString m_searchQuery;
     QString m_highLightRE;
     QList<QString> m_colors;
     Results *m_results;
+    IndexInfo *m_currentIndex;
+    QHash<QString, IndexInfo*> m_indexInfoMap;
+    QList<IndexInfo*> m_indexInfoList;
+    QList<QAction*> m_indexActionsList;
     int m_resultCount;
     int m_resultParPage;
     int m_currentShownId;
@@ -77,9 +86,8 @@ protected:
     Ui::MainWindow *ui;
 
 private slots:
-    void on_pushButton_2_clicked();
+    void displayResultsOptions();
     void resultLinkClicked(const QUrl &url);
-    void on_pushButton_clicked();
     void on_lineQuery_returnPressed();
     void on_pushGoLast_clicked();
     void on_pushGoFirst_clicked();

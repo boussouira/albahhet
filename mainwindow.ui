@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>553</width>
+    <height>338</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -14,140 +22,26 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>المكتبة الشاملة:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineBook">
+       <widget class="QLineEdit" name="lineQuery">
         <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
+         <enum>Qt::RightToLeft</enum>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="pushSearch">
         <property name="maximumSize">
          <size>
-          <width>35</width>
-          <height>23</height>
+          <width>85</width>
+          <height>27</height>
          </size>
         </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
         <property name="text">
-         <string>...</string>
+         <string>بحث</string>
         </property>
        </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushIndex">
-          <property name="maximumSize">
-           <size>
-            <width>95</width>
-            <height>27</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>فهرسة المكتبة</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushRCount">
-          <property name="maximumSize">
-           <size>
-            <width>85</width>
-            <height>27</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>نتائج البحث</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="text">
-           <string>اعدادات</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushStatstic">
-          <property name="maximumSize">
-           <size>
-            <width>85</width>
-            <height>27</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>احصاءات</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLineEdit" name="lineQuery">
-          <property name="layoutDirection">
-           <enum>Qt::RightToLeft</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushSearch">
-          <property name="maximumSize">
-           <size>
-            <width>85</width>
-            <height>27</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>بحث</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
      </layout>
     </item>
@@ -271,6 +165,52 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>553</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>فهرس</string>
+    </property>
+    <widget class="QMenu" name="menuIndexesList">
+     <property name="title">
+      <string>اختيار فهرس</string>
+     </property>
+    </widget>
+    <addaction name="actionNewIndex"/>
+    <addaction name="menuIndexesList"/>
+    <addaction name="actionIndexInfo"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>اعدادات</string>
+    </property>
+    <addaction name="actionSearchSettings"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <action name="actionNewIndex">
+   <property name="text">
+    <string>انشاء فهرس...</string>
+   </property>
+  </action>
+  <action name="actionIndexInfo">
+   <property name="text">
+    <string>معلومات حول الفهرس</string>
+   </property>
+  </action>
+  <action name="actionSearchSettings">
+   <property name="text">
+    <string>اعدادات البحث...</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

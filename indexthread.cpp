@@ -5,11 +5,6 @@ IndexingThread::IndexingThread()
     m_stopIndexing = false;
 }
 
-IndexingThread::IndexingThread(BooksDB *bookDB): m_bookDB(bookDB)
-{
-    m_stopIndexing = false;
-}
-
 void IndexingThread::run()
 {
     startIndexing();
@@ -22,7 +17,7 @@ void IndexingThread::startIndexing()
         while(book != 0) {
             indexBook(book->id(), book->path(), book->arhive());
             emit fileIndexed(book->name());
-           qDebug() << "FILE:" << book->path();
+//           qDebug() << "FILE:" << book->path();
             delete book;
 
             book = m_bookDB->next();

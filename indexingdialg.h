@@ -3,9 +3,11 @@
 
 #include <QDialog>
 #include <QTime>
+#include <QSettings>
 #include "common.h"
 #include "booksdb.h"
 #include "indexthread.h"
+#include "indexinfo.h"
 
 namespace Ui {
     class IndexingDialg;
@@ -17,6 +19,8 @@ public:
     IndexingDialg(QWidget *parent = 0);
     ~IndexingDialg();
     static QString arPlural(int count, int word);
+    void saveIndexInfo();
+    void checkIndex();
 
 protected:
     void showBooks();
@@ -31,6 +35,7 @@ public slots:
 protected:
     IndexWriter* m_writer;
     BooksDB *m_bookDB;
+    IndexInfo *m_indexInfo;
     QTime indexingTime;
     int m_booksCount;
     int m_indexedBooks;
@@ -39,9 +44,12 @@ protected:
     Ui::IndexingDialg *ui;
 
 private slots:
-    void on_pushClose_clicked();
-    void on_pushStopIndexing_clicked();
-    void on_pushStartIndexing_clicked();
+    void on_buttonSelectIndexPath_clicked();
+    void on_buttonSelectShamela_clicked();
+    void nextStep();
+    void on_pushCancel_clicked();
+    void stopIndexing();
+    void startIndexing();
 };
 
 #endif // INDEXINGDIALG_H
