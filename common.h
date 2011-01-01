@@ -1,11 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <QtSql>
-#include <QDebug>
-#include <QStringListModel>
 #include <QMessageBox>
-
 #include <CLucene.h>
 #include <CLucene/StdHeader.h>
 
@@ -34,6 +30,7 @@
 #include <string.h>
 #include <algorithm>
 #include <stdio.h>
+#include <cmath>
 
 #ifdef Q_OS_WIN32
         #define TCHAR_TO_QSTRING(s)   QString::fromUtf16((const ushort*) s)
@@ -47,7 +44,8 @@
         #include "mdbconverter.h"
 #endif
 
-#define _ceil(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
+//#define _ceil(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
+#define _ceil(x) ceil(x)
 
 #define SETTINGS_FILE qApp->applicationDirPath()+"/settings.ini"
 #define NEW_QSETTINGS QSettings settings(SETTINGS_FILE, QSettings::IniFormat);

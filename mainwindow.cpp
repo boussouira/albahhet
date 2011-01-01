@@ -7,8 +7,22 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_results = new Results();
+    m_searcher = new ShamelaSearcher();
     m_currentIndex = new IndexInfo();
+
+    m_fetechProgressBar = new QProgressBar(this);
+    m_fetechProgressBar->setTextVisible(false);
+    statusBar()->addWidget(m_fetechProgressBar, 0);
+    m_fetechProgressBar->hide();
+
+    m_searchTimeLabel = new QLabel(this);
+    statusBar()->addPermanentWidget(m_searchTimeLabel, 0);
+    m_searchTimeLabel->hide();
+
+    m_searchResultsLabel = new QLabel(this);
+    statusBar()->addPermanentWidget(m_searchResultsLabel, 1);
+    m_searchTimeLabel->hide();
+
     m_resultCount = 0;
     m_resultParPage = 10;
     m_currentShownId = 0;
@@ -85,17 +99,15 @@ void MainWindow::loadIndexesList()
             info->setOptimizeIndex(settings.value("optimizeIndex").toBool());
             settings.endGroup();
 
-            m_indexInfoList.append(info);
             m_indexInfoMap.insert(list.at(i), info);
 
             QAction *action = new QAction(info->name(), ui->menuIndexesList);
-            action->setData(i);
-            //        action->setCheckable(true);
+            action->setData(list.at(i));
             connect(action, SIGNAL(triggered()), this, SLOT(changeIndex()));
 
-            m_indexActionsList.append(action);
-                    }
-        ui->menuIndexesList->addActions(m_indexActionsList);
+            ui->menuIndexesList->addAction(action);
+        }
+
         selectIndex(current);
 
     } else {
@@ -112,28 +124,22 @@ void MainWindow::loadIndexesList()
 
 void MainWindow::selectIndex(QString name)
 {
-    IndexInfo *info = m_indexInfoMap.value(name, 0);
-    if(info != 0) {
-        for(int i=0; i<m_indexInfoList.count(); i++) {
-            if(m_indexInfoList.at(i)->name() == info->name()) {
-                selectIndex(m_indexActionsList.at(i));
-                break;
-            }
+    foreach(QAction *a, ui->menuIndexesList->actions()) {
+        if(a->data().toString() == name) {
+            selectIndex(a);
+            break;
         }
     }
+
 }
 
 void MainWindow::selectIndex(QAction *act)
 {
-    for(int i=0; i<m_indexActionsList.count(); i++) {
-        if(act == m_indexActionsList.at(i)) {
-            m_indexActionsList.at(i)->setCheckable(true);
-            m_indexActionsList.at(i)->setChecked(true);
-            m_currentIndex = m_indexInfoList.at(i);
-            indexChanged();
-            break;
-        }
-    }
+    m_currentIndex = m_indexInfoMap[act->data().toString()];
+    act->setCheckable(true);
+    act->setChecked(true);
+
+    indexChanged();
 }
 
 void MainWindow::changeIndex()
@@ -145,25 +151,18 @@ void MainWindow::changeIndex()
             return;
         }
 
-        int id = action->data().toInt();
-        m_currentIndex = m_indexInfoList.at(id);
-        action->setCheckable(true);
-        action->setChecked(true);
-
-        for(int i=0; i<m_indexActionsList.count(); i++) {
-            if(i != id) {
-                m_indexActionsList.at(i)->setChecked(false);
-                m_indexActionsList.at(i)->setCheckable(false);
-            }
+        foreach(QAction *a, ui->menuIndexesList->actions()) {
+            a->setChecked(false);
+            a->setCheckable(false);
         }
 
-        indexChanged();
+        selectIndex(action);
     }
 }
 
 void MainWindow::indexChanged()
 {
-    m_results->clear();
+    m_searcher->clear();
     ui->webView->setHtml("");
     ui->label->setText("");
 
@@ -176,11 +175,7 @@ void MainWindow::indexChanged()
 void MainWindow::updateIndexesMenu()
 {
     QList<QAction*> list = ui->menuIndexesList->actions();
-
     qDeleteAll(list);
-
-    m_indexActionsList.clear();
-    m_indexInfoList.clear();
     m_indexInfoMap.clear();
 
     loadIndexesList();
@@ -207,64 +202,136 @@ void MainWindow::newIndex()
 
 void MainWindow::startSearching()
 {
-    m_results->clear();
+    m_searcher->clear();
 
     if(!m_dbIsOpen)
         openDB();
 
-    try {
-        ArabicAnalyzer analyzer;
+    m_searchQuery = ui->lineQuery->text();
 
-        m_searchQuery = ui->lineQuery->text();
+    m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
+    m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
+    m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
+    m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
+    m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
+    m_searchQuery.replace(trUtf8("؟"), "?");
 
-        m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
-        m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
-        m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
-        m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
-        m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
-        m_searchQuery.replace(trUtf8("؟"), "?");
+    m_searcher = new ShamelaSearcher;
+    m_searcher->setIndexInfo(m_currentIndex);
+    m_searcher->setQueryString(m_searchQuery);
+    m_searcher->setResultsPeerPage(m_resultParPage);
+    m_searcher->setsetDefaultOperator(ui->checkBox->isChecked());
 
-        IndexSearcher *searcher = new IndexSearcher(qPrintable(m_currentIndex->path()));
+    connect(m_searcher, SIGNAL(gotResult(ShamelaResult*)), this, SLOT(gotResult(ShamelaResult*)));
+    connect(m_searcher, SIGNAL(startSearching()), this, SLOT(searchStarted()));
+    connect(m_searcher, SIGNAL(doneSearching()), this, SLOT(searchFinnished()));
+    connect(m_searcher, SIGNAL(startFeteching()), this, SLOT(fetechStarted()));
+    connect(m_searcher, SIGNAL(doneFeteching()), this, SLOT(fetechFinnished()));
 
-        // Start building the query
-        QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
-        queryPareser->setAllowLeadingWildcard(true);
+    /*
+    QFile file("out.html");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
 
-        if(ui->checkBox->isChecked())
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+    QTextStream out(&file);
+    out << ui->webView->page()->mainFrame()->toHtml();
+    */
+    m_searcher->start();
+}
 
-        Query* q = queryPareser->parse(QSTRING_TO_TCHAR(m_searchQuery));
-//        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-//        qDebug() << "Query : " << queryWord;
+void MainWindow::searchStarted()
+{
+    QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
 
-        QTime time;
+    ui->webView->setHtml(QString("<html><head><title></title>"
+                                 "<link href=\"%1/data/default.css\"  rel=\"stylesheet\" type=\"text/css\" />"
+                                 "</head>"
+                                 "<body></body>"
+                                 "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\"></script>"
+                                 "<script type=\"text/javascript\" src=\"%1/data/scripts.js\"></script>"
+                                 "</html>")
+                         .arg(appPath));
 
-        time.start();
-        m_results->setHits(searcher->search(q));
-        int timeSearch = time.elapsed();
+    ui->label->clear();
+    m_searchTimeLabel->clear();
+    m_searchResultsLabel->clear();
+    m_searchTimeLabel->hide();
+    m_searchResultsLabel->hide();
 
-        m_resultCount = m_results->resultsCount();
-        m_results->setPageCount(_ceil((m_results->resultsCount()/(double)m_resultParPage)));
-        m_results->setCurrentPage(0);
+    buttonStat(1, 1);
+    ui->pushSearch->setEnabled(false);
+    ui->lineQuery->setEnabled(false);
+    ui->webView->page()->mainFrame()->evaluateJavaScript("searchStarted()");
+}
 
-        m_results->setQuery(q);
-        m_results->setSearcher(searcher);
+void MainWindow::searchFinnished()
+{
+    ui->webView->page()->mainFrame()->evaluateJavaScript("searchFinnished()");
+    m_searchTimeLabel->setText(trUtf8("  مدة البحث: %1 ثانية").arg(m_searcher->searchTime()/1000.0));
+    m_searchResultsLabel->setText(trUtf8("  نتائج البحث: %1").arg(m_searcher->resultsCount()));
+    m_searchTimeLabel->show();
+    m_searchResultsLabel->show();
+}
 
-        displayResults();
+void MainWindow::fetechStarted()
+{
+    ui->pushSearch->setEnabled(false);
+    ui->lineQuery->setEnabled(false);
 
-        this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 ثانية.  "
-                                               "نتائج البحث %2")
-                                       .arg(timeSearch/1000.0)
-                                       .arg(m_resultCount));
+    ui->webView->page()->mainFrame()->evaluateJavaScript("fetechStarted()");
+    m_fetechProgressBar->setMaximum(m_searcher->resultsPeerPage());
+    m_fetechProgressBar->setValue(0);
+    m_fetechProgressBar->show();
+}
+
+void MainWindow::fetechFinnished()
+{
+    ShamelaSearcher *search = qobject_cast<ShamelaSearcher *>(sender());
+    if(search) {
+        setPageCount(search->currentPage()+1, search->pageCount());
     }
 
-    catch(CLuceneError &tmp) {
-        QMessageBox::warning(0, "Error search", tmp.what());
-    }
+    ui->webView->page()->mainFrame()->evaluateJavaScript("handleEvents()");
+    m_fetechProgressBar->setValue(m_fetechProgressBar->maximum());
+    m_fetechProgressBar->hide();
 
-    catch(...) {
-        qDebug() << "Error when searching at : " << m_currentIndex->path();
-    }
+    ui->pushSearch->setEnabled(true);
+    ui->lineQuery->setEnabled(true);
+}
+
+void MainWindow::gotResult(ShamelaResult *result)
+{
+    QString resultString = trUtf8("<div class=\"result %1\">"
+                               "<h3>%2</h3>"
+                               "<span class=\"progSpan\" style=\"width: %10px;\">"
+                               "<span class=\"progSpanContainre\"></span>"
+                               "</span>"
+                               "<a class=\"bookLink\" href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
+                               "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
+                               "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
+                               "</p></div>")
+                        .arg(result->bgColor())     // backround class name
+                        .arg(result->title())       // bab
+                        .arg(result->id())          // entry id
+                        .arg(result->snippet().simplified())    // text snippet
+                        .arg(getBookName(result->bookId()))     // book name
+                        .arg(result->page())        // page
+                        .arg(result->part())        // part
+                        .arg(result->bookId())      // book id
+                        .arg(result->archive())     // book archive
+                        .arg(result->score());      // score
+
+    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("addResult('%1');")
+                                                         .arg(resultString));
+    m_fetechProgressBar->setValue(m_fetechProgressBar->value()+1);
+    /*
+    QFile file("test.js");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+        return;
+
+    QTextStream out(&file);
+    out << QString("addResult('%1');").arg(resultString) << "\n";
+    */
 
 }
 
@@ -353,16 +420,16 @@ void MainWindow::displayResults()
 
     QString resultString;
 
-    int start = m_results->currentPage() * m_resultParPage;
-    int maxResult  =  (m_results->resultsCount() >= start+m_resultParPage)
-                      ? start+m_resultParPage : m_results->resultsCount();
+    int start = m_searcher->currentPage() * m_resultParPage;
+    int maxResult  =  (m_searcher->resultsCount() >= start+m_resultParPage)
+                      ? start+m_resultParPage : m_searcher->resultsCount();
     bool whiteBG = true;
     int entryID;
     for(int i=start; i < maxResult;i++){
 
-        int bookID = m_results->bookIdAt(i);
-        int archive = m_results->ArchiveAt(i);
-        int score = (int) (m_results->scoreAt(i) * 100.0);
+        int bookID = m_searcher->bookIdAt(i);
+        int archive = m_searcher->ArchiveAt(i);
+        int score = (int) (m_searcher->scoreAt(i) * 100.0);
 
         QString connName = (archive) ? QString("bid_%1").arg(archive) : QString("bid_%1_%2").arg(archive).arg(bookID);
 
@@ -382,7 +449,7 @@ void MainWindow::displayResults()
 
             QSqlQuery bookQuery(bookDB);
 
-            entryID = m_results->idAt(i);
+            entryID = m_searcher->idAt(i);
             bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
                              .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                              .arg(entryID));
@@ -414,7 +481,7 @@ void MainWindow::displayResults()
             QSqlDatabase::removeDatabase(connName);
     }
 
-    setPageCount(m_results->currentPage()+1, m_results->pageCount());
+    setPageCount(m_searcher->currentPage()+1, m_searcher->pageCount());
 
     QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
 
@@ -431,26 +498,22 @@ void MainWindow::displayResults()
 
 void MainWindow::on_pushGoNext_clicked()
 {
-    m_results->setCurrentPage(m_results->currentPage()+1);
-    displayResults();
+    m_searcher->nextPage();
 }
 
 void MainWindow::on_pushGoPrev_clicked()
 {
-    m_results->setCurrentPage(m_results->currentPage()-1);
-    displayResults();
+    m_searcher->prevPage();
 }
 
 void MainWindow::on_pushGoFirst_clicked()
 {
-    m_results->setCurrentPage(0);
-    displayResults();
+    m_searcher->firstPage();
 }
 
 void MainWindow::on_pushGoLast_clicked()
 {
-    m_results->setCurrentPage(m_results->pageCount()-1);
-    displayResults();
+    m_searcher->lastPage();
 }
 
 QString MainWindow::hiText(const QString &text, const QString &strToHi)

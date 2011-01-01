@@ -10,14 +10,18 @@ SOURCES += main.cpp \
     indexingdialg.cpp \
     indexthread.cpp \
     booksdb.cpp \
-    indexinfo.cpp
+    indexinfo.cpp \
+    shamelasearcher.cpp \
+    shamelaresult.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
     indexthread.h \
     common.h \
     booksdb.h \
-    indexinfo.h
+    indexinfo.h \
+    shamelasearcher.h \
+    shamelaresult.h
 FORMS += mainwindow.ui \
     indexingdialg.ui
 win32 {
