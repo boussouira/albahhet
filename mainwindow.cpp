@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "QWebFrame"
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
@@ -26,9 +26,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_resultParPage = 10;
     m_dbIsOpen = false;
 
+    FORCE_RTL(ui->lineQueryMust);
+    FORCE_RTL(ui->lineQueryShould);
+    FORCE_RTL(ui->lineQueryShouldNot);
+
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    m_searchQuery = settings.value("lastQuery").toString();
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
 
     settings.beginGroup("MainWindow");
@@ -37,10 +40,9 @@ MainWindow::MainWindow(QWidget *parent) :
     settings.endGroup();
     loadIndexesList();
 
-    ui->lineQuery->setText(m_searchQuery);
-
-    ui->lineQuery->setLayoutDirection(Qt::LeftToRight);
-    ui->lineQuery->setLayoutDirection(Qt::RightToLeft);
+    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
+    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
+    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
 
     connect(ui->actionNewIndex, SIGNAL(triggered()), this, SLOT(newIndex()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
@@ -52,9 +54,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    delete ui;
+}
+
+void MainWindow::saveSettings()
+{
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    settings.setValue("lastQuery", ui->lineQuery->text());
+    settings.setValue("lastQueryMust", ui->lineQueryMust->text());
+    settings.setValue("lastQueryShould", ui->lineQueryShould->text());
+    settings.setValue("lastQueryShouldNot", ui->lineQueryShouldNot->text());
+
     settings.setValue("resultPeerPage", m_resultParPage);
 
     settings.beginGroup("MainWindow");
@@ -65,8 +75,6 @@ MainWindow::~MainWindow()
     if(!m_currentIndex->name().isEmpty())
         settings.setValue("current_index",
                           QString("i_%1").arg(IndexInfo::nameHash(m_currentIndex->name())));
-
-    delete ui;
 }
 
 void MainWindow::loadIndexesList()
@@ -146,6 +154,11 @@ void MainWindow::changeIndex()
 
 void MainWindow::indexChanged()
 {
+    if(m_bookDB.isOpen()) {
+        delete m_bookQuery;
+        m_bookDB.close();
+    }
+    m_dbIsOpen = false;
 }
 
 void MainWindow::updateIndexesMenu()
@@ -169,6 +182,12 @@ void MainWindow::changeEvent(QEvent *e)
     }
 }
 
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    saveSettings();
+    e->accept();
+}
+
 void MainWindow::newIndex()
 {
     IndexingDialg *indexDial = new IndexingDialg(this);
@@ -181,20 +200,58 @@ void MainWindow::startSearching()
     if(!m_dbIsOpen)
         openDB();
 
-    m_searchQuery = ui->lineQuery->text();
+    QString mustQureyStr = ui->lineQueryMust->text();
+    QString shouldQureyStr = ui->lineQueryShould->text();
+    QString shouldNotQureyStr = ui->lineQueryShouldNot->text();
 
-    m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
-    m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
-    m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
-    m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
-    m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
-    m_searchQuery.replace(trUtf8("؟"), "?");
+    NORMALISE_SEARCH_STRING(mustQureyStr);
+    NORMALISE_SEARCH_STRING(shouldQureyStr);
+    NORMALISE_SEARCH_STRING(shouldNotQureyStr);
+
+    m_searchQuery = mustQureyStr + " " + shouldQureyStr;
+
+    ArabicAnalyzer analyzer;
+    BooleanQuery *q = new BooleanQuery;
+    QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
+    queryPareser->setAllowLeadingWildcard(true);
+
+    if(!mustQureyStr.isEmpty()) {
+        if(ui->checkQueryMust->isChecked())
+            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+        else
+            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(mustQureyStr));
+        q->add(mq, BooleanClause::MUST);
+
+    }
+
+    if(!shouldQureyStr.isEmpty()) {
+        if(ui->checkQueryShould->isChecked())
+            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+        else
+            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(shouldQureyStr));
+        q->add(mq, BooleanClause::SHOULD);
+
+    }
+
+    if(!shouldNotQureyStr.isEmpty()) {
+        if(ui->checkQueryShouldNot->isChecked())
+            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+        else
+            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(shouldNotQureyStr));
+        q->add(mq, BooleanClause::MUST_NOT);
+    }
 
     ShamelaSearcher *m_searcher = new ShamelaSearcher;
     m_searcher->setIndexInfo(m_currentIndex);
     m_searcher->setQueryString(m_searchQuery);
+    m_searcher->setQuery(q);
     m_searcher->setResultsPeerPage(m_resultParPage);
-    m_searcher->setsetDefaultOperator(ui->checkBox->isChecked());
 
     ShamelaResultWidget *widget = new ShamelaResultWidget(this);
     widget->setShamelaSearch(m_searcher);
@@ -213,16 +270,22 @@ void MainWindow::showStatistic()
 {
     try {
         IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->path()));
-//        int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
+        //int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
-        QString txt("<p dir=\"rtl\" style=\"padding:5px;font-weight:bold;\">");
+        QTreeWidget *treeWidget = new QTreeWidget;
+        treeWidget->setColumnCount(2);
+        treeWidget->setHeaderHidden(true);
+        treeWidget->setRootIsDecorated(false);
 
-        txt.append(trUtf8("اسم الفهرس: <strong style=\"color:green;\">%1</strong>" "<br />").arg(m_currentIndex->name()));
-        txt.append(trUtf8("مسار الفهرس: <strong style=\"color:green;\">%1</strong>" "<br />").arg(m_currentIndex->path()));
-        txt.append(trUtf8("مسار المكتبة الشاملة: <strong style=\"color:green;\">%1</strong>" "<br />").arg(m_currentIndex->shamelaPath()));
-        //txt.append(tr("Max Docs: %1<br/>").arg(r->maxDoc()));
-//        txt.append(tr("Current Version: %1<br/><br/>").arg(ver)) ;
-        txt.append(trUtf8("عدد الصفحات: <strong style=\"color:green;\">%1</strong>" "<br />").arg(r->numDocs()));
+        QList<QTreeWidgetItem *> itemList;
+
+        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name())
+        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path())
+        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath())
+        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs())
+
+        //ADD_QTREEWIDGET_ITEM("Max Docs", r->maxDoc());
+        //ADD_QTREEWIDGET_ITEM("Current Version", ver));
 
         TermEnum* te = r->terms();
         int32_t nterms;
@@ -244,22 +307,23 @@ void MainWindow::showStatistic()
             }
         }
 
-        txt.append(trUtf8("عدد الكلمات: <strong style=\"color:green;\">%1</strong>" "<br />").arg(nterms));
-        txt.append(trUtf8("حجم الفهرس: <strong style=\"color:green;\">%1</strong>" "<br />").arg(getIndexSize()));
-        txt.append(trUtf8("حجم الكتب المفهرسة: <strong style=\"color:green;\">%1</strong>" "<br />").arg(getBooksSize()));
-        txt.append("</p>");
+        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms)
+        ADD_QTREEWIDGET_ITEM("حجم الفهرس", getIndexSize())
+        ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getBooksSize())
+
+        treeWidget->addTopLevelItems(itemList);
+        treeWidget->resizeColumnToContents(1);
+        treeWidget->resizeColumnToContents(0);
 
         QDialog *dialog = new QDialog(this);
         QVBoxLayout *layout = new QVBoxLayout();
-        QTextBrowser *browser = new QTextBrowser(dialog);
-        browser->setHtml(txt);
-        QLabel *label = new QLabel(trUtf8(":معلومات حول الفهرس"), dialog);
-        label->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+        QLabel *label = new QLabel(trUtf8("معلومات حول الفهرس:"), dialog);
         layout->addWidget(label);
-        layout->addWidget(browser);
+        layout->addWidget(treeWidget);
 
         dialog->setWindowTitle(windowTitle());
         dialog->setLayout(layout);
+        dialog->resize(treeWidget->sizeHint());
         dialog->show();
 
         _CLLDELETE(te);
@@ -279,7 +343,17 @@ void MainWindow::resultsCount()
 {
 }
 
-void MainWindow::on_lineQuery_returnPressed()
+void MainWindow::on_lineQueryMust_returnPressed()
+{
+    startSearching();
+}
+
+void MainWindow::on_lineQueryShould_returnPressed()
+{
+    startSearching();
+}
+
+void MainWindow::on_lineQueryShouldNot_returnPressed()
 {
     startSearching();
 }
@@ -422,17 +496,18 @@ void MainWindow::doneIndexing(int indexingTime)
 void MainWindow::displayResultsOptions()
 {
     QDialog *settingDialog =  new QDialog(this);
+    settingDialog->setWindowTitle(windowTitle());
     QVBoxLayout *vLayout= new QVBoxLayout;
     QHBoxLayout *hLayout= new QHBoxLayout;
-    QLabel *label = new QLabel(trUtf8(":عدد النتائج في كل صفحة"), settingDialog);
+    QLabel *label = new QLabel(trUtf8("عدد النتائج في كل صفحة:"), settingDialog);
     QSpinBox *spinPage = new QSpinBox(settingDialog);
     QPushButton *pushDone = new QPushButton(trUtf8("حفظ"), settingDialog);
 
     spinPage->setMaximum(1000);
     spinPage->setMinimum(1);
     spinPage->setValue(m_resultParPage);
-    hLayout->addWidget(spinPage);
     hLayout->addWidget(label);
+    hLayout->addWidget(spinPage);
     vLayout->addLayout(hLayout);
     vLayout->addWidget(pushDone);
     settingDialog->setLayout(vLayout);

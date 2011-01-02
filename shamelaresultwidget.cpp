@@ -26,6 +26,7 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
 ShamelaResultWidget::~ShamelaResultWidget()
 {
+    m_booksName.clear();
     delete ui;
 
     if(m_searcher->isRunning())
@@ -111,7 +112,7 @@ void ShamelaResultWidget::gotException(QString what, int id)
     QString str = what;
     if(id == CL_ERR_TooManyClauses)
         str = trUtf8("احتمالات البحث كثيرة جدا");
-    else if(id == CL_ERR_CorruptIndex or id == CL_ERR_IO){
+    else if(id == CL_ERR_CorruptIndex || id == CL_ERR_IO){
         str = trUtf8("الفهرس غير سليم:");
         str += "\n" + what;
     }
@@ -162,8 +163,11 @@ QString ShamelaResultWidget::hiText(const QString &text, const QString &strToHi)
 
 QStringList ShamelaResultWidget::buildRegExp(const QString &str)
 {
-QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
-QStringList regExpList;
+    QString text = str;
+    text.remove(QRegExp(trUtf8("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
+
+    QStringList strWords = text.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
+    QStringList regExpList;
     QChar opPar('(');
     QChar clPar(')');
     foreach(QString word, strWords)
@@ -223,14 +227,22 @@ QString ShamelaResultWidget::getTitleId(const QSqlDatabase &db, int pageID, int 
 
 QString ShamelaResultWidget::getBookName(int bookID)
 {
-    QSqlQuery m_bookQuery(QSqlDatabase::database("shamelaBook"));
-    m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
+    QString name = m_booksName.value(bookID, "");
+    if(!name.isEmpty()) {
+        return name;
+    } else {
+        QSqlQuery m_bookQuery(QSqlDatabase::database("shamelaBook"));
+        m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
 
-    if(m_bookQuery.first())
-        return m_bookQuery.value(0).toString();
-    else {
-        qDebug() << m_bookQuery.lastError().text();
-        return QString();
+        if(m_bookQuery.first()){
+            QString bookName = m_bookQuery.value(0).toString();
+            m_booksName.insert(bookID, bookName);
+            return bookName;
+        }
+        else {
+            qDebug() << m_bookQuery.lastError().text();
+            return QString();
+        }
     }
 }
 
@@ -314,6 +326,8 @@ QString ShamelaResultWidget::getPage(QString href)
     int bookID = url.queryItems().at(1).second.toInt();
     int archive = url.queryItems().at(2).second.toInt();
 
+    m_currentBookId = bookID;
+
     QString text;
     {
         QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
@@ -326,18 +340,29 @@ QString ShamelaResultWidget::getPage(QString href)
         }
         QSqlQuery m_bookQuery(m_bookDB);
 
-        m_bookQuery.exec(QString("SELECT id, nass FROM %1 WHERE id = %2")
+        m_bookQuery.exec(QString("SELECT id, nass, page, part FROM %1 WHERE id = %2")
                          .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                          .arg(rid));
         if(m_bookQuery.first()) {
             text = m_bookQuery.value(1).toString();
             m_currentShownId = m_bookQuery.value(0).toInt();
+            m_currentPage = m_bookQuery.value(2).toInt();
+            m_currentPart = m_bookQuery.value(3).toInt();
         }
         text.replace(QRegExp("[\\r\\n]"),"<br/>");
     }
     QSqlDatabase::removeDatabase("disBook");
 
     return hiText(text, m_searcher->queryString());
+}
+
+QString ShamelaResultWidget::currentBookName()
+{
+    return getBookName(m_currentBookId);
+}
+QString ShamelaResultWidget::baseUrl()
+{
+    return QString("file:///%1").arg(qApp->applicationDirPath());
 }
 
 QString ShamelaResultWidget::formNextUrl(QString href)
@@ -371,6 +396,11 @@ void ShamelaResultWidget::updateNavgitionLinks(QString href)
     ui->webView->page()->mainFrame()->evaluateJavaScript(QString("updateLinks('%1', '%2');")
                                                          .arg(formNextUrl(href))
                                                          .arg(formPrevUrl(href)));
+
+    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("updateInfoBar('%1', '%2', '%3');")
+                                                         .arg(currentBookName())
+                                                         .arg(currentPage())
+                                                         .arg(currentPart()));
 }
 
 void ShamelaResultWidget::on_buttonGoNext_clicked()

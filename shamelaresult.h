@@ -8,6 +8,7 @@ class ShamelaResult
 {
 public:
     ShamelaResult();
+    ~ShamelaResult();
     QString text();
     QString title();
     QString snippet();
@@ -24,7 +25,7 @@ public:
     void setTitle(const QString &title);
     void setSnippet(const QString &text);
     void setBgColor(const QString &color);
-    void setBookName(const QString &name) { m_bookName = name; }
+    void setBookName(const QString &name);
     void setPage(int page);
     void setPart(int part);
     void setId(int id);
@@ -38,6 +39,8 @@ protected:
     QString m_snippet;
     QString m_bgColor;
     QString m_bookName;
+    QString m_html;
+    bool m_edited;
     int m_page;
     int m_part;
     int m_id;

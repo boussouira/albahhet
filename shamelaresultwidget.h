@@ -38,6 +38,10 @@ public:
 
 public slots:
     QString getPage(QString href);
+    QString currentBookName();
+    QString currentPage() { return QString::number(m_currentPage); }
+    QString currentPart() { return QString::number(m_currentPart); }
+    QString baseUrl();
     void updateNavgitionLinks(QString href);
 
 protected slots:
@@ -67,7 +71,11 @@ protected:
     ShamelaSearcher *m_searcher;
     IndexInfo *m_indexInfo;
     QList<QString> m_colors;
+    QHash<int, QString> m_booksName;
     int m_currentShownId;
+    int m_currentBookId;
+    int m_currentPage;
+    int m_currentPart;
     Ui::ShamelaResultWidget *ui;
 
 private slots:

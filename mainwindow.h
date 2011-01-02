@@ -11,6 +11,8 @@
 #include <qhash.h>
 #include <qprogressbar.h>
 #include <qlabel.h>
+#include "qwebframe.h"
+#include "qtreewidget.h"
 
 #include "common.h"
 #include "arabicanalyzer.h"
@@ -37,12 +39,14 @@ public:
 
 protected:
     void changeEvent(QEvent *e);
+    void closeEvent(QCloseEvent *e);
     QString getIndexSize();
     QString getBooksSize();
     qint64 getDirSize(const QString &path);
     void doneIndexing(int indexingTime);
 
 protected slots:
+    void saveSettings();
     void changeIndex();
     void newIndex();
     void startSearching();
@@ -77,7 +81,9 @@ protected:
 
 private slots:
     void displayResultsOptions();
-    void on_lineQuery_returnPressed();
+    void on_lineQueryMust_returnPressed();
+    void on_lineQueryShould_returnPressed();
+    void on_lineQueryShouldNot_returnPressed();
 };
 
 #endif // MAINWINDOW_H

@@ -90,6 +90,7 @@ private:
     int m_timeSearch;
     int m_resultParPage;
     QList<QString> m_colors;
+    QHash<int, ShamelaResult*> m_resultsHash;
 };
 
 #endif // SHAMELASEARCHER_H

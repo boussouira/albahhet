@@ -31,6 +31,9 @@ ShamelaSearcher::~ShamelaSearcher()
         m_searcher->close();
         delete m_searcher;
     }
+
+    qDeleteAll(m_resultsHash);
+    m_resultsHash.clear();
 }
 
 void ShamelaSearcher::run()
@@ -56,31 +59,20 @@ void ShamelaSearcher::search()
 {
     emit startSearching();
 
-    ArabicAnalyzer analyzer;
-    IndexSearcher *searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
+    qDeleteAll(m_resultsHash);
+    m_resultsHash.clear();
 
-//  Start building the query
-    QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
-    queryPareser->setAllowLeadingWildcard(true);
+    m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
 
-    if(m_defautOpIsAnd)
-        queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-
-    Query* q = queryPareser->parse(QSTRING_TO_TCHAR(m_queryStr));
-//  qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-//  qDebug() << "Query : " << m_queryStr;
+    qDebug() << "Query: " << TCHAR_TO_QSTRING(m_query->toString(_T("text")));
 
     QTime time;
-
     time.start();
-    setHits(searcher->search(q));
+    m_hits = m_searcher->search(m_query);
     m_timeSearch = time.elapsed();
 
     m_pageCount = _ceil((resultsCount()/(double)m_resultParPage));
     m_currentPage = 0;
-
-    setQuery(q);
-    setSearcher(searcher);
 
     emit doneSearching();
 }
@@ -96,9 +88,18 @@ void ShamelaSearcher::fetech()
     bool whiteBG = false;
     for(int i=start; i < maxResult;i++){
         //Document doc = m_hits->doc(i);
-        int bookID = this->bookIdAt(i);
-        int archive = this->ArchiveAt(i);
-        int score = (int) (this->scoreAt(i) * 100.0);
+        entryID = idAt(i);
+        int bookID = bookIdAt(i);
+        int archive = ArchiveAt(i);
+        int score = (int) (scoreAt(i) * 100.0);
+
+        ShamelaResult *savedResult = m_resultsHash.value(entryID, 0);
+        if(savedResult != 0
+           && archive == savedResult->archive()
+           && bookID == savedResult->bookId()) {
+            emit gotResult(savedResult);
+            continue;
+        }
 
         QString connName = (archive) ? QString("bid_%1").arg(archive) : QString("bid_%1_%2").arg(archive).arg(bookID);
 
@@ -118,7 +119,6 @@ void ShamelaSearcher::fetech()
 
             QSqlQuery bookQuery(bookDB);
 
-            entryID = this->idAt(i);
             bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
                              .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                              .arg(entryID));
@@ -136,6 +136,7 @@ void ShamelaSearcher::fetech()
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
 
                 emit gotResult(result);
+                m_resultsHash.insert(entryID, result);
             }
         }
         if(!archive)
@@ -248,8 +249,11 @@ QString ShamelaSearcher::buildFilePath(QString bkid, int archive)
 
 QStringList ShamelaSearcher::buildRegExp(const QString &str)
 {
-QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
-QStringList regExpList;
+    QString text = str;
+    text.remove(QRegExp(trUtf8("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
+
+    QStringList strWords = text.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
+    QStringList regExpList;
     QChar opPar('(');
     QChar clPar(')');
     foreach(QString word, strWords)
