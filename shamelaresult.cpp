@@ -24,6 +24,29 @@ QString ShamelaResult::bgColor()
     return m_bgColor;
 }
 
+QString ShamelaResult::toHtml()
+{
+    return QObject::trUtf8("<div class=\"result %1\">"
+                  "<h3>%2</h3>"
+                  "<span class=\"progSpan\" style=\"width: %10px;\">"
+                  "<span class=\"progSpanContainre\"></span>"
+                  "</span>"
+                  "<a class=\"bookLink\" href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
+                  "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span class=\"bookName\">%5</span>"
+                  "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
+                  "</p></div>")
+            .arg(m_bgColor)     // backround class name
+            .arg(m_title)       // bab
+            .arg(m_id)          // entry id
+            .arg(m_snippet.simplified())    // text snippet
+            .arg(m_bookName)     // book name
+            .arg(m_page)        // page
+            .arg(m_part)        // part
+            .arg(m_bookId)      // book id
+            .arg(m_archive)     // book archive
+            .arg(m_score);      // score
+}
+
 int ShamelaResult::page()
 {
     return m_page;

@@ -19,54 +19,68 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_colors.append("#EF86FB");
 }
 
+ShamelaSearcher::~ShamelaSearcher()
+{
+    if(m_hits != NULL)
+        delete m_hits;
+
+    if(m_query != NULL)
+        delete m_query;
+
+    if(m_searcher != NULL) {
+        m_searcher->close();
+        delete m_searcher;
+    }
+}
+
 void ShamelaSearcher::run()
 {
-    if(m_action == SEARCH){
-        qDebug("Start Searching...");
-        search();
-        fetech();
-    } else if (m_action == FETECH) {
-        qDebug("Start Feteching...");
-        fetech();
+    try {
+        if(m_action == SEARCH){
+            search();
+            fetech();
+        } else if (m_action == FETECH) {
+            fetech();
+        }
+    } catch(CLuceneError &e) {
+        qDebug() << "Error when searching:" << e.what() << "\ncode:" << e.number();
+        emit gotException(e.what(), e.number());
+    } catch(...) {
+        qDebug() << "Error when searching at : " << m_indexInfo->path();
+        gotException("UNKNOW", -1);
     }
+
 }
 
 void ShamelaSearcher::search()
 {
     emit startSearching();
 
-    try {
-        ArabicAnalyzer analyzer;
-        IndexSearcher *searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
+    ArabicAnalyzer analyzer;
+    IndexSearcher *searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
 
-        // Start building the query
-        QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
-        queryPareser->setAllowLeadingWildcard(true);
+//  Start building the query
+    QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
+    queryPareser->setAllowLeadingWildcard(true);
 
-        if(m_defautOpIsAnd)
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+    if(m_defautOpIsAnd)
+        queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
 
-        Query* q = queryPareser->parse(QSTRING_TO_TCHAR(m_queryStr));
-//        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-//        qDebug() << "Query : " << m_queryStr;
+    Query* q = queryPareser->parse(QSTRING_TO_TCHAR(m_queryStr));
+//  qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
+//  qDebug() << "Query : " << m_queryStr;
 
-        QTime time;
+    QTime time;
 
-        time.start();
-        setHits(searcher->search(q));
-        m_timeSearch = time.elapsed();
+    time.start();
+    setHits(searcher->search(q));
+    m_timeSearch = time.elapsed();
 
-        m_pageCount = _ceil((resultsCount()/(double)m_resultParPage));
-        m_currentPage = 0;
+    m_pageCount = _ceil((resultsCount()/(double)m_resultParPage));
+    m_currentPage = 0;
 
-        setQuery(q);
-        setSearcher(searcher);
-
-    } catch(CLuceneError &tmp) {
-        qDebug() << "Error when searching" << tmp.what();
-    } catch(...) {
-        qDebug() << "Error when searching at : " << m_indexInfo->path();
-    }
+    setQuery(q);
+    setSearcher(searcher);
 
     emit doneSearching();
 }

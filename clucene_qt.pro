@@ -12,7 +12,8 @@ SOURCES += main.cpp \
     booksdb.cpp \
     indexinfo.cpp \
     shamelasearcher.cpp \
-    shamelaresult.cpp
+    shamelaresult.cpp \
+    shamelaresultwidget.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -21,9 +22,11 @@ HEADERS += mainwindow.h \
     booksdb.h \
     indexinfo.h \
     shamelasearcher.h \
-    shamelaresult.h
+    shamelaresult.h \
+    shamelaresultwidget.h
 FORMS += mainwindow.ui \
-    indexingdialg.ui
+    indexingdialg.ui \
+    shamelaresultwidget.ui
 win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"
@@ -70,3 +73,6 @@ INCLUDEPATH += $$CLUCENE_PATH/src/shared
 LIBS += -lclucene-core \
     -lclucene-shared \
     -L$$CLUCENE_LIBS_PATH
+
+RESOURCES += \
+    resources.qrc

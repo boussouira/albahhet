@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>data/images/go-first.png</file>
+        <file>data/images/go-last.png</file>
+        <file>data/images/go-next.png</file>
+        <file>data/images/go-previous.png</file>
+        <file>data/images/find.png</file>
+    </qresource>
+</RCC>

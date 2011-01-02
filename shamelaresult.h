@@ -12,6 +12,7 @@ public:
     QString title();
     QString snippet();
     QString bgColor();
+    QString toHtml();
     int page();
     int part();
     int id();
@@ -23,6 +24,7 @@ public:
     void setTitle(const QString &title);
     void setSnippet(const QString &text);
     void setBgColor(const QString &color);
+    void setBookName(const QString &name) { m_bookName = name; }
     void setPage(int page);
     void setPart(int part);
     void setId(int id);
@@ -34,13 +36,14 @@ protected:
     QString m_text;
     QString m_title;
     QString m_snippet;
+    QString m_bgColor;
+    QString m_bookName;
     int m_page;
     int m_part;
     int m_id;
     int m_bookId;
     int m_archive;
     int m_score;
-    QString m_bgColor;
 };
 
 #endif // SHAMELARESULT_H

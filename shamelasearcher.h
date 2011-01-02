@@ -19,7 +19,7 @@ class ShamelaSearcher : public QThread
 
 public:
     ShamelaSearcher(QObject *parent = 0);
-
+    ~ShamelaSearcher();
     enum Action {
         SEARCH,
         FETECH
@@ -38,6 +38,7 @@ public:
     int resultsCount();
     int searchTime() { return m_timeSearch;}
     int resultsPeerPage() { return m_resultParPage;}
+    QString queryString() { return m_queryStr; }
 
     void setIndexInfo(IndexInfo *index);
     void setPageCount(int pageCount);
@@ -73,6 +74,7 @@ signals:
     void startFeteching();
     void doneFeteching();
     void gotResult(ShamelaResult *result);
+    void gotException(QString what, int id);
 
 
 private:

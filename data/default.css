@@ -12,6 +12,7 @@ body
     direction: rtl;
     margin: 0pt;
     padding: 2px;
+    display:none;
 }
 .result
 {
