@@ -51,6 +51,12 @@ void ShamelaResultWidget::doSearch()
     m_searcher->start();
 }
 
+void ShamelaResultWidget::clearResults()
+{
+    m_searcher->clear();
+    ui->webView->setHtml("");
+    showNavigationButton(false);
+}
 
 void ShamelaResultWidget::searchStarted()
 {
@@ -82,6 +88,7 @@ void ShamelaResultWidget::searchFinnished()
 void ShamelaResultWidget::fetechStarted()
 {
     ui->webView->page()->mainFrame()->evaluateJavaScript("fetechStarted()");
+    showNavigationButton(false);
     ui->progressBar->setMaximum(m_searcher->resultsPeerPage());
     ui->progressBar->setValue(0);
     ui->progressBar->show();
@@ -97,6 +104,7 @@ void ShamelaResultWidget::fetechFinnished()
     ui->webView->page()->mainFrame()->evaluateJavaScript("handleEvents()");
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressBar->hide();
+    showNavigationButton(true);
 }
 
 void ShamelaResultWidget::gotResult(ShamelaResult *result)
@@ -401,6 +409,11 @@ void ShamelaResultWidget::updateNavgitionLinks(QString href)
                                                          .arg(currentBookName())
                                                          .arg(currentPage())
                                                          .arg(currentPart()));
+}
+
+void ShamelaResultWidget::showNavigationButton(bool show)
+{
+    ui->widgetNavigationButtons->setVisible(show);
 }
 
 void ShamelaResultWidget::on_buttonGoNext_clicked()

@@ -35,6 +35,7 @@ public:
     void setShamelaSearch(ShamelaSearcher *s);
     void setIndexInfo(IndexInfo *info) { m_indexInfo = info; }
     void doSearch();
+    void clearResults();
 
 public slots:
     QString getPage(QString href);
@@ -43,6 +44,7 @@ public slots:
     QString currentPart() { return QString::number(m_currentPart); }
     QString baseUrl();
     void updateNavgitionLinks(QString href);
+    void showNavigationButton(bool show);
 
 protected slots:
     void searchStarted();

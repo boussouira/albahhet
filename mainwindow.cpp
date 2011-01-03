@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
     ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
 
+    m_useMultiTab = settings.value("useTabs", true).toBool();
+
     connect(ui->actionNewIndex, SIGNAL(triggered()), this, SLOT(newIndex()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->actionIndexInfo, SIGNAL(triggered()), this, SLOT(showStatistic()));
@@ -66,6 +68,7 @@ void MainWindow::saveSettings()
     settings.setValue("lastQueryShouldNot", ui->lineQueryShouldNot->text());
 
     settings.setValue("resultPeerPage", m_resultParPage);
+    settings.setValue("useTabs", m_useMultiTab);
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
@@ -253,15 +256,25 @@ void MainWindow::startSearching()
     m_searcher->setQuery(q);
     m_searcher->setResultsPeerPage(m_resultParPage);
 
-    ShamelaResultWidget *widget = new ShamelaResultWidget(this);
+    ShamelaResultWidget *widget;
+    int index=1;
+    QString title = trUtf8("%1 (%2)")
+                    .arg(m_currentIndex->name())
+                    .arg(++m_searchCount);
+
+    if(m_useMultiTab || ui->tabWidget->count() < 2) {
+        widget = new ShamelaResultWidget(this);
+        index = ui->tabWidget->addTab(widget, title);
+    } else {
+        widget = qobject_cast<ShamelaResultWidget*>(ui->tabWidget->widget(index));
+        widget->clearResults();
+    }
+
     widget->setShamelaSearch(m_searcher);
     widget->setIndexInfo(m_currentIndex);
 
-    int index = ui->tabWidget->addTab(widget,
-                                      trUtf8("%1 (%2)")
-                                      .arg(m_currentIndex->name())
-                                      .arg(++m_searchCount));
     ui->tabWidget->setCurrentIndex(index);
+    ui->tabWidget->setTabText(index, title);
 
     widget->doSearch();
 }
@@ -357,8 +370,22 @@ void MainWindow::on_lineQueryShouldNot_returnPressed()
 {
     startSearching();
 }
+void MainWindow::setResultParPage(int count)
+{
 
-void MainWindow::tabCountChange(int /*count*/)
+    m_resultParPage = count;
+}
+
+void MainWindow::setUseMultiTab()
+{
+    QCheckBox *check = qobject_cast<QCheckBox*>(sender());
+    if(check)
+        m_useMultiTab = check->isChecked();
+
+    qDebug() << "USE MULTI:" << m_useMultiTab;
+}
+
+ void MainWindow::tabCountChange(int /*count*/)
 {
     ui->tabWidget->setTabsClosable(ui->tabWidget->count() > 1);
 }
@@ -503,18 +530,23 @@ void MainWindow::displayResultsOptions()
     QSpinBox *spinPage = new QSpinBox(settingDialog);
     QPushButton *pushDone = new QPushButton(trUtf8("حفظ"), settingDialog);
 
+    QCheckBox *useNewTab = new QCheckBox(trUtf8("فتح نتائج البحث في تبويب جديد"), settingDialog);
+    useNewTab->setChecked(m_useMultiTab);
+
     spinPage->setMaximum(1000);
     spinPage->setMinimum(1);
     spinPage->setValue(m_resultParPage);
     hLayout->addWidget(label);
     hLayout->addWidget(spinPage);
     vLayout->addLayout(hLayout);
+    vLayout->addWidget(useNewTab);;
     vLayout->addWidget(pushDone);
     settingDialog->setLayout(vLayout);
     settingDialog->show();
 
     connect(pushDone, SIGNAL(clicked()), settingDialog, SLOT(accept()));
     connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
+    connect(useNewTab, SIGNAL(clicked()), this, SLOT(setUseMultiTab()));
 }
 
 QString MainWindow::buildFilePath(QString bkid, int archive)

@@ -53,7 +53,8 @@ protected slots:
     void showStatistic();
     void resultsCount();
     bool openDB();
-    void setResultParPage(int count){m_resultParPage = count;}
+    void setResultParPage(int count);
+    void setUseMultiTab();
     void tabCountChange(int count);
     void closeTab(int index);
     QString buildFilePath(QString bkid, int archive);
@@ -77,6 +78,7 @@ protected:
     int m_searchCount;
     bool m_dbIsOpen;
     bool m_haveMainTable;
+    bool m_useMultiTab;
     Ui::MainWindow *ui;
 
 private slots:

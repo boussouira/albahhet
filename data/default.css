@@ -16,21 +16,23 @@ body
 }
 .result
 {
-    margin:0px;
-    padding:4px;
-    border-bottom:1px solid black;
+    margin:5px 5px 10px 5px;
+    padding:5px 0px;
+    -webkit-border-radius:10px;
 } 
 .whiteBG
 {
-    background-color:#FFFFFF;
+    background-color:#feffed;
+    border:1px solid #666800;
 }
 .grayBG
 {
-    background-color:#EFEFEF;
+    background-color:#fff9f5;
+    border:1px solid #520000;
 } 
 .result h3
 {
-    margin:0px 0px 5px;
+    margin:0px 5px 5px 5px;
     font-size:18px;
     color:rgb(0, 68, 255);
     display:inline-block;
@@ -38,16 +40,29 @@ body
 .result a
 {
     margin:0px;
-    padding:0px 5px;
+    padding:5px;
     display:block;
 } 
+.result .result_info{
+    padding:0px 10px;
+    margin:5px 0px;
+}
+
+.result .result_head{
+    margin:0px;
+    margin-bottom:15px;
+    padding:0px;
+    border-bottom:1px dotted #ccc;
+}
 .currentResult 
 {
     font-weight:bold;
     margin:0px;
     padding:10px;
+    /*
     background-color:#EEFFFF;
     border:1px solid black;
+    */
 }
 
 .bookName
@@ -62,6 +77,8 @@ body
     float: left;
     height: 10px;
     background-color: rgb(167, 239, 170);
+    margin:0px 5px;
+    margin-top:5px;
 }
 
 .progSpanContainre
@@ -75,26 +92,55 @@ body
 .prev{
     font-style:oblique;
     float:right;
-    color:#8c8a8c;
 }
 
 .next  {
     font-style:oblique;
     float:left;
-    color:#8c8a8c;
+}
+
+.backToResults {
+    
+}
+
+
+
+.parText{
+    background-color:#ffebeb;
+    border: 1px solid #ffc5c5;
+    -webkit-border-radius:10px;
+    color:black;
+    margin-top:15px;
+    padding:10px;
 }
 
 .pageNav {
-    font-style:oblique;
-    margin:0 10px;
+    border: 1px solid #ccc;
+    border-top:1px dashed #ccc;
+    -webkit-border-radius: 0px 0px 10px 10px;
+    color:#8c8a8c;
+    text-align:center;
+    padding:2px 10px;
+    margin:0px;
     display:block;
 }
-
-.parText{
-    color:black;
-    padding-top:20px;
+.pageNav img:hover{
+    cursor:pointer;
 }
 
+.page_info {
+    border: 1px solid #ccc;
+    border-bottom:0px;
+    -webkit-border-radius: 10px 10px 0px 0px;
+    margin:0px;
+    padding:2px 10px;
+}
+.bName {
+    float:right;
+}
+.bLocation {
+    float:left;
+}
 .clearDiv{
     clear:both;
 }

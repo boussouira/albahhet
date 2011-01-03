@@ -159,6 +159,9 @@ void ShamelaSearcher::clear()
         _CLDELETE(m_searcher)
     }
 
+    qDeleteAll(m_resultsHash);
+    m_resultsHash.clear();
+
     m_currentPage = 0;
     m_pageCount = 0;
     m_timeSearch = 0;
