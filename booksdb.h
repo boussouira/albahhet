@@ -3,12 +3,12 @@
 
 #include "indexinfo.h"
 #include <qthread.h>
-#include <QMutexLocker>
-#include <QVariant>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QDebug>
+#include <qmutex.h>
+#include <qvariant.h>
+#include <qsqldatabase.h>
+#include <qsqlquery.h>
+#include <qsqlerror.h>
+#include <qdebug.h>
 
 class BookInfo
 {
@@ -20,10 +20,20 @@ public:
             m_archive(archive)
     {
     }
+    BookInfo()
+    {
+    }
+
     QString id() { return m_id; }
     QString name() { return m_name; }
     QString path() { return m_path; }
     QString arhive() { return m_archive; }
+
+    void setId(const QString &id) { m_id = id; }
+    void setName(const QString &name) { m_name = name; }
+    void setPath(const QString &path) { m_path = path; }
+    void setArchive(const QString &archive) { m_archive = archive; }
+
 protected:
     QString m_id;
     QString m_name;
@@ -41,9 +51,16 @@ public:
     void openIndexDB();
     void openShamelaDB();
     void queryBooksToIndex();
+    void queryBooksToIndex(QList<int> ids);
     void importBooksListFromShamela();
     void run();
     void clear();
+
+    QList<int> getShamelaIds();
+    QList<int> getSavedIds();
+
+    int addBooks(QList<int> shaIds);
+    int removeBooks(QList<int> savedIds);
 
 protected:
     IndexInfo* m_indexInfo;

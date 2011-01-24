@@ -2,8 +2,15 @@ QT += core \
     gui \
     sql \
     webkit
-TARGET = clucene_qt
 TEMPLATE = app
+TARGET = clucene_qt
+
+MOC_DIR += .moc
+OBJECTS_DIR += .obj
+UI_DIR += .ui
+RCC_DIR += .rcc
+
+
 SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
@@ -13,7 +20,11 @@ SOURCES += main.cpp \
     indexinfo.cpp \
     shamelasearcher.cpp \
     shamelaresult.cpp \
-    shamelaresultwidget.cpp
+    shamelaresultwidget.cpp \
+    arabicfilter.cpp \
+    arabictokenizer.cpp \
+    settingsdialog.cpp \
+    indexesdialog.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -23,10 +34,17 @@ HEADERS += mainwindow.h \
     indexinfo.h \
     shamelasearcher.h \
     shamelaresult.h \
-    shamelaresultwidget.h
+    shamelaresultwidget.h \
+    cl_common.h \
+    arabicfilter.h \
+    arabictokenizer.h \
+    settingsdialog.h \
+    indexesdialog.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
-    shamelaresultwidget.ui
+    shamelaresultwidget.ui \
+    settingsdialog.ui \
+    indexesdialog.ui
 win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"
@@ -69,9 +87,11 @@ DEFINES += _REENTRANT \
 INCLUDEPATH += $$CLUCENE_PATH/src/core
 INCLUDEPATH += $$CLUCENE_PATH/src/ext
 INCLUDEPATH += $$CLUCENE_PATH/src/shared
+INCLUDEPATH += $$CLUCENE_PATH/src/contribs-lib
 
 LIBS += -lclucene-core \
     -lclucene-shared \
+    -lclucene-contribs-lib \
     -L$$CLUCENE_LIBS_PATH
 
 RESOURCES += \

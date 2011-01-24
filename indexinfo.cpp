@@ -3,9 +3,6 @@
 
 IndexInfo::IndexInfo()
 {
-    m_name = "";
-    m_path = "";
-    m_shamelaPath = "";
     m_optimizeIndex = true;
     m_ramSize = 0;
 }

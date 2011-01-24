@@ -1,7 +1,6 @@
 #ifndef SHAMELARESULT_H
 #define SHAMELARESULT_H
 
-#include "common.h"
 #include <qstring.h>
 
 class ShamelaResult
@@ -23,7 +22,7 @@ public:
 
     void setText(const QString &text);
     void setTitle(const QString &title);
-    void setSnippet(const QString &text);
+    void setSnippet(const QString &snippet);
     void setBgColor(const QString &color);
     void setBookName(const QString &name);
     void setPage(int page);

@@ -1,6 +1,7 @@
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
 #include <qfiledialog.h>
+#include <qmessagebox.h>
 
 enum {
     SECOND  = 1,
@@ -82,7 +83,6 @@ void IndexingDialg::startIndexing()
         m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
     }
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-
     m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
 
     m_bookDB->queryBooksToIndex();
@@ -162,9 +162,6 @@ void IndexingDialg::addBook(const QString &name)
     ui->progressBar->setValue(++m_indexedBooks);
     ui->labelIndexedBook->setText(name);
 
-    if(ui->progressBar->maximum() == m_indexedBooks) {
-        ui->progressBar->setMaximum(0);
-    }
 }
 
 void IndexingDialg::doneIndexing()
@@ -177,6 +174,8 @@ void IndexingDialg::doneIndexing()
         int optimizeTime = -1;
 
         if(m_indexInfo->optimize()) {
+            ui->progressBar->setMaximum(0);
+
             QTime optTime;
             optTime.start();
             m_writer->optimize();
@@ -240,7 +239,8 @@ void IndexingDialg::stopIndexing()
     int rep = QMessageBox::question(this,
                                     trUtf8("فهرسة المكتبة"),
                                     trUtf8("هل تريد ايقاف فهرسة المكتبة؟"),
-                                    QMessageBox::Yes|QMessageBox::No);
+                                    QMessageBox::Yes|QMessageBox::No,
+                                    QMessageBox::No);
     if(rep==QMessageBox::Yes){
         ui->progressBar->setMaximum(0);
         m_stopIndexing = true;
@@ -348,6 +348,8 @@ void IndexingDialg::saveIndexInfo()
     settings.setValue("ram_size", m_indexInfo->ramSize());
     settings.setValue("optimizeIndex", m_indexInfo->optimize());
     settings.endGroup();
+
+    emit indexCreated();
 }
 
 void IndexingDialg::checkIndex()

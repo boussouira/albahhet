@@ -1,29 +1,19 @@
 #ifndef SHAMELARESULTWIDGET_H
 #define SHAMELARESULTWIDGET_H
 
-#include "shamelasearcher.h"
-#include "common.h"
-#include "arabicanalyzer.h"
-#include "indexingdialg.h"
-#include "indexthread.h"
-#include "shamelasearcher.h"
-#include "shamelaresultwidget.h"
-
+#include "cl_common.h"
 #include <qwidget.h>
-#include <qtextbrowser.h>
-#include <qfiledialog.h>
-#include <qsettings.h>
-#include <qspinbox.h>
-#include <qstandarditemmodel.h>
-#include <qaction.h>
+#include <qsqldatabase.h>
 #include <qhash.h>
-#include <qprogressbar.h>
-#include <qlabel.h>
-#include <qwebframe.h>
+#include <qurl.h>
 
 namespace Ui {
     class ShamelaResultWidget;
 }
+
+class ShamelaSearcher;
+class IndexInfo;
+class ShamelaResult;
 
 class ShamelaResultWidget : public QWidget
 {
@@ -81,6 +71,7 @@ protected:
     Ui::ShamelaResultWidget *ui;
 
 private slots:
+    void writeHtmlResult();
     void on_buttonGoFirst_clicked();
     void on_buttonGoLast_clicked();
     void on_buttonGoPrev_clicked();

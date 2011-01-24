@@ -1,4 +1,15 @@
 #include "shamelasearcher.h"
+#include "arabicanalyzer.h"
+#include "common.h"
+#include "cl_common.h"
+#include "indexinfo.h"
+#include "shamelaresult.h"
+#include <qdatetime.h>
+#include <qstringlist.h>
+#include <qsqlquery.h>
+#include <qsqlerror.h>
+#include <qdebug.h>
+#include <qvariant.h>
 
 ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
 {
@@ -81,6 +92,12 @@ void ShamelaSearcher::fetech()
 {
     emit startFeteching();
 
+    ArabicAnalyzer hl_analyzer;
+    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->path()))));
+    SimpleCssFormatter hl_formatter;
+    int maxNumFragmentsRequired = 30;
+    const TCHAR* fragmentSeparator = _T("...");
+
     int start = m_currentPage * m_resultParPage;
     int maxResult  =  (resultsCount() >= start+m_resultParPage)
                       ? (start+m_resultParPage) : resultsCount();
@@ -132,10 +149,31 @@ void ShamelaSearcher::fetech()
                 result->setScore(score);
                 result->setText(bookQuery.value(0).toString());
                 result->setTitle(getTitleId(bookDB, result));
-                result->setSnippet(hiText(abbreviate(result->text(), 320), m_queryStr));
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
+                //result->setSnippet(hiText(abbreviate(result->text(), 320), m_queryStr));
+                /**/
+                Highlighter highlighter(&hl_formatter, &scorer);
+                SimpleFragmenter frag(20);
+                highlighter.setTextFragmenter(&frag);
 
-                emit gotResult(result);
+                const TCHAR* text = QSTRING_TO_TCHAR(bookQuery.value(0).toString());
+                StringReader reader(text);
+                TokenStream* tokenStream = hl_analyzer.tokenStream(_T("text"), &reader);
+
+                TCHAR* hi_result = highlighter.getBestFragments(
+                        tokenStream,
+                        text,
+                        maxNumFragmentsRequired,
+                        fragmentSeparator);
+
+                result->setSnippet(TCHAR_TO_QSTRING(hi_result));
+
+                _CLDELETE_CARRAY(hi_result)
+                _CLDELETE(tokenStream)
+                _CLDELETE(text)
+                /**/
+
+                        emit gotResult(result);
                 m_resultsHash.insert(entryID, result);
             }
         }

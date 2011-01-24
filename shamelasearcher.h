@@ -1,17 +1,13 @@
 #ifndef SHAMELASEARCHER_H
 #define SHAMELASEARCHER_H
 
-#include "common.h"
-#include "indexinfo.h"
-#include "arabicanalyzer.h"
-#include "shamelaresult.h"
+#include "cl_common.h"
 #include <qthread.h>
-#include <qdatetime.h>
 #include <qsqldatabase.h>
-#include <qsqlquery.h>
-#include <qsqlerror.h>
-#include <qdebug.h>
-#include <qvariant.h>
+#include <qhash.h>
+
+class IndexInfo;
+class ShamelaResult;
 
 class ShamelaSearcher : public QThread
 {

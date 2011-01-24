@@ -2,28 +2,17 @@
 #define MAINWINDOW_H
 
 #include <qmainwindow.h>
-#include <qtextbrowser.h>
-#include <qfiledialog.h>
-#include <qsettings.h>
-#include <qspinbox.h>
-#include <qstandarditemmodel.h>
-#include <qaction.h>
+#include <qsqldatabase.h>
 #include <qhash.h>
-#include <qprogressbar.h>
-#include <qlabel.h>
-#include "qwebframe.h"
-#include "qtreewidget.h"
-
-#include "common.h"
-#include "arabicanalyzer.h"
-#include "indexingdialg.h"
-#include "indexthread.h"
-#include "shamelasearcher.h"
-#include "shamelaresultwidget.h"
 
 namespace Ui {
     class MainWindow;
 }
+
+class IndexInfo;
+class QSqlQuery;
+class QProgressBar;
+class QLabel;
 
 class MainWindow : public QMainWindow
 {
@@ -33,12 +22,10 @@ public:
     ~MainWindow();
     void loadIndexesList();
     void selectIndex(QString name);
-    void selectIndex(QAction *act);
+    void selectIndex(QAction *action);
     void indexChanged();
-    void updateIndexesMenu();
 
 protected:
-    void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *e);
     QString getIndexSize();
     QString getBooksSize();
@@ -47,14 +34,15 @@ protected:
 
 protected slots:
     void saveSettings();
+    void loadSettings();
     void changeIndex();
+    void updateIndexesMenu();
     void newIndex();
+    void editIndexes();
     void startSearching();
     void showStatistic();
     void resultsCount();
     bool openDB();
-    void setResultParPage(int count);
-    void setUseMultiTab();
     void tabCountChange(int count);
     void closeTab(int index);
     QString buildFilePath(QString bkid, int archive);
@@ -82,7 +70,7 @@ protected:
     Ui::MainWindow *ui;
 
 private slots:
-    void displayResultsOptions();
+    void showSettingsDialog();
     void on_lineQueryMust_returnPressed();
     void on_lineQueryShould_returnPressed();
     void on_lineQueryShouldNot_returnPressed();

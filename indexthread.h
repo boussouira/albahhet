@@ -5,8 +5,10 @@
 #include "common.h"
 #include "indexthread.h"
 #include "arabicanalyzer.h"
-#include "booksdb.h"
-#include "indexinfo.h"
+
+class BooksDB;
+class BookInfo;
+class IndexInfo;
 
 class IndexingThread : public QThread
 {
@@ -20,7 +22,7 @@ public:
     void stop() { m_stopIndexing = true; }
 
 protected:
-    void indexBook(const QString &bookID, const QString &bookPath, const QString &archive);
+    void indexBook(BookInfo *book);
     void startIndexing();
 
 signals:

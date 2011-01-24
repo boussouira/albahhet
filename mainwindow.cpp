@@ -1,11 +1,34 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QCloseEvent>
+
+#include "common.h"
+#include "indexinfo.h"
+#include "indexingdialg.h"
+#include "shamelasearcher.h"
+#include "shamelaresultwidget.h"
+#include "arabicanalyzer.h"
+#include "settingsdialog.h"
+#include "indexesdialog.h"
+
+#include <qtextbrowser.h>
+#include <qfiledialog.h>
+#include <qsettings.h>
+#include <qspinbox.h>
+#include <qstandarditemmodel.h>
+#include <qaction.h>
+#include <qprogressbar.h>
+#include <qlabel.h>
+#include <qwebframe.h>
+#include <qtreewidget.h>
+#include <qevent.h>
+#include <qmessagebox.h>
+#include <qsqlquery.h>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowTitle(APP_NAME);
 
     m_currentIndex = new IndexInfo();
 
@@ -33,23 +56,44 @@ MainWindow::MainWindow(QWidget *parent) :
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
+    m_useMultiTab = settings.value("useTabs", true).toBool();
 
     settings.beginGroup("MainWindow");
     resize(settings.value("size", size()).toSize());
     move(settings.value("pos", pos()).toPoint());
     settings.endGroup();
+
     loadIndexesList();
+
+    // Check if we have any index
+    if(ui->menuIndexesList->actions().isEmpty()) {
+        int rep = QMessageBox::question(this,
+                                        trUtf8("انشاء فهرس"),
+                                        trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
+                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+        if(rep == QMessageBox::Yes)
+            newIndex();
+        else
+            QMessageBox::information(this,
+                                     trUtf8("انشاء فهرس"),
+                                     trUtf8("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
+                                            "<strong>" "فهرس" "</strong>"
+                                            " ثم "
+                                            "<strong>" "انشاء فهرس جديد..." "</strong>"));
+
+    }
 
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
     ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
 
-    m_useMultiTab = settings.value("useTabs", true).toBool();
 
     connect(ui->actionNewIndex, SIGNAL(triggered()), this, SLOT(newIndex()));
     connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
     connect(ui->actionIndexInfo, SIGNAL(triggered()), this, SLOT(showStatistic()));
-    connect(ui->actionSearchSettings, SIGNAL(triggered()), this, SLOT(displayResultsOptions()));
+    connect(ui->actionSearchSettings, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
+    connect(ui->actionEditIndexes, SIGNAL(triggered()), this, SLOT(editIndexes()));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabCountChange(int)));
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
 }
@@ -80,13 +124,21 @@ void MainWindow::saveSettings()
                           QString("i_%1").arg(IndexInfo::nameHash(m_currentIndex->name())));
 }
 
+void MainWindow::loadSettings()
+{
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
+    m_useMultiTab = settings.value("useTabs", true).toBool();
+}
+
 void MainWindow::loadIndexesList()
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
     QStringList list =  settings.value("indexes_list").toStringList();
-    bool enableWidgets = true;
+    bool haveIndexes = !list.isEmpty();
 
-    if(!list.isEmpty()) {
+    if(haveIndexes) {
         QString current = settings.value("current_index", list.first()).toString();
 
         for(int i=0; i<list.count(); i++) {
@@ -110,29 +162,41 @@ void MainWindow::loadIndexesList()
 
         selectIndex(current);
 
-    } else {
-        enableWidgets = false;
     }
 
-    ui->tabWidget->setEnabled(enableWidgets);
+    ui->tabWidget->setEnabled(haveIndexes);
+    ui->actionIndexInfo->setEnabled(haveIndexes);
+    ui->actionEditIndexes->setEnabled(haveIndexes);
+    ui->menuIndexesList->setEnabled(haveIndexes);
+/*
+    if(!haveIndexes) {
+        int rep = QMessageBox::question(this,
+                                        trUtf8("فهرسة المكتبة"),
+                                        trUtf8("لم يتم العثور على اي فهرس" "\n"
+                                               "هل تريد انشاء فهرس جديد؟"),
+                                        QMessageBox::Yes|QMessageBox::No);
+        if(rep == QMessageBox::Yes)
+            newIndex();
+    }
+*/
 }
 
 void MainWindow::selectIndex(QString name)
 {
-    foreach(QAction *a, ui->menuIndexesList->actions()) {
-        if(a->data().toString() == name) {
-            selectIndex(a);
+    foreach(QAction *action, ui->menuIndexesList->actions()) {
+        if(action->data().toString() == name) {
+            selectIndex(action);
             break;
         }
     }
 
 }
 
-void MainWindow::selectIndex(QAction *act)
+void MainWindow::selectIndex(QAction *action)
 {
-    m_currentIndex = m_indexInfoMap[act->data().toString()];
-    act->setCheckable(true);
-    act->setChecked(true);
+    m_currentIndex = m_indexInfoMap[action->data().toString()];
+    action->setCheckable(true);
+    action->setChecked(true);
 
     indexChanged();
 }
@@ -162,27 +226,25 @@ void MainWindow::indexChanged()
         m_bookDB.close();
     }
     m_dbIsOpen = false;
+
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    if(!m_currentIndex->name().isEmpty())
+        settings.setValue("current_index", INDEX_HASH(m_currentIndex->name()));
+
+    setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 }
 
 void MainWindow::updateIndexesMenu()
 {
     QList<QAction*> list = ui->menuIndexesList->actions();
-    qDeleteAll(list);
+
+    if(!list.isEmpty())
+        qDeleteAll(list);
+
     m_indexInfoMap.clear();
 
     loadIndexesList();
-}
-
-void MainWindow::changeEvent(QEvent *e)
-{
-    QMainWindow::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -193,15 +255,36 @@ void MainWindow::closeEvent(QCloseEvent *e)
 
 void MainWindow::newIndex()
 {
-    IndexingDialg *indexDial = new IndexingDialg(this);
-    if(indexDial->exec() == QDialog::Accepted)
-       updateIndexesMenu();
+    IndexingDialg indexDialog(this);
+    connect(&indexDialog, SIGNAL(indexCreated()), this, SLOT(updateIndexesMenu()));
+
+    indexDialog.exec();
+}
+
+void MainWindow::editIndexes()
+{
+    IndexesDialog dialog(this);
+    connect(&dialog, SIGNAL(indexesChanged()), this, SLOT(updateIndexesMenu()));
+
+    dialog.exec();
 }
 
 void MainWindow::startSearching()
 {
     if(!m_dbIsOpen)
         openDB();
+
+    if(ui->lineQueryMust->text().isEmpty()){
+        if(!ui->lineQueryShould->text().isEmpty()){
+            ui->lineQueryMust->setText(ui->lineQueryShould->text());
+            ui->lineQueryShould->clear();
+        } else {
+            QMessageBox::warning(this,
+                                 trUtf8("البحث"),
+                                 trUtf8("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
+            return;
+        }
+    }
 
     QString mustQureyStr = ui->lineQueryMust->text();
     QString shouldQureyStr = ui->lineQueryShould->text();
@@ -334,7 +417,7 @@ void MainWindow::showStatistic()
         layout->addWidget(label);
         layout->addWidget(treeWidget);
 
-        dialog->setWindowTitle(windowTitle());
+        dialog->setWindowTitle(APP_NAME);
         dialog->setLayout(layout);
         dialog->resize(treeWidget->sizeHint());
         dialog->show();
@@ -370,22 +453,8 @@ void MainWindow::on_lineQueryShouldNot_returnPressed()
 {
     startSearching();
 }
-void MainWindow::setResultParPage(int count)
-{
 
-    m_resultParPage = count;
-}
-
-void MainWindow::setUseMultiTab()
-{
-    QCheckBox *check = qobject_cast<QCheckBox*>(sender());
-    if(check)
-        m_useMultiTab = check->isChecked();
-
-    qDebug() << "USE MULTI:" << m_useMultiTab;
-}
-
- void MainWindow::tabCountChange(int /*count*/)
+void MainWindow::tabCountChange(int /*count*/)
 {
     ui->tabWidget->setTabsClosable(ui->tabWidget->count() > 1);
 }
@@ -520,33 +589,14 @@ void MainWindow::doneIndexing(int indexingTime)
 
 }
 
-void MainWindow::displayResultsOptions()
+void MainWindow::showSettingsDialog()
 {
-    QDialog *settingDialog =  new QDialog(this);
-    settingDialog->setWindowTitle(windowTitle());
-    QVBoxLayout *vLayout= new QVBoxLayout;
-    QHBoxLayout *hLayout= new QHBoxLayout;
-    QLabel *label = new QLabel(trUtf8("عدد النتائج في كل صفحة:"), settingDialog);
-    QSpinBox *spinPage = new QSpinBox(settingDialog);
-    QPushButton *pushDone = new QPushButton(trUtf8("حفظ"), settingDialog);
+    SettingsDialog dialog(this);
+    dialog.setWindowTitle(APP_NAME);
 
-    QCheckBox *useNewTab = new QCheckBox(trUtf8("فتح نتائج البحث في تبويب جديد"), settingDialog);
-    useNewTab->setChecked(m_useMultiTab);
+    connect(&dialog, SIGNAL(settingsUpdated()), this, SLOT(loadSettings()));
 
-    spinPage->setMaximum(1000);
-    spinPage->setMinimum(1);
-    spinPage->setValue(m_resultParPage);
-    hLayout->addWidget(label);
-    hLayout->addWidget(spinPage);
-    vLayout->addLayout(hLayout);
-    vLayout->addWidget(useNewTab);;
-    vLayout->addWidget(pushDone);
-    settingDialog->setLayout(vLayout);
-    settingDialog->show();
-
-    connect(pushDone, SIGNAL(clicked()), settingDialog, SLOT(accept()));
-    connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
-    connect(useNewTab, SIGNAL(clicked()), this, SLOT(setUseMultiTab()));
+    dialog.exec();
 }
 
 QString MainWindow::buildFilePath(QString bkid, int archive)

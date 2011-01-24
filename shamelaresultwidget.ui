@@ -57,7 +57,7 @@
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
-            <normaloff>:/data/images/go-last.png</normaloff>:/data/images/go-last.png</iconset>
+            <normaloff>:/bin/data/images/go-last.png</normaloff>:/bin/data/images/go-last.png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -80,7 +80,7 @@
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
-            <normaloff>:/data/images/go-next.png</normaloff>:/data/images/go-next.png</iconset>
+            <normaloff>:/bin/data/images/go-next.png</normaloff>:/bin/data/images/go-next.png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -136,7 +136,7 @@
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
-            <normaloff>:/data/images/go-previous.png</normaloff>:/data/images/go-previous.png</iconset>
+            <normaloff>:/bin/data/images/go-previous.png</normaloff>:/bin/data/images/go-previous.png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -159,7 +159,7 @@
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
-            <normaloff>:/data/images/go-first.png</normaloff>:/data/images/go-first.png</iconset>
+            <normaloff>:/bin/data/images/go-first.png</normaloff>:/bin/data/images/go-first.png</iconset>
           </property>
           <property name="iconSize">
            <size>

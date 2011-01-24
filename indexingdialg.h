@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QTime>
 #include <QSettings>
-#include "common.h"
 #include "booksdb.h"
 #include "indexthread.h"
 #include "indexinfo.h"
@@ -31,6 +30,9 @@ public slots:
     void doneIndexing();
     void indexingError();
     void setRamSize();
+
+signals:
+    void indexCreated();
 
 protected:
     IndexWriter* m_writer;

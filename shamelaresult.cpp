@@ -1,4 +1,5 @@
 #include "shamelaresult.h"
+#include "common.h"
 
 ShamelaResult::ShamelaResult()
 {
@@ -11,7 +12,7 @@ ShamelaResult::~ShamelaResult()
 
 QString ShamelaResult::text()
 {
-   return m_text;
+    return m_text;
 }
 
 QString ShamelaResult::title()
@@ -92,26 +93,38 @@ int ShamelaResult::score()
 
 void ShamelaResult::setText(const QString &text)
 {
-    m_text = text;
-    m_edited = true;
+
+    if(m_text != text) {
+        m_text = text;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setTitle(const QString &title)
 {
-    m_title = title;
-    m_edited = true;
+
+    if(m_title != title) {
+        m_title = title;
+        m_edited = true;
+    }
 }
 
-void ShamelaResult::setSnippet(const QString &text)
+void ShamelaResult::setSnippet(const QString &snippet)
 {
-    m_snippet = text;
-    m_edited = true;
+    if(m_snippet != snippet) {
+        m_snippet = snippet;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setBgColor(const QString &color)
 {
-    m_bgColor = color;
-    m_edited = true;
+
+    if(m_bgColor != color) {
+        m_bgColor = color;
+        m_edited = true;
+
+    }
 }
 
 void ShamelaResult::setBookName(const QString &name)
@@ -124,36 +137,49 @@ void ShamelaResult::setBookName(const QString &name)
 
 void ShamelaResult::setPage(int page)
 {
-    m_page = page;
-    m_edited = true;
+
+    if(m_page != page) {
+        m_page = page;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setPart(int part)
 {
-    m_part = part;
-    m_edited = true;
+    if(m_part != part){
+        m_part = part;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setId(int id)
 {
-    m_id = id;
-    m_edited = true;
+    if(m_id != id) {
+        m_id = id;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setBookId(int id)
 {
-    m_bookId = id;
-    m_edited = true;
+    if(m_bookId != id) {
+        m_bookId = id;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setArchive(int archive)
 {
-    m_archive = archive;
-    m_edited = true;
+    if(m_archive != archive) {
+        m_archive = archive;
+        m_edited = true;
+    }
 }
 
 void ShamelaResult::setScore(int score)
 {
-    m_score = score;
-    m_edited = true;
+    if(m_score != score) {
+        m_score = score;
+        m_edited = true;
+    }
 }

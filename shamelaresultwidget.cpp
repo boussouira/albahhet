@@ -1,6 +1,27 @@
 #include "shamelaresultwidget.h"
 #include "ui_shamelaresultwidget.h"
 
+#include "shamelaresult.h"
+#include "indexinfo.h"
+#include "shamelasearcher.h"
+#include "common.h"
+#include "cl_common.h"
+
+#include <qtextbrowser.h>
+#include <qfiledialog.h>
+#include <qsettings.h>
+#include <qspinbox.h>
+#include <qstandarditemmodel.h>
+#include <qaction.h>
+#include <qprogressbar.h>
+#include <qlabel.h>
+#include <qwebframe.h>
+#include <qsqlquery.h>
+#include <qsqlerror.h>
+#include <qtextstream.h>
+#include <qdebug.h>
+#include <qmessagebox.h>
+
 ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ShamelaResultWidget)
@@ -63,11 +84,12 @@ void ShamelaResultWidget::searchStarted()
     QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
 
     ui->webView->setHtml(QString("<html><head><title></title>"
-                                 "<link href=\"%1/data/default.css\"  rel=\"stylesheet\" type=\"text/css\" />"
+                                 "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>"
+                                 "<link href=\"%1/data/default.css\" rel=\"stylesheet\" type=\"text/css\"/>"
                                  "</head>"
                                  "<body></body>"
-                                 "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\"></script>"
-                                 "<script type=\"text/javascript\" src=\"%1/data/scripts.js\"></script>"
+                                 "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\" />"
+                                 "<script type=\"text/javascript\" src=\"%1/data/scripts.js\" />"
                                  "</html>")
                          .arg(appPath));
 
@@ -258,31 +280,24 @@ void ShamelaResultWidget::setPageCount(int current, int count)
 {
     int start = (current * m_searcher->resultsPeerPage()) + 1 ;
     int end = qMax(1, (current * m_searcher->resultsPeerPage()) + m_searcher->resultsPeerPage());
+    end = (count >= end) ? end : count;
     ui->labelNav->setText(trUtf8("%1 - %2 من %3 نتيجة")
                        .arg(start)
                        .arg(end)
                        .arg(count));
-    buttonStat(start, end);
+    buttonStat(current, m_searcher->pageCount());
 }
 
 void ShamelaResultWidget::buttonStat(int currentPage, int pageCount)
 {
-    if(currentPage == 1) {
-        ui->buttonGoPrev->setEnabled(false);
-        ui->buttonGoFirst->setEnabled(false);
+    bool back = (currentPage > 0);
+    bool next = (currentPage < pageCount-1);
 
-    } else {
-        ui->buttonGoPrev->setEnabled(true);
-        ui->buttonGoFirst->setEnabled(true);
-    }
+    ui->buttonGoPrev->setEnabled(back);
+    ui->buttonGoFirst->setEnabled(back);
 
-    if(currentPage == pageCount){
-        ui->buttonGoNext->setEnabled(false);
-        ui->buttonGoLast->setEnabled(false);
-    } else {
-        ui->buttonGoNext->setEnabled(true);
-        ui->buttonGoLast->setEnabled(true);
-    }
+    ui->buttonGoNext->setEnabled(next);
+    ui->buttonGoLast->setEnabled(next);
 }
 
 
@@ -434,4 +449,15 @@ void ShamelaResultWidget::on_buttonGoLast_clicked()
 void ShamelaResultWidget::on_buttonGoFirst_clicked()
 {
     m_searcher->firstPage();
+}
+
+void ShamelaResultWidget::writeHtmlResult()
+{
+    QFile file("test.html");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+
+    QTextStream out(&file);
+    out.setCodec("UTF-8");
+    out << ui->webView->page()->mainFrame()->toHtml();
 }
