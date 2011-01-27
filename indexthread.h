@@ -1,43 +1,37 @@
 #ifndef INDEXTHREAD_H
 #define INDEXTHREAD_H
 
-#include <QThread>
+#include <qthread.h>
 #include "arabicanalyzer.h"
-#include "common.h"
 
-class IndexBookThread : public QThread
+class BooksDB;
+class BookInfo;
+class IndexInfo;
+
+class IndexingThread : public QThread
 {
     Q_OBJECT
 public:
-    IndexBookThread();
-    ~IndexBookThread();
-    void indexCat();
-    void indexBoook(const QString &bookID, const QString &bookName, const QString &bookPath,
-                    IndexWriter *writer);
+    IndexingThread();
+    void setBookDB(BooksDB *bookDB) { m_bookDB = bookDB; }
+    void setWirter(IndexWriter* writer) { m_writer = writer;}
+    void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
     void run();
-    QString randFolderName(int len, const QString &prefix=0);
-    void setCat(int cat) { m_currentCat = cat; }
-    void setOptions(int ramSize, bool optimIndex) { m_ramFlushSize = ramSize; m_optimizeIndex =optimIndex; }
-public slots:
-    void stop();
-
-signals:
-    void bookIsIndexed(const QString &bookName);
-    void doneCatIndexing(const QString &indexFolder, IndexBookThread *thread);
+    void stop() { m_stopIndexing = true; }
 
 protected:
-    QSqlDatabase indexDB;
-    QSqlQuery *inexQuery;
-    int m_currentCat;
-    bool m_indexing;
-    bool m_stop;
-    int m_ramFlushSize;
-    bool m_optimizeIndex;
-    QMutex m_mutex;
-    QWaitCondition m_gotBookToIndex;
-    QString m_bookID;
-    QString m_bookName;
-    QString m_indexPath;
+    void indexBook(BookInfo *book);
+    void startIndexing();
+
+signals:
+    void fileIndexed(const QString &bookName);
+    void indexingError();
+
+protected:
+    BooksDB *m_bookDB;
+    IndexWriter* m_writer;
+    IndexInfo* m_indexInfo;
+    bool m_stopIndexing;
 };
 
 #endif // INDEXTHREAD_H

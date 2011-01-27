@@ -62,7 +62,9 @@ clucene_qt
 quran_index
 *.db
 tafessir_index
-bin
 debug
+bin/*.exe
+bin/*.ini
+bin/*.dll
 letters.txt
 release

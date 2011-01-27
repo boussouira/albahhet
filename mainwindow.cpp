@@ -1,685 +1,771 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "common.h"
+#include "indexinfo.h"
+#include "indexingdialg.h"
+#include "shamelasearcher.h"
+#include "shamelaresultwidget.h"
+#include "arabicanalyzer.h"
+#include "settingsdialog.h"
+#include "indexesdialog.h"
+#include "shamelamodels.h"
+
+#include <qtextbrowser.h>
+#include <qfiledialog.h>
+#include <qsettings.h>
+#include <qspinbox.h>
+#include <qstandarditemmodel.h>
+#include <qaction.h>
+#include <qprogressbar.h>
+#include <qlabel.h>
+#include <qwebframe.h>
+#include <qtreewidget.h>
+#include <qevent.h>
+#include <qmessagebox.h>
+#include <qsqlquery.h>
+#include <qprogressdialog.h>
+
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowTitle("CLucene Test");
+    setWindowTitle(APP_NAME);
 
-    m_resultModel = new QStandardItemModel();
-    m_results = new Results();
-    m_resultCount = 0;
+    m_currentIndex = new IndexInfo();
+    m_book = new BooksDB();
+    m_shaModel = new ShamelaModels(this);
+
+    m_filterHandler = new SearchFilterHandler(this);
+    m_filterHandler->setShamelaModels(m_shaModel);
+
+    m_filterText << "" << "" << "";
+
+    m_searchCount = 0;
     m_resultParPage = 10;
-    m_groupSize = 550;
     m_dbIsOpen = false;
 
-    m_colors.append("#FFFF63");
-    m_colors.append("#A5FFFF");
-    m_colors.append("#FF9A9C");
-    m_colors.append("#9CFF9C");
-    m_colors.append("#EF86FB");
+    FORCE_RTL(ui->lineQueryMust);
+    FORCE_RTL(ui->lineQueryShould);
+    FORCE_RTL(ui->lineQueryShouldNot);
+    FORCE_RTL(ui->lineFilter);
 
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope,
-                       "cluceneTest", "cluceneTestX");
-    m_bookPath = settings.value("db").toString();
-    if(!m_bookPath.endsWith('/'))
-        m_bookPath.append('/');
-    m_searchQuery = settings.value("lastQuery").toString();
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
-    m_groupSize = settings.value("groupSize", m_groupSize).toInt();
-    ui->lineBook->setReadOnly(true);
-    ui->lineBook->setText(m_bookPath);
-    ui->lineQuery->setText(m_searchQuery);
+    m_useMultiTab = settings.value("useTabs", true).toBool();
 
-    ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+    settings.beginGroup("MainWindow");
+    resize(settings.value("size", size()).toSize());
+    move(settings.value("pos", pos()).toPoint());
+    settings.endGroup();
 
-    connect(ui->pushIndex, SIGNAL(clicked()), this, SLOT(startIndexing()));
-    connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
-    connect(ui->pushStatstic, SIGNAL(clicked()), this, SLOT(showStatistic()));
-    connect(ui->webView, SIGNAL(linkClicked(QUrl)), this, SLOT(resultLinkClicked(QUrl)));
+    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
+    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
+    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
+
+    ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
+
+    connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
+    connect(ui->pushSearch, SIGNAL(clicked()), SLOT(startSearching()));
+    connect(ui->actionIndexInfo, SIGNAL(triggered()), SLOT(showStatistic()));
+    connect(ui->actionSearchSettings, SIGNAL(triggered()), SLOT(showSettingsDialog()));
+    connect(ui->actionEditIndexes, SIGNAL(triggered()), SLOT(editIndexes()));
+    connect(ui->actionAbout, SIGNAL(triggered()), SLOT(aboutApp()));
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), SLOT(tabCountChange(int)));
+    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), SLOT(closeTab(int)));
 }
 
 MainWindow::~MainWindow()
 {
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope,
-                       "cluceneTest", "cluceneTestX");
-    settings.setValue("db", m_bookPath);
-    settings.setValue("lastQuery", ui->lineQuery->text());
-    settings.setValue("resultPeerPage", m_resultParPage);
-    settings.setValue("groupSize", m_groupSize);
+    DEL_BOOKS_DB(m_book);
     delete ui;
 }
 
-void MainWindow::changeEvent(QEvent *e)
+void MainWindow::saveSettings()
 {
-    QMainWindow::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    settings.setValue("lastQueryMust", ui->lineQueryMust->text());
+    settings.setValue("lastQueryShould", ui->lineQueryShould->text());
+    settings.setValue("lastQueryShouldNot", ui->lineQueryShouldNot->text());
+
+    settings.setValue("resultPeerPage", m_resultParPage);
+    settings.setValue("useTabs", m_useMultiTab);
+
+    settings.beginGroup("MainWindow");
+    settings.setValue("size", size());
+    settings.setValue("pos", pos());
+    settings.endGroup();
+
+    if(!m_currentIndex->name().isEmpty())
+        settings.setValue("current_index",
+                          QString("i_%1").arg(IndexInfo::nameHash(m_currentIndex->name())));
+}
+
+void MainWindow::loadSettings()
+{
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
+    m_useMultiTab = settings.value("useTabs", true).toBool();
+}
+
+void MainWindow::loadIndexesList()
+{
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QStringList list =  settings.value("indexes_list").toStringList();
+    bool haveIndexes = !list.isEmpty();
+
+    if(haveIndexes) {
+        QString current = settings.value("current_index").toString();
+        if(current.isEmpty() || !list.contains(current))
+            current = list.first();
+
+        for(int i=0; i<list.count(); i++) {
+            IndexInfo *info = new IndexInfo();
+            settings.beginGroup(list.at(i));
+            info->setName(settings.value("name").toString());
+            info->setShamelaPath(settings.value("shamela_path").toString());
+            info->setPath(settings.value("index_path").toString());
+            info->setRamSize(settings.value("ram_size").toInt());
+            info->setOptimizeIndex(settings.value("optimizeIndex").toBool());
+            settings.endGroup();
+
+            m_indexInfoMap.insert(list.at(i), info);
+
+            QAction *action = new QAction(info->name(), ui->menuIndexesList);
+            action->setData(list.at(i));
+            connect(action, SIGNAL(triggered()), SLOT(changeIndex()));
+
+            ui->menuIndexesList->addAction(action);
+        }
+
+        selectIndex(current);
+    }
+
+    ui->tabWidget->setEnabled(haveIndexes);
+    ui->actionIndexInfo->setEnabled(haveIndexes);
+    ui->actionEditIndexes->setEnabled(haveIndexes);
+    ui->menuIndexesList->setEnabled(haveIndexes);
+}
+
+void MainWindow::selectIndex(QString name)
+{
+    foreach(QAction *action, ui->menuIndexesList->actions()) {
+        if(action->data().toString() == name) {
+            selectIndex(action);
+            break;
+        }
+    }
+
+}
+
+void MainWindow::selectIndex(QAction *action)
+{
+    m_currentIndex = m_indexInfoMap[action->data().toString()];
+    action->setCheckable(true);
+    action->setChecked(true);
+
+    indexChanged();
+}
+
+void MainWindow::changeIndex()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(action) {
+        if(action->isCheckable()) {
+            action->setChecked(true);
+            return;
+        }
+
+        foreach(QAction *a, ui->menuIndexesList->actions()) {
+            a->setChecked(false);
+            a->setCheckable(false);
+        }
+
+        selectIndex(action);
     }
 }
 
-void MainWindow::startIndexing()
+void MainWindow::indexChanged()
 {
-    int const MAX_GROUP_SIZE = m_groupSize * 1024 * 1024;
-    int currentGroup = 1;
-    int currentGroupSize = 0;
-    int bookSize = 0;
-    int totalBooksSize = 0;
-    if(!m_dbIsOpen)
-        openDB();
-    {
-        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookIndex");
-        indexDB.setDatabaseName("book_index.db");
-        if(!indexDB.open())
-            qDebug("Error opning index db");
-        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-        inexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
-                        "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
-                        "fileSize INTEGER, cat INTEGER)");
-        inexQuery->exec("DELETE FROM books");
-
-
-        indexDB.transaction();
-        m_bookQuery->exec("SELECT Bk, bkid, auth, authno FROM 0bok WHERE Archive = 0");
-        while(m_bookQuery->next()) {
-            QString bookPath = buildFilePath(m_bookQuery->value(1).toString());
-            QFile bookFile(bookPath);
-            if(bookFile.exists()){
-                bookSize = bookFile.size();
-                if(currentGroupSize+bookSize < MAX_GROUP_SIZE)
-                    currentGroupSize += bookSize;
-                else {
-                    currentGroup++;
-                    currentGroupSize = 0;
-                }
-                totalBooksSize += bookSize;
-                if(!inexQuery->exec(QString("INSERT INTO books VALUES (NULL, '%1', %2, '%3', %4, '%5', '%6', '%7')")
-                    .arg(m_bookQuery->value(0).toString())
-                    .arg(m_bookQuery->value(1).toString())
-                    .arg(bookPath)
-                    .arg(m_bookQuery->value(3).toString())
-                    .arg(m_bookQuery->value(2).toString())
-                    .arg(bookSize)
-                    .arg(currentGroup)))
-                    qDebug()<< "ERROR:" << inexQuery->lastError().text();
-            } else
-                qDebug()<< "NOT FOUND:" << bookPath;
-        }
-        indexDB.commit();
+    if(m_bookDB.isOpen()) {
+//        delete m_bookQuery;
+        m_bookDB.close();
     }
-    ui->statusBar->showMessage(trUtf8("حجم المكتبة: %1 عدد المجموعات: %2").arg(totalBooksSize).arg(currentGroup));
-    QSqlDatabase::removeDatabase("bookIndex");
-    IndexingDialg *indexDial = new IndexingDialg(this);
-    indexDial->setModal(true);
-    indexDial->show();
+    m_dbIsOpen = false;
+
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    if(!m_currentIndex->name().isEmpty())
+        settings.setValue("current_index", indexHashName(m_currentIndex->name()));
+
+    setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
+
+    DEL_BOOKS_DB(m_book);
+
+    m_book = new BooksDB();
+    m_book->setIndexInfo(m_currentIndex);
+
+    QProgressDialog progress(trUtf8("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
+    progress.setModal(Qt::WindowModal);
+
+    QStandardItemModel *catsModel = m_book->getCatsListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة الأقسام");
+
+    QStandardItemModel *booksModel = m_book->getBooksListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة الكتب");
+
+    QStandardItemModel *authModel = m_book->getAuthorsListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة المؤلفيين");
+
+    m_shaModel->setBooksListModel(booksModel);
+    m_shaModel->setCatsListModel(catsModel);
+    m_shaModel->setAuthorsListModel(authModel);
+
+    ui->treeViewBooks->setModel(booksModel);
+    ui->treeViewCats->setModel(catsModel);
+    ui->treeViewAuthors->setModel(authModel);
+
+    // Set the proxy model
+    chooseProxy(ui->tabWidgetFilter->currentIndex());
+
+    progress.setValue(progress.maximum());
+}
+
+void MainWindow::haveIndexesCheck()
+{
+    // Check if we have any index
+    if(ui->menuIndexesList->actions().isEmpty()) {
+        int rep = QMessageBox::question(this,
+                                        trUtf8("انشاء فهرس"),
+                                        trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
+                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+        if(rep == QMessageBox::Yes)
+            newIndex();
+        else
+            QMessageBox::information(this,
+                                     trUtf8("انشاء فهرس"),
+                                     trUtf8("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
+                                            "<strong>" "فهرس" "</strong>"
+                                            " ثم "
+                                            "<strong>" "انشاء فهرس جديد..." "</strong>"));
+
+    }
+}
+
+void MainWindow::updateIndexesMenu()
+{
+    QList<QAction*> list = ui->menuIndexesList->actions();
+
+    if(!list.isEmpty())
+        qDeleteAll(list);
+
+    m_indexInfoMap.clear();
+
+    loadIndexesList();
+}
+
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    saveSettings();
+    e->accept();
+}
+
+void MainWindow::newIndex()
+{
+    IndexingDialg indexDialog(this);
+    connect(&indexDialog, SIGNAL(indexCreated()), SLOT(updateIndexesMenu()));
+
+    indexDialog.exec();
+}
+
+void MainWindow::editIndexes()
+{
+    IndexesDialog dialog(this);
+    connect(&dialog, SIGNAL(indexesChanged()), SLOT(updateIndexesMenu()));
+
+    dialog.exec();
 }
 
 void MainWindow::startSearching()
 {
-    m_resultModel->clear();
     if(!m_dbIsOpen)
         openDB();
+
+    if(ui->lineQueryMust->text().isEmpty()){
+        if(!ui->lineQueryShould->text().isEmpty()){
+            ui->lineQueryMust->setText(ui->lineQueryShould->text());
+            ui->lineQueryShould->clear();
+        } else {
+            QMessageBox::warning(this,
+                                 trUtf8("البحث"),
+                                 trUtf8("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
+            return;
+        }
+    }
+
+    QString mustQureyStr = ui->lineQueryMust->text();
+    QString shouldQureyStr = ui->lineQueryShould->text();
+    QString shouldNotQureyStr = ui->lineQueryShouldNot->text();
+
+    NORMALISE_SEARCH_STRING(mustQureyStr);
+    NORMALISE_SEARCH_STRING(shouldQureyStr);
+    NORMALISE_SEARCH_STRING(shouldNotQureyStr);
+
+    m_searchQuery = mustQureyStr + " " + shouldQureyStr;
+
+    ArabicAnalyzer analyzer;
+    BooleanQuery *q = new BooleanQuery;
+    BooleanQuery *allFilterQuery = new BooleanQuery;
+    QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
+    queryPareser->setAllowLeadingWildcard(true);
+
     try {
-        ArabicAnalyzer analyzer;
-        m_searchQuery = ui->lineQuery->text();
+        if(!mustQureyStr.isEmpty()) {
+            if(ui->checkQueryMust->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
 
-        m_searchQuery.replace(QRegExp(trUtf8("ـفق")), "(");
-        m_searchQuery.replace(QRegExp(trUtf8("ـغق")), ")");
-        m_searchQuery.replace(QRegExp(trUtf8("ـ[أا]و")), "OR");
-        m_searchQuery.replace(QRegExp(trUtf8("ـو")), "AND");
-        m_searchQuery.replace(QRegExp(trUtf8("ـبدون")), "NOT");
-        m_searchQuery.replace(trUtf8("؟"), "?");
+            Query *mq = queryPareser->parse(QStringToTChar(mustQureyStr));
+            q->add(mq, BooleanClause::MUST);
 
-        QString queryWord = m_searchQuery;
-        IndexSearcher *searcher = new IndexSearcher(INDEX_PATH);
+        }
 
-        // Start building the query
-        QueryParser *queryPareser = new QueryParser(_T("text"),&analyzer);
-        if(ui->checkBox->isChecked())
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-        queryPareser->setAllowLeadingWildcard(true);
+        if(!shouldQureyStr.isEmpty()) {
+            if(ui->checkQueryShould->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
 
-        Query* q = queryPareser->parse(QSTRING_TO_TCHAR(queryWord));
-//        qDebug() << "Search: " << TCHAR_TO_QSTRING(q->toString(_T("text")));
-//        qDebug() << "Query : " << queryWord;
+            Query *mq = queryPareser->parse(QStringToTChar(shouldQureyStr));
+            q->add(mq, BooleanClause::SHOULD);
 
-        QTime time;
+        }
 
-        time.start();
-        m_results->setHits(searcher->search(q));
-        int timeSearch = time.elapsed();
+        if(!shouldNotQureyStr.isEmpty()) {
+            if(ui->checkQueryShouldNot->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
 
-        m_resultCount = m_results->resultsCount();
-        m_results->setPageCount(_toBInt((m_results->resultsCount()/(double)m_resultParPage)));
-        m_results->setCurrentPage(0);
-        displayResults();
+            Query *mq = queryPareser->parse(QStringToTChar(shouldNotQureyStr));
+            q->add(mq, BooleanClause::MUST_NOT);
+        }
 
-        this->statusBar()->showMessage(trUtf8("تم البحث خلال %1 "SECONDE_AR".  "
-                                               "نتائج البحث %2")
-                                       .arg(miTOsec(timeSearch))
-                                       .arg(m_resultCount));
-//        _CLLDELETE(hits);
-//        _CLLDELETE(q);
-//        searcher->close();
+        // Filtering
+        if(ui->groupBoxFilter->isChecked()) {
+            Query * filterQuery;
+            bool required = ui->radioRequired->isChecked();
+            bool prohibited = ui->radioProhibited->isChecked();
+            bool gotAFilter = false;
+
+            filterQuery = getBooksListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            filterQuery = getCatsListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            filterQuery = getAuthorsListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            if(gotAFilter) {
+                allFilterQuery->setBoost(0.0);
+                q->add(allFilterQuery, required, prohibited);
+            }
+        }
+    } catch(CLuceneError &e) {
+        if(e.number() == CL_ERR_Parse)
+            QMessageBox::warning(this,
+                                 trUtf8("خطأ في استعلام البحث"),
+                                 trUtf8("هنالك خطأ في احدى حقول البحث"
+                                        "\n"
+                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."
+                                        "\n"
+                                        "او تأكد من أنك تستخدمها بشكل صحيح"));
+        else
+            QMessageBox::warning(0,
+                                 "CLucene Error when Indexing",
+                                 tr("Error code: %1\n%2").arg(e.number()).arg(e.what()));
+
+        _CLDELETE(q);
+        _CLDELETE(queryPareser);
+
+        return;
     }
-
-    catch(CLuceneError &tmp) {
-        QMessageBox::warning(0, "Error search", tmp.what());
-    }
-
     catch(...) {
-        qDebug() << "Error when searching at : " << INDEX_PATH;
+        QMessageBox::warning(0,
+                             "Unkonw error when Indexing",
+                             tr("Unknow error"));
+        _CLDELETE(q);
+        _CLDELETE(queryPareser);
+
+        return;
     }
 
+    ShamelaSearcher *m_searcher = new ShamelaSearcher;
+    m_searcher->setIndexInfo(m_currentIndex);
+    m_searcher->setQueryString(m_searchQuery);
+    m_searcher->setQuery(q);
+    m_searcher->setResultsPeerPage(m_resultParPage);
+
+    ShamelaResultWidget *widget;
+    int index=1;
+    QString title = trUtf8("%1 (%2)")
+                    .arg(m_currentIndex->name())
+                    .arg(++m_searchCount);
+
+    if(m_useMultiTab || ui->tabWidget->count() < 2) {
+        widget = new ShamelaResultWidget(this);
+        index = ui->tabWidget->addTab(widget, title);
+    } else {
+        widget = qobject_cast<ShamelaResultWidget*>(ui->tabWidget->widget(index));
+        widget->clearResults();
+    }
+
+    widget->setShamelaSearch(m_searcher);
+    widget->setIndexInfo(m_currentIndex);
+
+    ui->tabWidget->setCurrentIndex(index);
+    ui->tabWidget->setTabText(index, title);
+
+    widget->doSearch();
 }
 
 void MainWindow::showStatistic()
 {
     try {
-        IndexReader* r = IndexReader::open(INDEX_PATH);
-        int64_t ver = r->getCurrentVersion(INDEX_PATH);
+        IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->path()));
+        //int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
-        QString txt;
-        txt.append(tr("Statistics for <strong>%1</strong><br/>").arg(INDEX_PATH));
-        //txt.append(tr("Max Docs: %1<br/>").arg(r->maxDoc()));
-        txt.append(tr("Current Version: %1<br/><br/>").arg(ver)) ;
-        txt.append(tr("Num Docs: %1<br/>").arg(r->numDocs()));
+        QTreeWidget *treeWidget = new QTreeWidget;
+        treeWidget->setColumnCount(2);
+        treeWidget->setHeaderHidden(true);
+        treeWidget->setRootIsDecorated(false);
+
+        QList<QTreeWidgetItem *> itemList;
+
+        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name())
+        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path())
+        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath())
+        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs())
+
+        //ADD_QTREEWIDGET_ITEM("Max Docs", r->maxDoc());
+        //ADD_QTREEWIDGET_ITEM("Current Version", ver));
 
         TermEnum* te = r->terms();
-        int32_t nterms;
-        for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
-        }
-        txt.append(tr("Term count: %1<br/>").arg(nterms));
-        txt.append(tr("Index size: %1<br/>").arg(getIndexSize()));
-        txt.append(tr("Book size: %1").arg(getBookSize()));
-        _CLLDELETE(te);
+        int32_t nterms = 0;
 
+        bool writeToFile = false;
+
+        if(writeToFile) {
+            QFile logFile("terms.txt");
+            if(logFile.open(QIODevice::WriteOnly|QIODevice::Text)) {
+                QTextStream log(&logFile);
+                for (nterms = 0; te->next() == true; nterms++) {
+                    /* if(_wcsicmp(te->term()->field(), _T("bookid")) == 0) */
+                    log << TCharToQString(te->term()->toString()) << "\n";
+                }
+            }
+        } else {
+            for (nterms = 0; te->next() == true; nterms++) {
+                /* qDebug() << TCharToQString(te->term()->text()); */
+            }
+        }
+
+        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms)
+        ADD_QTREEWIDGET_ITEM("حجم الفهرس", getIndexSize())
+        ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getBooksSize())
+
+        treeWidget->addTopLevelItems(itemList);
+        treeWidget->resizeColumnToContents(1);
+        treeWidget->resizeColumnToContents(0);
+
+        QDialog *dialog = new QDialog(this);
+        QVBoxLayout *layout = new QVBoxLayout();
+        QLabel *label = new QLabel(trUtf8("معلومات حول الفهرس:"), dialog);
+        layout->addWidget(label);
+        layout->addWidget(treeWidget);
+
+        dialog->setWindowTitle(APP_NAME);
+        dialog->setLayout(layout);
+        dialog->resize(treeWidget->sizeHint());
+        dialog->show();
+
+        _CLLDELETE(te);
         r->close();
         _CLLDELETE(r);
-        QMessageBox::information(0, "Statistics", txt);
     }
     catch(CLuceneError &err) {
         QMessageBox::warning(0, "Error search", err.what());
     }
     catch(...) {
-        qDebug() << "Error when opening : " << INDEX_PATH;
+        qDebug() << "Error when opening : " << m_currentIndex->path();
     }
 
-}
-
-QString MainWindow::cleanString(QString str)
-{
-    str.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-    str.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA -> HEH
-
-    return str;
 }
 
 void MainWindow::resultsCount()
 {
-    this->statusBar()->showMessage(trUtf8("نتائج البحث %1")
-                                   .arg(m_resultCount));
 }
 
-void MainWindow::displayResults(/*result &pResult*/)
-{
-
-    QString resultString;
-
-    int start = m_results->currentPage() * m_resultParPage;
-    int maxResult  =  (m_results->resultsCount() >= start+m_resultParPage)
-                      ? start+m_resultParPage : m_results->resultsCount();
-    bool whiteBG = true;
-    int entryID;
-    for(int i=start; i < maxResult;i++){
-        {
-            int bookID = m_results->bookIdAt(i);
-            QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "resultBook");
-            QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                              .arg(buildFilePath(QString::number(bookID)));
-            m_bookDB.setDatabaseName(mdbpath);
-
-            if (!m_bookDB.open()) {
-                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
-            }
-            QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
-
-            entryID = m_results->idAt(i);
-            m_bookQuery->exec(QString("SELECT nass, page, part FROM book WHERE id = %1")
-                              .arg(entryID));
-            if(m_bookQuery->first()){
-                resultString.append(trUtf8("<div style=\"margin: 0px; padding: 4px; border-bottom: 1px solid black; background-color: %1 ;\">"
-                                           "<h3 style=\"margin: 0px 0px 5px; font-size: 18px; color: rgb(0, 68, 255);\">%2</h3>"
-                                           "<a style=\"margin: 0px; padding: 0px 5px;\" href=\"http://localhost/book.html?id=%3&bookid=%8\">%4</a>"
-                                           "<p style=\"margin: 5px 0px 0px;\"> كتاب: <span style=\"margin-left: 7px; color: green; font-weight: bold;\">%5</span>"
-                                           "<span style=\"float: left;\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
-                                           "</p></div>")
-                                    .arg(whiteBG ? "#FFFFFF" : "#EFEFEF") //BG color
-                                    .arg(getTitleId(entryID)) //BAB
-                                    .arg(entryID) // entry id
-                                    .arg(hiText(abbreviate(m_bookQuery->value(0).toString(),320), m_searchQuery)) // TEXT
-                                    .arg(getBookName(bookID)) // BOOK_NAME
-                                    .arg(m_bookQuery->value(1).toString()) // PAGE
-                                    .arg(m_bookQuery->value(2).toString()) // PART
-                                    .arg(bookID));
-                whiteBG = !whiteBG;
-            }
-        }
-        QSqlDatabase::removeDatabase("resultBook");
-    }
-
-    setPageCount(m_results->currentPage()+1, m_results->pageCount());
-    ui->webView->setHtml("<html><head><style>a{text-decoration: none;color:#000000;} a:hover {color:blue}</style></head>"
-                         "<body style=\"direction: rtl; margin: 0pt; padding: 2px;\">"+resultString+"</body></html>");
-
-}
-
-void MainWindow::on_pushGoNext_clicked()
-{
-    m_results->setCurrentPage(m_results->currentPage()+1);
-    displayResults();
-}
-
-void MainWindow::on_pushGoPrev_clicked()
-{
-    m_results->setCurrentPage(m_results->currentPage()-1);
-    displayResults();
-}
-
-void MainWindow::on_pushGoFirst_clicked()
-{
-    m_results->setCurrentPage(0);
-    displayResults();
-}
-
-void MainWindow::on_pushGoLast_clicked()
-{
-    m_results->setCurrentPage(m_results->pageCount()-1);
-    displayResults();
-}
-
-QString MainWindow::hiText(const QString &text, const QString &strToHi)
-{
-    QStringList regExpStr = buildRegExp(strToHi);
-    QString finlStr  = text;
-    int color = 0;
-    bool useColors = (regExpStr.size() <= m_colors.size());
-
-    foreach(QString regExp, regExpStr)
-        finlStr.replace(QRegExp(cleanString(regExp)),
-                        QString("<b style=\"background-color:%1\">\\1</b>")
-                        .arg(m_colors.at(useColors ? color++ : color)));
-
-//    if(!useColors)
-//        finlStr.replace(QRegExp("<\\/b>([\\s])<b style=\"background-color:[^\"]+\">"), "\\1");
-
-    return finlStr;
-}
-
-QStringList MainWindow::buildRegExp(const QString &str)
-{
-    QStringList strWords = str.split(QRegExp(trUtf8("[\\s;,.()\"{}\\[\\]]")), QString::SkipEmptyParts);
-    QStringList regExpList;
-    foreach(QString word, strWords)
-    {
-        QString regExpStr;
-        regExpStr.append("\\b(");
-
-        for (int i=0; i< word.size();i++) {
-            if(word.at(i) == QChar('~'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('*'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('?'))
-                regExpStr.append("\\S");
-            else {
-                regExpStr.append(word.at(i));
-                regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
-            }
-        }
-        regExpStr.append(")\\b");
-        regExpList.append(regExpStr);
-    }
-    return regExpList;
-}
-
-void MainWindow::setPageCount(int current, int count)
-{
-    int rCount = _atLeastOne(count);
-    int rCurrent = _atLeastOne(current);
-    ui->label->setText(trUtf8("الصفحة %1 / %2")
-                       .arg(rCount)
-                       .arg(rCurrent));
-    buttonStat(rCurrent, rCount);
-}
-
-void MainWindow::buttonStat(int currentPage, int pageCount)
-{
-    if(currentPage == 1) {
-        ui->pushGoPrev->setEnabled(false);
-        ui->pushGoFirst->setEnabled(false);
-    } else {
-        ui->pushGoPrev->setEnabled(true);
-        ui->pushGoFirst->setEnabled(true);
-    }
-
-    if(currentPage == pageCount){
-        ui->pushGoNext->setEnabled(false);
-        ui->pushGoLast->setEnabled(false);
-    } else {
-        ui->pushGoNext->setEnabled(true);
-        ui->pushGoLast->setEnabled(true);
-    }
-
-
-}
-
-void MainWindow::on_lineQuery_returnPressed()
+void MainWindow::on_lineQueryMust_returnPressed()
 {
     startSearching();
 }
 
-QStringList MainWindow::makeVLabels(int start, int end)
+void MainWindow::on_lineQueryShould_returnPressed()
 {
-    QStringList labls;
-    for(int i=start+1; i<=end;i++)
-        labls.append(QString::number(i));
-    return labls;
+    startSearching();
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_lineQueryShouldNot_returnPressed()
 {
-    QString path = QFileDialog::getExistingDirectory(this,
-                                 trUtf8("اختر مجلد المكتبة الشاملة"));
-    if(!path.isEmpty()) {
-        m_bookPath = path;
-        if(!m_bookPath.endsWith('/'))
-            m_bookPath.append('/');
-        ui->lineBook->setText(m_bookPath);
-        if(QSqlDatabase::contains("shamelaBooks"))
-            QSqlDatabase::removeDatabase("shamelaBooks");
-        if(openDB()){
-            int rep = QMessageBox::question(this,
-                                            trUtf8("فهرسة المكتبة"),
-                                            trUtf8("هل تريد فهرسة المكتبة ؟"),
-                                            QMessageBox::Yes|QMessageBox::No);
-            if(rep==QMessageBox::Yes)
-                startIndexing();
-        }
+    startSearching();
+}
+
+void MainWindow::tabCountChange(int /*count*/)
+{
+    ui->tabWidget->setTabsClosable(ui->tabWidget->count() > 1);
+}
+
+void MainWindow::closeTab(int index)
+{
+    if(index > 0) {
+        QWidget *w = ui->tabWidget->widget(index);
+        ui->tabWidget->removeTab(index);
+        delete w;
     }
 }
 
 bool MainWindow::openDB()
 {
     m_dbIsOpen = false;
-    QString book = m_bookPath;
-    book.append("Files/main.mdb");
 
-    if(!QFile::exists(book)) {
-        QMessageBox::warning(this,
-                             trUtf8("خطأ في اختيار مجلد الشاملة"),
-                             trUtf8("المرجوا اختيار مجلد المكتبة الشاملة"));
-        return false;
-    }
     m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
-    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
+    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
+                      .arg(m_currentIndex->shamelaMainDbPath());
     m_bookDB.setDatabaseName(mdbpath);
 
     if (!m_bookDB.open()) {
         QMessageBox::warning(0, "Error opening database", "Cannot open main.mdb database.");
         return false;
     }
-    m_bookQuery = new QSqlQuery(m_bookDB);
+//    m_bookQuery = new QSqlQuery(m_bookDB);
     m_dbIsOpen = true;
 
     return true;
 }
 
-QString MainWindow::abbreviate(QString str, int size) {
-        if (str.length() <= size-3)
-                return str;
-        str.simplified();
-        int index = str.lastIndexOf(' ', size-3);
-        if (index <= -1)
-                return "";
-        return str.left(index).append("...");
-}
-
 QString MainWindow::getIndexSize()
 {
     QDir dir;
-    dir.cd(INDEX_PATH);
+    dir.cd(m_currentIndex->path());
     dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
     dir.setSorting(QDir::Size | QDir::Reversed);
 
     QFileInfoList list = dir.entryInfoList();
     QString sizeStr;
-    int size = 0;
+    qint64 size = 0;
     for (int i = 0; i < list.size(); ++i) {
         QFileInfo fileInfo = list.at(i);
         size += fileInfo.size();
     }
 
-    if(size <= 1024)
-        sizeStr = tr("%1 B").arg(size);
-    else if(1024 <= size && size <= 1024*1024)
-        sizeStr = tr("%1 KB").arg(size/(1024.0), 4);
-    else if(size >= 1024*1024)
-        sizeStr = tr("%1 MB").arg(size/(1024.0*1024.0), 4);
+    if(size < 1024)
+        sizeStr = trUtf8("%1 بيت").arg(size);
+    else if(1024 <= size && size < 1024*1024)
+        sizeStr = trUtf8("%1 كيلو").arg(size/(1024.0), 4);
+    else if( 1024*1024 <= size && size < 1024*1024*1024)
+        sizeStr = trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = tr("%1 GB").arg(size);
+        sizeStr = trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
 
-    int bookSize = 0;
-    {
-        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookSize");
-        indexDB.setDatabaseName("book_index.db");
-        if(!indexDB.open())
-            qDebug("Error opning index db");
-        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-        inexQuery->exec("SELECT fileSize FROM books");
-        while(inexQuery->next())
-            bookSize += inexQuery->value(0).toInt();
-    }
-    QSqlDatabase::removeDatabase("bookSize");
-
-    sizeStr.append(tr(" (%1%)").arg(((double)size/(double)bookSize)*100.0, 2));
     return sizeStr;
 }
 
-QString MainWindow::getBookSize()
+QString MainWindow::getBooksSize()
 {
+    QString sizeStr;
+    qint64 size = getDirSize(m_currentIndex->shamelaPath());
 
-    int size = 0;
-    {
-        QSqlDatabase indexDB = QSqlDatabase::addDatabase("QSQLITE", "bookSize");
-        indexDB.setDatabaseName("book_index.db");
-        if(!indexDB.open())
-            qDebug("Error opning index db");
-        QSqlQuery *inexQuery = new QSqlQuery(indexDB);
-        inexQuery->exec("SELECT fileSize FROM books");
-        while(inexQuery->next())
-            size += inexQuery->value(0).toInt();
-    }
-    QSqlDatabase::removeDatabase("bookSize");
-
-    if(size <= 1024)
-        return tr("%1 B").arg(size);
-    else if(1024 <= size && size <= 1024*1024)
-        return tr("%1 KB").arg(size/(1024.0), 4);
-    else if(size >= 1024*1024)
-        return tr("%1 MB").arg(size/(1024.0*1024.0), 4);
+    if(size < 1024)
+        sizeStr = trUtf8("%1 بيت").arg(size);
+    else if(1024 <= size && size < 1024*1024)
+        sizeStr = trUtf8("%1 كيلو").arg(size/(1024.0), 4);
+    else if( 1024*1024 <= size && size < 1024*1024*1024)
+        sizeStr = trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
     else
-        return tr("%1 GB").arg(size);
+        sizeStr = trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
+
+    return sizeStr;
 }
 
-void MainWindow::writeLog(int indexingTime)
+qint64 MainWindow::getDirSize(const QString &path)
+{
+    QFileInfo info(path);
+    qint64 size=0;
+
+    if(info.isDir()){
+        QDir dir(path);
+        foreach(QFileInfo fieInfo, dir.entryInfoList(QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot)) {
+            if(fieInfo.isFile() && fieInfo.suffix() == "mdb")
+                size += fieInfo.size();
+            else if(fieInfo.isDir())
+                size += getDirSize(fieInfo.absoluteFilePath());
+        }
+    }
+
+    return size;
+}
+
+void MainWindow::doneIndexing(int indexingTime)
 {
     try {
-        IndexReader* r = IndexReader::open(INDEX_PATH);
-        int64_t ver = r->getCurrentVersion(INDEX_PATH);
+        IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->path()));
+        int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
         QString txt;
-        txt.append(tr("[+] Date: %1\n").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy - HH:MM:ss")));
+        txt.append(tr("[+] Date: %1\n")
+                   .arg(QDateTime::currentDateTime().toString("dd/MM/yyyy - HH:MM:ss")));
 #ifdef GITVERSION
         txt.append(tr("[+] Git: %1 - Change number: %2\n").arg(GITVERSION).arg(GITCHANGENUMBER));
 #endif
-        txt.append(tr("[+] Statistics for \"%1\"\n").arg(INDEX_PATH));
-        txt.append(tr("[+] Book: \"%1\"\n").arg(m_bookPath));
+        txt.append(tr("[+] Statistics for \"%1\"\n").arg(m_currentIndex->path()));
         txt.append(tr("[+] Current Version: %1\n").arg(ver)) ;
         txt.append(tr("[+] Num Docs: %1\n").arg(r->numDocs()));
 
         TermEnum* te = r->terms();
         int32_t nterms;
         for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
+            /* qDebug() << TCharToQString(te->term()->text()); */
         }
-        txt.append(tr("[+] Indexing took: %1 s\n").arg(miTOsec(indexingTime)));
+        txt.append(tr("[+] Indexing took: %1 s\n").arg(indexingTime/1000.0));
         txt.append(tr("[+] Term count: %1\n").arg(nterms));
         txt.append(tr("[+] Index size: %1\n").arg(getIndexSize()));
-        txt.append(tr("[+] Book size: %1\n").arg(getBookSize()));
-        txt.append("===========================================\n\n");
+        txt.append(tr("[+] Books size: %1\n").arg(getBooksSize()));
+        txt.append("\n");
         _CLLDELETE(te);
 
         r->close();
         _CLLDELETE(r);
 
         QFile logFile("statistic.txt");
-        if(logFile.open(QIODevice::Append)) {
+        if(logFile.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text)) {
              QTextStream log(&logFile);
              log << txt;
         }
-
     }
     catch(...) {}
 
 }
 
-QString MainWindow::getTitleId(int pageID)
+void MainWindow::showSettingsDialog()
 {
-    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("resultBook"));
-    m_bookQuery->exec(QString("SELECT TOP 1 tit FROM title WHERE id <= %1 ORDER BY id DESC").arg(pageID));
+    SettingsDialog dialog(this);
+    connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
 
-    if(m_bookQuery->first())
-        return m_bookQuery->value(0).toString();
-    else {
-        qDebug() << m_bookQuery->lastError().text();
-        return m_bookName;
+    dialog.exec();
+}
+
+QString MainWindow::buildFilePath(QString bkid, int archive)
+{
+    if(!archive)
+        return QString("%1/Books/%2/%3.mdb")
+        .arg(m_currentIndex->shamelaPath())
+        .arg(bkid.right(1)).arg(bkid);
+    else
+        return QString("%1/Books/Archive/%2.mdb")
+                .arg(m_currentIndex->shamelaPath())
+                .arg(archive);
+}
+
+void MainWindow::aboutApp()
+{
+    QString aTitle(trUtf8(" حول البرنامج"));
+    QString aText(trUtf8("برنامج %1 للبحث في كتب المكتبة الشاملة"
+                         "<br>"
+                         "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION));
+
+    QMessageBox::information(this, aTitle, aText);
+}
+
+Query *MainWindow::getBooksListQuery()
+{
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedBooks()) {
+        TermQuery *term = new TermQuery(new Term(_T("bookid"), QStringToTChar(QString::number(id))));
+        q->add(term,  BooleanClause::SHOULD);
+        count++;
     }
 
+    return count ? q : NULL;
 }
 
-QString MainWindow::getBookName(int bookID)
+Query *MainWindow::getCatsListQuery()
 {
-    QSqlQuery *m_bookQuery = new QSqlQuery(QSqlDatabase::database("shamelaBook"));
-    m_bookQuery->exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
-
-    if(m_bookQuery->first())
-        return m_bookQuery->value(0).toString();
-    else {
-        qDebug() << m_bookQuery->lastError().text();
-        return m_bookName;
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedCats()) {
+        TermQuery *term = new TermQuery(new Term(_T("cat"), QStringToTChar(QString::number(id))));
+        q->add(term,  BooleanClause::SHOULD);
+        count++;
     }
 
+    return count ? q : NULL;
 }
 
-void MainWindow::resultLinkClicked(const QUrl &url)
+Query *MainWindow::getAuthorsListQuery()
 {
-    int rid = url.queryItems().first().second.toInt();
-    int bookID = url.queryItems().last().second.toInt();
-    QDialog *dialog = new QDialog(this);
-    QVBoxLayout *layout= new QVBoxLayout(dialog);
-    QTextBrowser *textBrowser = new QTextBrowser(0);
-    QString text;
-    layout->addWidget(textBrowser);
-    {
-        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                          .arg(buildFilePath(QString::number(bookID)));
-        m_bookDB.setDatabaseName(mdbpath);
-
-        if (!m_bookDB.open()) {
-            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID)) << "database.";
-        }
-        QSqlQuery *m_bookQuery = new QSqlQuery(m_bookDB);
-
-        m_bookQuery->exec(QString("SELECT page, part, nass FROM book WHERE id = %2")
-                          .arg(rid));
-        if(m_bookQuery->first())
-            text = m_bookQuery->value(2).toString();
-
-        text.replace(QRegExp("[\\r\\n]"),"<br/>");
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedAuthors()) {
+        TermQuery *term = new TermQuery(new Term(_T("author"), QStringToTChar(QString::number(id))));
+        q->add(term, BooleanClause::SHOULD);
+        count++;
     }
-    QSqlDatabase::removeDatabase("disBook");
 
-    textBrowser->setHtml(hiText(text, m_searchQuery));
-    textBrowser->setAlignment(Qt::AlignRight);
-
-    dialog->setLayout(layout);
-    dialog->resize(500,500);
-    dialog->show();
+    return count ? q : NULL;
 }
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::chooseProxy(int index)
 {
-    QDialog *settingDialog =  new QDialog(this);
-    QVBoxLayout *vLayout= new QVBoxLayout(settingDialog);
+    m_filterHandler->setFilterSourceModel(index);
 
-    QHBoxLayout *hLayout= new QHBoxLayout(settingDialog);
-    QLabel *label = new QLabel(trUtf8(":عدد النتائج في كل صفحة"), settingDialog);
-    QSpinBox *spinPage = new QSpinBox(settingDialog);
-    QPushButton *pushDone = new QPushButton(trUtf8("حفظ"), settingDialog);
+    if(index == 0)
+        ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
 
-    spinPage->setMaximum(1000);
-    spinPage->setMinimum(1);
-    spinPage->setValue(m_resultParPage);
-    hLayout->addWidget(spinPage);
-    hLayout->addWidget(label);
+    else if(index == 1)
+        ui->treeViewCats->setModel(m_filterHandler->getFilterModel());
 
-    QHBoxLayout *hLayout2= new QHBoxLayout(settingDialog);
-    QLabel *label2 = new QLabel(trUtf8("حجم كل مجموعة"), settingDialog);
-    QSpinBox *spinPage2 = new QSpinBox(settingDialog);
-
-    spinPage2->setMaximum(1000);
-    spinPage2->setMinimum(1);
-    spinPage2->setSuffix(" MB");
-    spinPage2->setValue(m_groupSize);
-    hLayout2->addWidget(spinPage2);
-    hLayout2->addWidget(label2);
-
-    vLayout->addLayout(hLayout);
-    vLayout->addLayout(hLayout2);
-    vLayout->addWidget(pushDone);
-    settingDialog->setLayout(vLayout);
-    settingDialog->show();
-
-    connect(pushDone, SIGNAL(clicked()), settingDialog, SLOT(accept()));
-    connect(spinPage, SIGNAL(valueChanged(int)), this, SLOT(setResultParPage(int)));
-    connect(spinPage2, SIGNAL(valueChanged(int)), this, SLOT(setGroupSize(int)));
+    else
+        ui->treeViewAuthors->setModel(m_filterHandler->getFilterModel());
 }
 
-QString MainWindow::buildFilePath(QString bkid)
+void MainWindow::on_lineFilter_textChanged(QString text)
 {
-    return QString("%1Books/%2/%3.mdb").arg(m_bookPath).arg(bkid.right(1)).arg(bkid);
+    m_filterText[ui->tabWidgetFilter->currentIndex()] = text;
+
+    m_filterHandler->setFilterText(text);
 }
 
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::on_tabWidgetFilter_currentChanged(int index)
 {
-    QDir dir;
-    foreach(QString childDir, dir.entryList(QDir::NoDotAndDotDot|QDir::Dirs)) {
-        if(childDir.contains(QRegExp("(index_book|tmp_[a-f0-9]*)"))) {
-            QDir indexDir(childDir);
-            foreach(QString file, indexDir.entryList(QDir::NoDotAndDotDot|QDir::Files))
-                indexDir.remove(file);
-            indexDir.cdUp();
-            indexDir.rmdir(childDir);
-        }
-    }
-    statusBar()->showMessage(trUtf8("تم حذف الفهارس"),
-                             3000);
+    chooseProxy(index);
+
+    ui->lineFilter->setText(m_filterText.at(index));
 }
+

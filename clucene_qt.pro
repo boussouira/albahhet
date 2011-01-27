@@ -2,23 +2,67 @@ QT += core \
     gui \
     sql \
     webkit
-TARGET = clucene_qt
 TEMPLATE = app
+TARGET = al-bahhet
+
+MOC_DIR += .moc
+OBJECTS_DIR += .obj
+UI_DIR += .ui
+RCC_DIR += .rcc
+
+INCLUDEPATH += $$PWD
+
 SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
     indexingdialg.cpp \
-    indexthread.cpp
+    indexthread.cpp \
+    booksdb.cpp \
+    indexinfo.cpp \
+    shamelasearcher.cpp \
+    shamelaresult.cpp \
+    shamelaresultwidget.cpp \
+    arabicfilter.cpp \
+    arabictokenizer.cpp \
+    settingsdialog.cpp \
+    indexesdialog.cpp \
+    shamelamodels.cpp \
+    bookinfo.cpp \
+    fancylineedit.cpp \
+    common.cpp \
+    searchfilterhandler.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
     indexthread.h \
-    common.h
+    common.h \
+    booksdb.h \
+    indexinfo.h \
+    shamelasearcher.h \
+    shamelaresult.h \
+    shamelaresultwidget.h \
+    cl_common.h \
+    arabicfilter.h \
+    arabictokenizer.h \
+    settingsdialog.h \
+    indexesdialog.h \
+    shamelamodels.h \
+    bookinfo.h \
+    fancylineedit.h \
+    searchfilterhandler.h
 FORMS += mainwindow.ui \
-    indexingdialg.ui
-win32 { 
-    CLUCENE_PATH = "C:/clucene-2.3.2"
-    CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+    indexingdialg.ui \
+    shamelaresultwidget.ui \
+    settingsdialog.ui \
+    indexesdialog.ui
+win32 {
+    win32-msvc* {
+        CLUCENE_PATH = "C:/clucene-2.3.2"
+        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+    } else {
+        CLUCENE_PATH = "C:/clucene-2.3.2_mingw"
+        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
+    }
     DESTDIR = bin
     RC_FILE = win_rc.rc
 }
@@ -50,12 +94,15 @@ DEFINES += _REENTRANT \
     _UCS2 \
     _UNICODE
 
-# INCLUDEPATH += $$CLUCENE_PATH/src/core
-# INCLUDEPATH += $$CLUCENE_PATH/src/ext
-# INCLUDEPATH += $$CLUCENE_PATH/src/shared
-INCLUDEPATH += C:/clucene-2.3.2/src/core
-INCLUDEPATH += C:/clucene-2.3.2/src/ext
-INCLUDEPATH += C:/clucene-2.3.2/src/shared
+INCLUDEPATH += $$CLUCENE_PATH/src/core
+INCLUDEPATH += $$CLUCENE_PATH/src/ext
+INCLUDEPATH += $$CLUCENE_PATH/src/shared
+INCLUDEPATH += $$CLUCENE_PATH/src/contribs-lib
+
 LIBS += -lclucene-core \
     -lclucene-shared \
+    -lclucene-contribs-lib \
     -L$$CLUCENE_LIBS_PATH
+
+RESOURCES += \
+    resources.qrc

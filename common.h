@@ -1,45 +1,35 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <QtSql>
-#include <QDebug>
-#include <QStringListModel>
-#include <QMessageBox>
+#include <qobject.h>
+#include <CLucene/clucene-config.h>
+#include <CLucene/SharedHeader.h>
+#include "indexinfo.h"
 
-#include <CLucene.h>
-#include <CLucene/StdHeader.h>
+#define APP_VERSION "1.0"
+#define APP_NAME QObject::trUtf8("الباحث الشامل")
 
-#include <CLucene/_clucene-config.h>
-#include <CLucene/config/repl_tchar.h>
-#include <CLucene/config/repl_wchar.h>
-#include <CLucene/util/CLStreams.h>
-#include <CLucene/util/Misc.h>
-#include <CLucene/util/StringBuffer.h>
-#include <CLucene/util/dirent.h>
+enum PULRAL{
+    SECOND  = 1,
+    MINUTE  = 2,
+    HOUR    = 3,
+    BOOK    = 4
+};
 
-#include <CLucene/search/IndexSearcher.h>
-//test for memory leaks:
-#ifdef _MSC_VER
-#ifdef _DEBUG
-        #define _CRTDBG_MAP_ALLOC
-        #include <stdlib.h>
-        #include <crtdbg.h>
-#endif
-#endif
+TCHAR* QStringToTChar(const QString &str);
+QString TCharToQString(const TCHAR *string);
 
-#include <iostream>
-#include <fstream>
-#include <sys/stat.h>
-#include <cctype>
-#include <string.h>
-#include <algorithm>
-#include <stdio.h>
+QString arPlural(int count, PULRAL word, bool html=false);
+
+QString indexHashName(QString name);
+QString indexHashName(IndexInfo *index);
+
+void normaliseSearchString(QString &text);
 
 #ifdef Q_OS_WIN32
-        #define TCHAR_TO_QSTRING(s)   QString::fromUtf16((const ushort*) s)
-        #define FIELD_TO_INT(name, d) QString::fromUtf16((const ushort*)d->get(_T(name))).toInt()
-        #define QSTRING_TO_TCHAR(s) (const wchar_t*) s.utf16()
-        #define WIN32_LEAN_AND_MEAN
+        #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
+        #define FIELD_TO_INT(name, d)   _wtoi(d->get(_T(name)))
+        #define QSTRING_TO_TCHAR(s)     QStringToTChar(s)
 #else
         #define TCHAR_TO_QSTRING(s)   QString::fromWCharArray(s)
         #define FIELD_TO_INT(name, d) QString::fromWCharArray(d->get(_T(name))).toInt()
@@ -47,26 +37,25 @@
         #include "mdbconverter.h"
 #endif
 
-#ifndef USE_MIL_SEC
-        #define miTOsec(x) (x/1000.0)
-        #define SECONDE_AR "ثانية"
-#else
-        #define miTOsec(x) x
-        #define SECONDE_AR "جزء من الثانية"
-#endif
+#define SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
 
-#define _toBInt(x) ((x-(int)x) > 0) ? ((int)x)+1 : (int)x
-#define _atLeastOne(x) (x > 0 ? x : 1)
+#define DEL_DB(name) QSqlDatabase::removeDatabase(name);
+#define DEL_DBS(list) {foreach(QString n, list){ DEL_DB(n);}}
+#define DEL_BOOKS_DB(db) {QStringList conn = db->connections(); delete db; DEL_DBS(conn);}
 
-#define INDEX_PATH  "book_index"
+#define ADD_QTREEWIDGET_ITEM(name, value) { \
+        QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \
+        item->setData(0, Qt::DisplayRole, trUtf8(name)); \
+        item->setData(1, Qt::DisplayRole, value); \
+        itemList.append(item); \
+        }
 
-using namespace std;
-using namespace lucene::index;
-using namespace lucene::analysis;
-using namespace lucene::util;
-using namespace lucene::store;
-using namespace lucene::document;
-using namespace lucene::queryParser;
-using namespace lucene::search;
+#define PROGRESS_DIALOG_STEP(text)     progress.setValue(progress.value()+1); \
+                                progress.setLabelText(trUtf8("جاري " text "..."));
+
+#define FORCE_RTL(x)    x->setLayoutDirection(Qt::LeftToRight); \
+                        x->setLayoutDirection(Qt::RightToLeft);
+
+#define NORMALISE_SEARCH_STRING(x)  normaliseSearchString(x)
 
 #endif // COMMON_H
