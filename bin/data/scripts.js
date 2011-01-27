@@ -1,5 +1,9 @@
 ﻿var lastHtml = '';
+var lastTop = 0;
+var lastLeft = 0;
 var baseUrl = resultWidget.baseUrl();
+var clearBody = false;
+
 function handleEvents() {
     $('.result .bookLink').click(function() {
         var d = $(this).parent('.result');
@@ -8,24 +12,9 @@ function handleEvents() {
         
         if(link) {
             lastHtml = $('body').html();
-            /*
-            $('body').find('.currentResult').each(function(){
-                if(lastHtml) {
-                    $(this).addClass('result');
-                    $(this).removeClass('currentResult');
-                    $(this).html(lastHtml);
-                    $(this).mouseenter(function() {
-                        handleEvents();
-                    });
-                }
-            });
-            */
-            /*
-            d.addClass('currentResult');
-            d.removeClass('result');
-            lastHtml = d.html();
-            d.html('');
-            */
+            lastTop = d.position().top, 
+            lastLeft = d.position().left;
+            
             var parText = $('<p>', {'class': 'parText'});
             parText.html(resultWidget.getPage(link));
 
@@ -40,6 +29,7 @@ function handleEvents() {
             
             parNav.append($('<img>', {'alt': 'عودة للنتائج', 'src': baseUrl+'/data/images/go-up.png', 'class': 'backToResults'}).click(function() {
                 $('body').html(lastHtml);
+                scroll(lastLeft, lastTop);
                 
                 resultWidget.showNavigationButton(true);
                 handleEvents();
@@ -67,7 +57,6 @@ function handleEvents() {
             $('body').html(r);
             resultWidget.updateNavgitionLinks(link);
             resultWidget.showNavigationButton(false);
-            //scroll(d.position().left, d.position().top);
         }
     });
 }
@@ -89,21 +78,53 @@ function updateInfoBar(bookName, page, part) {
     infoBar.append($('<div>', {'class': 'clearDiv'}));
 }
 
+function setStatusText(str) {
+    $('.statusDiv').text(str);
+}
+
 function addResult(str) {
     $('body').append($(str));
 }
 
 function searchStarted() {
-  $('body').html($('<p>', {text: "جاري البحث..."}));
+    $('body').html($('<p>', {text: "جاري البحث...", 'class': 'statusDiv'}));
 }
 
 function searchFinnished() {
-  $('body').html('');
+    $('body').html('');
 }
 
 function fetechStarted() {
-  $('body').html('');
+    if(clearBody == true) {
+        $('body').html('');
+    } else {
+        clearBody = true;
+    }
+}
+
+function setSearchTime(time) {
+    var sec = time / 1000;
+    var str = 'ثم البحث خلال ' + sec + ' ثانية';
+    
+    $('body').html($('<p>', {'text': str, 'class': 'statusDiv'}));
+    clearBody = false;
+}
+
+function noResultFound() {
+    var str = 'لم يتم العثور على ما يطابق بحثك';
+    $('body').html($('<p>', {'text': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
+}
+
+function searchException(text, desc) {
+    var str =   'حدث خطأ أثناء البحث: ' + 
+                '<strong>' +
+                text +
+                '</strong>';
+    if(desc) {
+        str +=  '<br />' + desc;
+    }
+    
+    $('body').html($('<p>', {'html': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
 }
 
 $(document).ready(handleEvents());
-$(document).ready($('body').fadeIn('slow'));

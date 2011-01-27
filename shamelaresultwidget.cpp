@@ -21,6 +21,8 @@
 #include <qtextstream.h>
 #include <qdebug.h>
 #include <qmessagebox.h>
+#include <qmenu.h>
+#include "qevent.h"
 
 ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     QWidget(parent),
@@ -40,9 +42,11 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
     m_currentShownId = 0;
 
-    connect(ui->webView, SIGNAL(linkClicked(QUrl)), this, SLOT(resultLinkClicked(QUrl)));
+    ui->webView->installEventFilter(this);
+
+    connect(ui->webView, SIGNAL(linkClicked(QUrl)), SLOT(resultLinkClicked(QUrl)));
     connect(ui->webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
-            this, SLOT(populateJavaScriptWindowObject()));
+            SLOT(populateJavaScriptWindowObject()));
 }
 
 ShamelaResultWidget::~ShamelaResultWidget()
@@ -59,12 +63,12 @@ ShamelaResultWidget::~ShamelaResultWidget()
 void ShamelaResultWidget::setShamelaSearch(ShamelaSearcher *s)
 {
     m_searcher = s;
-    connect(m_searcher, SIGNAL(gotResult(ShamelaResult*)), this, SLOT(gotResult(ShamelaResult*)));
-    connect(m_searcher, SIGNAL(startSearching()), this, SLOT(searchStarted()));
-    connect(m_searcher, SIGNAL(doneSearching()), this, SLOT(searchFinnished()));
-    connect(m_searcher, SIGNAL(startFeteching()), this, SLOT(fetechStarted()));
-    connect(m_searcher, SIGNAL(doneFeteching()), this, SLOT(fetechFinnished()));
-    connect(m_searcher, SIGNAL(gotException(QString, int)), this, SLOT(gotException(QString, int)));
+    connect(m_searcher, SIGNAL(gotResult(ShamelaResult*)), SLOT(gotResult(ShamelaResult*)));
+    connect(m_searcher, SIGNAL(startSearching()), SLOT(searchStarted()));
+    connect(m_searcher, SIGNAL(doneSearching()), SLOT(searchFinnished()));
+    connect(m_searcher, SIGNAL(startFeteching()), SLOT(fetechStarted()));
+    connect(m_searcher, SIGNAL(doneFeteching()), SLOT(fetechFinnished()));
+    connect(m_searcher, SIGNAL(gotException(QString, int)), SLOT(gotException(QString, int)));
 }
 
 void ShamelaResultWidget::doSearch()
@@ -94,22 +98,34 @@ void ShamelaResultWidget::searchStarted()
                          .arg(appPath));
 
     ui->labelNav->clear();
-//    m_searchTimeLabel->clear();
 
     buttonStat(1, 1);
-    ui->webView->page()->mainFrame()->evaluateJavaScript("searchStarted()");
+
+    ui->progressBar->setMaximum(0);
+    ui->progressBar->show();
+
+    ui->webView->page()->mainFrame()->evaluateJavaScript("searchStarted();");
 }
 
 void ShamelaResultWidget::searchFinnished()
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript("searchFinnished()");
-//    m_searchTimeLabel->setText(trUtf8("  مدة البحث: %1 ثانية").arg(m_searcher->searchTime()/1000.0));
-//    m_searchTimeLabel->show();
+    ui->webView->page()->mainFrame()->evaluateJavaScript("searchFinnished();");
+
+    if(m_searcher->resultsCount() > 0) {
+        ui->webView->page()->mainFrame()->evaluateJavaScript(QString("setSearchTime(%1);")
+                                                             .arg(m_searcher->searchTime()));
+    } else {
+        ui->webView->page()->mainFrame()->evaluateJavaScript("noResultFound();");
+
+        showNavigationButton(false);
+    }
+
+    ui->progressBar->hide();
 }
 
 void ShamelaResultWidget::fetechStarted()
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript("fetechStarted()");
+    ui->webView->page()->mainFrame()->evaluateJavaScript("fetechStarted();");
     showNavigationButton(false);
     ui->progressBar->setMaximum(m_searcher->resultsPeerPage());
     ui->progressBar->setValue(0);
@@ -123,10 +139,11 @@ void ShamelaResultWidget::fetechFinnished()
         setPageCount(search->currentPage(), search->resultsCount());
     }
 
-    ui->webView->page()->mainFrame()->evaluateJavaScript("handleEvents()");
+    ui->webView->page()->mainFrame()->evaluateJavaScript("handleEvents();");
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressBar->hide();
     showNavigationButton(true);
+//    writeHtmlResult();
 }
 
 void ShamelaResultWidget::gotResult(ShamelaResult *result)
@@ -140,16 +157,18 @@ void ShamelaResultWidget::gotResult(ShamelaResult *result)
 void ShamelaResultWidget::gotException(QString what, int id)
 {
     QString str = what;
+    QString desc;
+
     if(id == CL_ERR_TooManyClauses)
         str = trUtf8("احتمالات البحث كثيرة جدا");
     else if(id == CL_ERR_CorruptIndex || id == CL_ERR_IO){
-        str = trUtf8("الفهرس غير سليم:");
-        str += "\n" + what;
+        str = trUtf8("الفهرس غير سليم");
+        desc = what;
     }
 
-    QMessageBox::warning(this,
-                         trUtf8("حدث خطأ"),
-                         str);
+    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("searchException('%1', '%2');")
+                                                         .arg(str)
+                                                         .arg(desc));
 }
 
 void ShamelaResultWidget::populateJavaScriptWindowObject()
@@ -320,7 +339,11 @@ void ShamelaResultWidget::resultLinkClicked(const QUrl &url)
         m_bookDB.setDatabaseName(mdbpath);
 
         if (!m_bookDB.open()) {
-            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+            qDebug("[%s:%d] Cannot open database at \"%s\".",
+                   __FILE__,
+                   __LINE__,
+                   qPrintable(buildFilePath(QString::number(bookID), archive)));
+            return;
         }
         QSqlQuery m_bookQuery(m_bookDB);
 
@@ -359,10 +382,17 @@ QString ShamelaResultWidget::getPage(QString href)
         m_bookDB.setDatabaseName(mdbpath);
 
         if (!m_bookDB.open()) {
-            qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+            qDebug("[%s:%d] Cannot open database at \"%s\".",
+                   __FILE__,
+                   __LINE__,
+                   qPrintable(buildFilePath(QString::number(bookID), archive)));
+
+            return QString("Error!");
         }
         QSqlQuery m_bookQuery(m_bookDB);
 
+//        m_bookQuery.exec(QString("SELECT TOP 1 id, nass, page, part FROM %1 "
+//                                 "WHERE id <= %2 ORDER BY id DESC")
         m_bookQuery.exec(QString("SELECT id, nass, page, part FROM %1 WHERE id = %2")
                          .arg((!archive) ? "book" : QString("b%1").arg(bookID))
                          .arg(rid));
@@ -371,6 +401,8 @@ QString ShamelaResultWidget::getPage(QString href)
             m_currentShownId = m_bookQuery.value(0).toInt();
             m_currentPage = m_bookQuery.value(2).toInt();
             m_currentPart = m_bookQuery.value(3).toInt();
+        } else {
+            qDebug() << "No page:" << rid;
         }
         text.replace(QRegExp("[\\r\\n]"),"<br/>");
     }
@@ -460,4 +492,24 @@ void ShamelaResultWidget::writeHtmlResult()
     QTextStream out(&file);
     out.setCodec("UTF-8");
     out << ui->webView->page()->mainFrame()->toHtml();
+}
+
+bool ShamelaResultWidget::eventFilter(QObject *obj, QEvent *event)
+{
+    /*
+    if(obj == ui->webView) {
+        if(event->type() == QEvent::ContextMenu) {
+            QContextMenuEvent *e = static_cast<QContextMenuEvent*>(event);
+//            QMenu *menu = ui->webView->page()->createStandardContextMenu();
+            QMenu *menu = new QMenu(this);
+            QAction *action = new QAction(trUtf8("نسخ"), this);
+            action->setEnabled(!ui->webView->page()->selectedText().isEmpty());
+            menu->addAction(action);
+            menu->exec(e->globalPos());
+
+            return true;
+        }
+    }
+*/
+    return QWidget::eventFilter(obj, event);
 }

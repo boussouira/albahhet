@@ -47,10 +47,6 @@ public:
     void setResultsPeerPage(int count) { m_resultParPage = count; }
 
     QString buildFilePath(QString bkid, int archive);
-    QStringList buildRegExp(const QString &str);
-    QString cleanString(QString str);
-    QString abbreviate(QString str, int size);
-    QString hiText(const QString &text, const QString &strToHi);
     QString getTitleId(const QSqlDatabase &db, ShamelaResult *result);
 
 protected:

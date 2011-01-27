@@ -10,6 +10,7 @@ OBJECTS_DIR += .obj
 UI_DIR += .ui
 RCC_DIR += .rcc
 
+INCLUDEPATH += $$PWD
 
 SOURCES += main.cpp \
     mainwindow.cpp \
@@ -24,7 +25,11 @@ SOURCES += main.cpp \
     arabicfilter.cpp \
     arabictokenizer.cpp \
     settingsdialog.cpp \
-    indexesdialog.cpp
+    indexesdialog.cpp \
+    shamelamodels.cpp \
+    bookinfo.cpp \
+    fancylineedit.cpp \
+    common.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -39,7 +44,10 @@ HEADERS += mainwindow.h \
     arabicfilter.h \
     arabictokenizer.h \
     settingsdialog.h \
-    indexesdialog.h
+    indexesdialog.h \
+    shamelamodels.h \
+    bookinfo.h \
+    fancylineedit.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \

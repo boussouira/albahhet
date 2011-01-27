@@ -1,9 +1,7 @@
 #ifndef INDEXTHREAD_H
 #define INDEXTHREAD_H
 
-#include <QThread>
-#include "common.h"
-#include "indexthread.h"
+#include <qthread.h>
 #include "arabicanalyzer.h"
 
 class BooksDB;

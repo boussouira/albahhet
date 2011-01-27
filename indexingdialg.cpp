@@ -1,21 +1,15 @@
 #include "indexingdialg.h"
 #include "ui_indexingdialg.h"
+#include "common.h"
+#include "bookinfo.h"
 #include <qfiledialog.h>
 #include <qmessagebox.h>
-
-enum {
-    SECOND  = 1,
-    MINUTE  = 2,
-    HOUR    = 3,
-    BOOK    = 4
-};
 
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::IndexingDialg)
 {
     ui->setupUi(this);
-    setWindowTitle(parent->windowTitle());
 
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
@@ -26,14 +20,14 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 
     setRamSize();
     ui->spinRamSize->hide();
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setRamSize()));
-    connect(ui->pushNext, SIGNAL(clicked()), this, SLOT(nextStep()));
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(setRamSize()));
+    connect(ui->pushNext, SIGNAL(clicked()), SLOT(nextStep()));
 }
 
 IndexingDialg::~IndexingDialg()
 {
     delete ui;
-    delete m_bookDB;
+    DEL_BOOKS_DB(m_bookDB);
 }
 
 void IndexingDialg::showBooks()
@@ -91,9 +85,9 @@ void IndexingDialg::startIndexing()
 
     for(int i=0;i<m_threadCount;i++) {
         IndexingThread *indexThread = new IndexingThread();
-        connect(indexThread, SIGNAL(fileIndexed(QString)), this, SLOT(addBook(QString)));
-        connect(indexThread, SIGNAL(finished()), this, SLOT(doneIndexing()));
-        connect(indexThread, SIGNAL(indexingError()), this, SLOT(indexingError()));
+        connect(indexThread, SIGNAL(fileIndexed(QString)), SLOT(addBook(QString)));
+        connect(indexThread, SIGNAL(finished()), SLOT(doneIndexing()));
+        connect(indexThread, SIGNAL(indexingError()), SLOT(indexingError()));
 
         indexThread->setIndexInfo(m_indexInfo);
         indexThread->setBookDB(m_bookDB);
@@ -184,10 +178,13 @@ void IndexingDialg::doneIndexing()
         }
 
         m_writer->close();
+
         ui->pushNext->setText(trUtf8("انتهى"));
+
+        ui->pushNext->setEnabled(true);
         ui->pushCancel->setEnabled(false);
 
-        QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK));
+        QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
         msg.append("<br>");
 
         msg.append(trUtf8("تمت الفهرسة خلال %1").arg(formatTime(elpasedMsec)));
@@ -220,16 +217,16 @@ QString IndexingDialg::formatTime(int milsec)
     int hours   = (int) (((milsec / 1000) / 60) / 60);
 
     if(hours > 0){
-        time.append(arPlural(hours, HOUR));
+        time.append(arPlural(hours, HOUR, true));
         time.append(trUtf8(" و "));
     }
 
     if(minutes > 0 || hours > 0) {
-        time.append(arPlural(minutes, MINUTE));
+        time.append(arPlural(minutes, MINUTE, true));
         time.append(trUtf8(" و "));
     }
 
-    time.append(arPlural(seconde, SECOND));
+    time.append(arPlural(seconde, SECOND, true));
 
     return time;
 }
@@ -245,6 +242,7 @@ void IndexingDialg::stopIndexing()
         ui->progressBar->setMaximum(0);
         m_stopIndexing = true;
         m_bookDB->clear();
+        ui->pushNext->setEnabled(false);
     }
 }
 
@@ -284,33 +282,6 @@ void IndexingDialg::setRamSize()
     }
 }
 
-QString IndexingDialg::arPlural(int count, int word)
-{
-    QStringList list;
-    QString str;
-    if(word == SECOND)
-        list <<  trUtf8("ثانية") << trUtf8("ثانيتين") << trUtf8("ثوان") << trUtf8("ثانية");
-    else if(word == MINUTE)
-        list <<  trUtf8("دقيقة") << trUtf8("دقيقتين") << trUtf8("دقائق") << trUtf8("دقيقة");
-    else if(word == HOUR)
-        list <<  trUtf8("ساعة") << trUtf8("ساعتين") << trUtf8("ساعات") << trUtf8("ساعة");
-    else if(word == BOOK)
-        list <<  trUtf8("كتاب واحد") << trUtf8("كتابين") << trUtf8("كتب") << trUtf8("كتابا");
-
-    if(count <= 1)
-        str = list.at(0);
-    else if(count == 2)
-        str = list.at(1);
-    else if (count > 2 && count <= 10)
-        str = QString("%1 %2").arg(count).arg(list.at(2));
-    else if (count > 10)
-        str = QString("%1 %2").arg(count).arg(list.at(3));
-    else
-        str = QString();
-
-    return QString("<strong>%1</strong>").arg(str);
-}
-
 void IndexingDialg::on_buttonSelectShamela_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
@@ -348,6 +319,9 @@ void IndexingDialg::saveIndexInfo()
     settings.setValue("ram_size", m_indexInfo->ramSize());
     settings.setValue("optimizeIndex", m_indexInfo->optimize());
     settings.endGroup();
+
+    DEL_BOOKS_DB(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
+    m_bookDB = new BooksDB();
 
     emit indexCreated();
 }

@@ -1,6 +1,10 @@
 #include "indexthread.h"
+#include "common.h"
 #include "booksdb.h"
 #include "indexinfo.h"
+#include "bookinfo.h"
+#include <qvariant.h>
+#include <qsqlquery.h>
 #include <qmessagebox.h>
 
 IndexingThread::IndexingThread()
@@ -54,32 +58,44 @@ void IndexingThread::indexBook(BookInfo *book)
                                  .arg(book->path()));
 
         if (!mdbDB.open()) {
-            qDebug() << "Cannot open MDB database.";
+            qDebug("[%s:%d] Cannot open database.", __FILE__, __LINE__);
             return;
         }
         QSqlQuery shaQuery(mdbDB);
 
         shaQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ")
-                         .arg((!book->arhive().toInt()) ? "book" : QString("b%1").arg(book->id())));
+                         .arg((!book->archive()) ? "book" : QString("b%1").arg(book->id())));
         Document doc;
+        TCHAR *text;
+        TCHAR *id;
+        int tokenAndNoStore = Field::STORE_NO | Field::INDEX_TOKENIZED;
+        int storeAndNoToken = Field::STORE_YES | Field::INDEX_UNTOKENIZED;
+
         while(shaQuery.next())
         {
-            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(0).toString()),
-                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-            doc.add( *_CLNEW Field(_T("bookid"), QSTRING_TO_TCHAR(book->id()),
-                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-            doc.add( *_CLNEW Field(_T("archive"), QSTRING_TO_TCHAR(book->arhive()),
-                                   Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()),
-                                   Field::STORE_NO | Field::INDEX_TOKENIZED));
+            id = QStringToTChar(shaQuery.value(0).toString());
+            text = QStringToTChar(shaQuery.value(1).toString());
+
+            doc.add( *_CLNEW Field(_T("id"), id, storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("bookid"), book->idT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("archive"), book->archiveT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("cat"), book->catT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("author"), book->authorIDT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("text"), text, tokenAndNoStore));
 
             m_writer->addDocument(&doc);
 
             doc.clear();
+            delete [] id;
+            delete [] text;
+
         }
 
         mdbDB.close();
     }
+
+    m_bookDB->setBookIndexed(book->id());
+    m_bookDB->getAuthorFromShamela(book->authorID());
 
     QSqlDatabase::removeDatabase(QString("INDEX_%1").arg(book->id()));
 }

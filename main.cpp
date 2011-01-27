@@ -13,5 +13,8 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
+    w.loadIndexesList();
+    w.haveIndexesCheck();
+
     return app.exec();
 }

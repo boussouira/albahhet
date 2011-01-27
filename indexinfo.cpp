@@ -71,19 +71,29 @@ QString IndexInfo::nameHash(QString name)
     return QString::number(qChecksum(qPrintable(name), name.size()+1));
 }
 
-QString IndexInfo::shamelaDbName()
+QString IndexInfo::shamelaMainDbName()
 {
     return QString("main.mdb");
 }
 
-QString IndexInfo::shamelaDbPath()
+QString IndexInfo::shamelaMainDbPath()
 {
-    return QString("%1/Files/%2").arg(shamelaPath()).arg(shamelaDbName());
+    return QString("%1/Files/%2").arg(shamelaPath()).arg(shamelaMainDbName());
+}
+
+QString IndexInfo::shamelaSpecialDbName()
+{
+    return QString("special.mdb");
+}
+
+QString IndexInfo::shamelaSpecialDbPath()
+{
+    return QString("%1/Files/%2").arg(shamelaPath()).arg(shamelaSpecialDbName());
 }
 
 bool IndexInfo::isShamelaPath(QString path)
 {
-    return QFile::exists(QString("%1/Files/%2").arg(path).arg(shamelaDbName()));
+    return QFile::exists(QString("%1/Files/%2").arg(path).arg(shamelaMainDbName()));
 }
 
 QString IndexInfo::indexDbName()

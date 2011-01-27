@@ -10,5 +10,7 @@
         <file>bin/data/images/delete.png</file>
         <file>bin/data/images/edit.png</file>
         <file>bin/data/images/checkall.png</file>
+        <file>bin/data/images/magnifier.png</file>
+        <file>bin/data/images/clear.png</file>
     </qresource>
 </RCC>

@@ -4,6 +4,7 @@
 #include "cl_common.h"
 #include "indexinfo.h"
 #include "shamelaresult.h"
+#include <cmath>
 #include <qdatetime.h>
 #include <qstringlist.h>
 #include <qsqlquery.h>
@@ -52,7 +53,10 @@ void ShamelaSearcher::run()
     try {
         if(m_action == SEARCH){
             search();
-            fetech();
+
+            if(m_hits->length() > 0)
+                fetech();
+
         } else if (m_action == FETECH) {
             fetech();
         }
@@ -75,14 +79,14 @@ void ShamelaSearcher::search()
 
     m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
 
-    qDebug() << "Query: " << TCHAR_TO_QSTRING(m_query->toString(_T("text")));
+    qDebug() << "Query: " << TCharToQString(m_query->toString(_T("text")));
 
     QTime time;
     time.start();
     m_hits = m_searcher->search(m_query);
     m_timeSearch = time.elapsed();
 
-    m_pageCount = _ceil((resultsCount()/(double)m_resultParPage));
+    m_pageCount = ceil((resultsCount()/(double)m_resultParPage));
     m_currentPage = 0;
 
     emit doneSearching();
@@ -118,7 +122,8 @@ void ShamelaSearcher::fetech()
             continue;
         }
 
-        QString connName = (archive) ? QString("bid_%1").arg(archive) : QString("bid_%1_%2").arg(archive).arg(bookID);
+        QString connName = (archive) ? QString("bid_%1").arg(archive) :
+                           QString("bid_%1_%2").arg(archive).arg(bookID);
 
         {
             QSqlDatabase bookDB;
@@ -131,8 +136,14 @@ void ShamelaSearcher::fetech()
                 bookDB.setDatabaseName(mdbpath);
             }
 
-            if (!bookDB.open())
-                qDebug() << "Cannot open" << buildFilePath(QString::number(bookID), archive) << "database.";
+            if (!bookDB.open()) {
+                qDebug("[%s:%d] Cannot open database at \"%s\".",
+                       __FILE__,
+                       __LINE__,
+                       qPrintable(buildFilePath(QString::number(bookID), archive)));
+
+                continue;
+            }
 
             QSqlQuery bookQuery(bookDB);
 
@@ -151,12 +162,13 @@ void ShamelaSearcher::fetech()
                 result->setTitle(getTitleId(bookDB, result));
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
                 //result->setSnippet(hiText(abbreviate(result->text(), 320), m_queryStr));
-                /**/
+
+                /* Highlight the text */
                 Highlighter highlighter(&hl_formatter, &scorer);
                 SimpleFragmenter frag(20);
                 highlighter.setTextFragmenter(&frag);
 
-                const TCHAR* text = QSTRING_TO_TCHAR(bookQuery.value(0).toString());
+                const TCHAR* text = QStringToTChar(bookQuery.value(0).toString());
                 StringReader reader(text);
                 TokenStream* tokenStream = hl_analyzer.tokenStream(_T("text"), &reader);
 
@@ -166,11 +178,11 @@ void ShamelaSearcher::fetech()
                         maxNumFragmentsRequired,
                         fragmentSeparator);
 
-                result->setSnippet(TCHAR_TO_QSTRING(hi_result));
+                result->setSnippet(TCharToQString(hi_result));
 
                 _CLDELETE_CARRAY(hi_result)
                 _CLDELETE(tokenStream)
-                _CLDELETE(text)
+                delete [] text;
                 /**/
 
                         emit gotResult(result);
@@ -286,80 +298,6 @@ QString ShamelaSearcher::buildFilePath(QString bkid, int archive)
         return QString("%1/Books/%2/%3.mdb").arg(m_indexInfo->shamelaPath()).arg(bkid.right(1)).arg(bkid);
     else
         return QString("%1/Books/Archive/%2.mdb").arg(m_indexInfo->shamelaPath()).arg(archive);
-}
-
-QStringList ShamelaSearcher::buildRegExp(const QString &str)
-{
-    QString text = str;
-    text.remove(QRegExp(trUtf8("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
-
-    QStringList strWords = text.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
-    QStringList regExpList;
-    QChar opPar('(');
-    QChar clPar(')');
-    foreach(QString word, strWords)
-    {
-        QString regExpStr;
-        regExpStr.append("\\b");
-        regExpStr.append(opPar);
-
-        for (int i=0; i< word.size();i++) {
-            if(word.at(i) == QChar('~'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('*'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('?'))
-                regExpStr.append("\\S");
-            else if( word.at(i) == QChar('"') || word.at(i) == opPar || word.at(i) == opPar )
-                continue;
-            else {
-                regExpStr.append(word.at(i));
-                regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
-            }
-        }
-
-        regExpStr.append(clPar);
-        regExpStr.append("\\b");
-        regExpList.append(regExpStr);
-    }
-
-    return regExpList;
-}
-
-QString ShamelaSearcher::abbreviate(QString str, int size) {
-        if (str.length() <= size-3)
-                return str;
-        str.simplified();
-        int index = str.lastIndexOf(' ', size-3);
-        if (index <= -1)
-                return "";
-        return str.left(index).append("...");
-}
-
-QString ShamelaSearcher::cleanString(QString str)
-{
-    str.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-    str.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA -> HEH
-
-    return str;
-}
-
-QString ShamelaSearcher::hiText(const QString &text, const QString &strToHi)
-{
-    QStringList regExpStr = buildRegExp(strToHi);
-    QString finlStr  = text;
-    int color = 0;
-    bool useColors = (regExpStr.size() <= m_colors.size());
-
-    foreach(QString regExp, regExpStr)
-        finlStr.replace(QRegExp(cleanString(regExp)),
-                        QString("<b style=\"background-color:%1\">\\1</b>")
-                        .arg(m_colors.at(useColors ? color++ : color)));
-
-//    if(!useColors)
-//        finlStr.replace(QRegExp("<\\/b>([\\s])<b style=\"background-color:[^\"]+\">"), "\\1");
-
-    return finlStr;
 }
 
 QString ShamelaSearcher::getTitleId(const QSqlDatabase &db, ShamelaResult *result)

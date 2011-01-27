@@ -36,6 +36,9 @@ public slots:
     void updateNavgitionLinks(QString href);
     void showNavigationButton(bool show);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
 protected slots:
     void searchStarted();
     void searchFinnished();

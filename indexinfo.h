@@ -21,8 +21,10 @@ public:
     QString nameHash();
     static QString nameHash(QString name);
 
-    QString shamelaDbName();
-    QString shamelaDbPath();
+    QString shamelaMainDbName();
+    QString shamelaMainDbPath();
+    QString shamelaSpecialDbName();
+    QString shamelaSpecialDbPath();
     bool isShamelaPath(QString path);
 
     QString indexDbName();

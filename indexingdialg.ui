@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>انشاء فهرس</string>
   </property>
   <property name="layoutDirection">
    <enum>Qt::RightToLeft</enum>
@@ -47,7 +47,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string/>
+               <string>C:/Documents and Settings/Naruto/Bureau/e-shamela</string>
               </property>
              </widget>
             </item>
@@ -81,7 +81,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string/>
+               <string>TestX</string>
               </property>
              </widget>
             </item>
@@ -91,7 +91,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string/>
+               <string>C:/Documents and Settings/Naruto/Bureau/qqqq</string>
               </property>
              </widget>
             </item>

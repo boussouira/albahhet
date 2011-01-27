@@ -12,9 +12,6 @@
 #include <qdir.h>
 #include <assert.h>
 
-#define PROGRESS_STEP(text)     progress.setValue(progress.value()+1); \
-                                progress.setLabelText(trUtf8("جاري " text "..."));
-
 IndexesDialog::IndexesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::IndexesDialog)
@@ -74,31 +71,37 @@ bool IndexesDialog::deleteIndex(IndexInfo *index)
         settings.remove(indexHash);
         list.removeAt(indexIndex);
 
-        settings.setValue("indexes_list", list);
+        if(list.isEmpty())
+            settings.remove("indexes_list");
+        else
+            settings.setValue("indexes_list", list);
 
-        if(indexHash == settings.value("current_index").toString())
-            settings.setValue("current_index", list.first());
-
+        if(indexHash == settings.value("current_index").toString()) {
+            if(list.isEmpty())
+                settings.remove("current_index");
+            else
+                settings.setValue("current_index", list.first());
+        }
         return true;
     }
 
     return false;
 }
 
-void IndexesDialog::removeSameIds(QList<int> &big, QList<int> &small)
+void IndexesDialog::removeSameIds(QList<int> &bigList, QList<int> &smalList)
 {
     int i=0;
 
-    qDebug() << "small.count():" << small.count();
-    qDebug() << "big.count():" << big.count();
+    qDebug() << "small.count():" << smalList.count();
+    qDebug() << "big.count():" << bigList.count();
 
-    for(i=0; i < small.count(); i++) {
-        int val = small.at(i);
-        int index = big.indexOf(val);
+    for(i=0; i < smalList.count(); i++) {
+        int val = smalList.at(i);
+        int index = bigList.indexOf(val);
 
         if(index != -1) {
-            small.removeAt(i);
-            big.removeAt(index);
+            smalList.removeAt(i);
+            bigList.removeAt(index);
             i--;
         }
     }
@@ -224,12 +227,12 @@ void IndexesDialog::on_pushUpDate_clicked()
         progress.setWindowModality(Qt::WindowModal);
         progress.setCancelButton(0);
 
-        PROGRESS_STEP("التعرف على كتب الشاملة");
+        PROGRESS_DIALOG_STEP("التعرف على كتب الشاملة");
 
         QList<int> shaIds = bookDb->getShamelaIds();
         QList<int> savedIds = bookDb->getSavedIds();
 
-        PROGRESS_STEP("مقارنة الكتب");
+        PROGRESS_DIALOG_STEP("مقارنة الكتب");
 
         if(shaIds.count() > savedIds.count())
             removeSameIds(shaIds, savedIds);
@@ -240,27 +243,27 @@ void IndexesDialog::on_pushUpDate_clicked()
 //        qDebug() << "SAVED:" << savedIds.count() << ":" << savedIds;
 
         if(shaIds.count() > 0) {
-            PROGRESS_STEP("اضافة الكتب الجديدة الى قاعدة البيانات");
+            PROGRESS_DIALOG_STEP("اضافة الكتب الجديدة الى قاعدة البيانات");
             added = bookDb->addBooks(shaIds);
         }
 
         if(savedIds.count() > 0) {
-            PROGRESS_STEP("حذف الكتب من قاعدة البيانات");
+            PROGRESS_DIALOG_STEP("حذف الكتب من قاعدة البيانات");
             removed = bookDb->removeBooks(savedIds);
         }
 
         QString msg(trUtf8("ثم تحديث الفهرس بنجاح." "<br>"));
         if(added > 0) {
-            PROGRESS_STEP("فهرسة الكتب الجديدة");
+            PROGRESS_DIALOG_STEP("فهرسة الكتب الجديدة");
 
-            msg.append(trUtf8("ثم اضافة %1." "<br>").arg(IndexingDialg::arPlural(added, 4)));
+            msg.append(trUtf8("ثم اضافة %1." "<br>").arg(arPlural(added, BOOK)));
             indexBooks(shaIds, bookDb, indexInfo);
         }
 
         if(removed > 0) {
-            PROGRESS_STEP("حذف الكتب من الفهرس");
+            PROGRESS_DIALOG_STEP("حذف الكتب من الفهرس");
 
-            msg.append(trUtf8("ثم حذف %1." "<br>").arg(IndexingDialg::arPlural(removed, 4)));
+            msg.append(trUtf8("ثم حذف %1." "<br>").arg(arPlural(removed, BOOK)));
             deletBooksFromIndex(savedIds, indexInfo);
         }
 
@@ -273,10 +276,7 @@ void IndexesDialog::on_pushUpDate_clicked()
                                  trUtf8("تحديث فهرس"),
                                  msg);
 
-        delete bookDb;
-
-        DEL_DB("indexDb");
-        DEL_DB("shamelaBookDb");
+        DEL_BOOKS_DB(bookDb);
 
     } else {
         QMessageBox::warning(this,
@@ -381,19 +381,19 @@ void IndexesDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
         return;
     }
 
-    RefCountArray<Term*> terms(ids.count());
     for(int i=0; i<ids.count(); i++) {
-        Term *term = new Term(QSTRING_TO_TCHAR(QString::number(ids.at(i))), _T("bookid"));
-        terms[i] = term;
+        TCHAR str[10];
+        Term *term = new Term(_itow(ids.at(i), str, 10), _T("bookid"));
+        writer->deleteDocuments(term);
+
+        _CLDELETE(term);
     }
 
-    writer->deleteDocuments(&terms);
 
 //    writer->optimize();
     writer->close();
 
     _CLDELETE(writer);
-//    _CLDECDELETE(term);
 }
 
 void IndexesDialog::optimizeIndex(IndexInfo *info)

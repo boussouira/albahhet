@@ -9,6 +9,7 @@
 #include "arabicanalyzer.h"
 #include "settingsdialog.h"
 #include "indexesdialog.h"
+#include "shamelamodels.h"
 
 #include <qtextbrowser.h>
 #include <qfiledialog.h>
@@ -23,6 +24,7 @@
 #include <qevent.h>
 #include <qmessagebox.h>
 #include <qsqlquery.h>
+#include <qprogressdialog.h>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
@@ -31,19 +33,12 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(APP_NAME);
 
     m_currentIndex = new IndexInfo();
+    m_book = new BooksDB();
+    m_shaModel = new ShamelaModels(this);
+    m_filterProxy = new QSortFilterProxyModel(this);
+    m_filterProxy->setDynamicSortFilter(true);
 
-    m_fetechProgressBar = new QProgressBar(this);
-    m_fetechProgressBar->setTextVisible(false);
-    statusBar()->addWidget(m_fetechProgressBar, 0);
-    m_fetechProgressBar->hide();
-
-    m_searchTimeLabel = new QLabel(this);
-    statusBar()->addPermanentWidget(m_searchTimeLabel, 0);
-    m_searchTimeLabel->hide();
-
-    m_searchResultsLabel = new QLabel(this);
-    statusBar()->addPermanentWidget(m_searchResultsLabel, 1);
-    m_searchTimeLabel->hide();
+    m_filterText << "" << "" << "";
 
     m_searchCount = 0;
     m_resultParPage = 10;
@@ -52,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     FORCE_RTL(ui->lineQueryMust);
     FORCE_RTL(ui->lineQueryShould);
     FORCE_RTL(ui->lineQueryShouldNot);
+    FORCE_RTL(ui->lineFilter);
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
@@ -63,43 +59,23 @@ MainWindow::MainWindow(QWidget *parent) :
     move(settings.value("pos", pos()).toPoint());
     settings.endGroup();
 
-    loadIndexesList();
-
-    // Check if we have any index
-    if(ui->menuIndexesList->actions().isEmpty()) {
-        int rep = QMessageBox::question(this,
-                                        trUtf8("انشاء فهرس"),
-                                        trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
-                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
-
-        if(rep == QMessageBox::Yes)
-            newIndex();
-        else
-            QMessageBox::information(this,
-                                     trUtf8("انشاء فهرس"),
-                                     trUtf8("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
-                                            "<strong>" "فهرس" "</strong>"
-                                            " ثم "
-                                            "<strong>" "انشاء فهرس جديد..." "</strong>"));
-
-    }
-
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
     ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
 
-
-    connect(ui->actionNewIndex, SIGNAL(triggered()), this, SLOT(newIndex()));
-    connect(ui->pushSearch, SIGNAL(clicked()), this, SLOT(startSearching()));
-    connect(ui->actionIndexInfo, SIGNAL(triggered()), this, SLOT(showStatistic()));
-    connect(ui->actionSearchSettings, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
-    connect(ui->actionEditIndexes, SIGNAL(triggered()), this, SLOT(editIndexes()));
-    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabCountChange(int)));
-    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
+    connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
+    connect(ui->pushSearch, SIGNAL(clicked()), SLOT(startSearching()));
+    connect(ui->actionIndexInfo, SIGNAL(triggered()), SLOT(showStatistic()));
+    connect(ui->actionSearchSettings, SIGNAL(triggered()), SLOT(showSettingsDialog()));
+    connect(ui->actionEditIndexes, SIGNAL(triggered()), SLOT(editIndexes()));
+    connect(ui->actionAbout, SIGNAL(triggered()), SLOT(aboutApp()));
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), SLOT(tabCountChange(int)));
+    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), SLOT(closeTab(int)));
 }
 
 MainWindow::~MainWindow()
 {
+    DEL_BOOKS_DB(m_book);
     delete ui;
 }
 
@@ -139,7 +115,9 @@ void MainWindow::loadIndexesList()
     bool haveIndexes = !list.isEmpty();
 
     if(haveIndexes) {
-        QString current = settings.value("current_index", list.first()).toString();
+        QString current = settings.value("current_index").toString();
+        if(current.isEmpty() || !list.contains(current))
+            current = list.first();
 
         for(int i=0; i<list.count(); i++) {
             IndexInfo *info = new IndexInfo();
@@ -155,30 +133,18 @@ void MainWindow::loadIndexesList()
 
             QAction *action = new QAction(info->name(), ui->menuIndexesList);
             action->setData(list.at(i));
-            connect(action, SIGNAL(triggered()), this, SLOT(changeIndex()));
+            connect(action, SIGNAL(triggered()), SLOT(changeIndex()));
 
             ui->menuIndexesList->addAction(action);
         }
 
         selectIndex(current);
-
     }
 
     ui->tabWidget->setEnabled(haveIndexes);
     ui->actionIndexInfo->setEnabled(haveIndexes);
     ui->actionEditIndexes->setEnabled(haveIndexes);
     ui->menuIndexesList->setEnabled(haveIndexes);
-/*
-    if(!haveIndexes) {
-        int rep = QMessageBox::question(this,
-                                        trUtf8("فهرسة المكتبة"),
-                                        trUtf8("لم يتم العثور على اي فهرس" "\n"
-                                               "هل تريد انشاء فهرس جديد؟"),
-                                        QMessageBox::Yes|QMessageBox::No);
-        if(rep == QMessageBox::Yes)
-            newIndex();
-    }
-*/
 }
 
 void MainWindow::selectIndex(QString name)
@@ -222,7 +188,7 @@ void MainWindow::changeIndex()
 void MainWindow::indexChanged()
 {
     if(m_bookDB.isOpen()) {
-        delete m_bookQuery;
+//        delete m_bookQuery;
         m_bookDB.close();
     }
     m_dbIsOpen = false;
@@ -233,6 +199,58 @@ void MainWindow::indexChanged()
         settings.setValue("current_index", INDEX_HASH(m_currentIndex->name()));
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
+
+    DEL_BOOKS_DB(m_book);
+
+    m_book = new BooksDB();
+    m_book->setIndexInfo(m_currentIndex);
+
+    QProgressDialog progress(trUtf8("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
+    progress.setModal(Qt::WindowModal);
+
+    QStandardItemModel *catsModel = m_book->getCatsListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة الأقسام");
+
+    QStandardItemModel *booksModel = m_book->getBooksListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة الكتب");
+
+    QStandardItemModel *authModel = m_book->getAuthorsListModel();
+    PROGRESS_DIALOG_STEP("انشاء لائحة المؤلفيين");
+
+    m_shaModel->setBooksListModel(booksModel);
+    m_shaModel->setCatsListModel(catsModel);
+    m_shaModel->setAuthorsListModel(authModel);
+
+    ui->treeViewBooks->setModel(booksModel);
+    ui->treeViewCats->setModel(catsModel);
+    ui->treeViewAuthors->setModel(authModel);
+
+    // Set the proxy model
+    chooseProxy();
+
+    progress.setValue(progress.maximum());
+}
+
+void MainWindow::haveIndexesCheck()
+{
+    // Check if we have any index
+    if(ui->menuIndexesList->actions().isEmpty()) {
+        int rep = QMessageBox::question(this,
+                                        trUtf8("انشاء فهرس"),
+                                        trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
+                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+        if(rep == QMessageBox::Yes)
+            newIndex();
+        else
+            QMessageBox::information(this,
+                                     trUtf8("انشاء فهرس"),
+                                     trUtf8("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
+                                            "<strong>" "فهرس" "</strong>"
+                                            " ثم "
+                                            "<strong>" "انشاء فهرس جديد..." "</strong>"));
+
+    }
 }
 
 void MainWindow::updateIndexesMenu()
@@ -256,7 +274,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::newIndex()
 {
     IndexingDialg indexDialog(this);
-    connect(&indexDialog, SIGNAL(indexCreated()), this, SLOT(updateIndexesMenu()));
+    connect(&indexDialog, SIGNAL(indexCreated()), SLOT(updateIndexesMenu()));
 
     indexDialog.exec();
 }
@@ -264,7 +282,7 @@ void MainWindow::newIndex()
 void MainWindow::editIndexes()
 {
     IndexesDialog dialog(this);
-    connect(&dialog, SIGNAL(indexesChanged()), this, SLOT(updateIndexesMenu()));
+    connect(&dialog, SIGNAL(indexesChanged()), SLOT(updateIndexesMenu()));
 
     dialog.exec();
 }
@@ -298,39 +316,97 @@ void MainWindow::startSearching()
 
     ArabicAnalyzer analyzer;
     BooleanQuery *q = new BooleanQuery;
+    BooleanQuery *allFilterQuery = new BooleanQuery;
     QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
     queryPareser->setAllowLeadingWildcard(true);
 
-    if(!mustQureyStr.isEmpty()) {
-        if(ui->checkQueryMust->isChecked())
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+    try {
+        if(!mustQureyStr.isEmpty()) {
+            if(ui->checkQueryMust->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+            Query *mq = queryPareser->parse(QStringToTChar(mustQureyStr));
+            q->add(mq, BooleanClause::MUST);
+
+        }
+
+        if(!shouldQureyStr.isEmpty()) {
+            if(ui->checkQueryShould->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+            Query *mq = queryPareser->parse(QStringToTChar(shouldQureyStr));
+            q->add(mq, BooleanClause::SHOULD);
+
+        }
+
+        if(!shouldNotQureyStr.isEmpty()) {
+            if(ui->checkQueryShouldNot->isChecked())
+                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
+            else
+                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+
+            Query *mq = queryPareser->parse(QStringToTChar(shouldNotQureyStr));
+            q->add(mq, BooleanClause::MUST_NOT);
+        }
+
+        // Filtering
+        if(ui->groupBoxFilter->isChecked()) {
+            Query * filterQuery;
+            bool required = ui->radioRequired->isChecked();
+            bool prohibited = ui->radioProhibited->isChecked();
+            bool gotAFilter = false;
+
+            filterQuery = getBooksListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            filterQuery = getCatsListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            filterQuery = getAuthorsListQuery();
+            if(filterQuery != NULL) {
+                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
+                gotAFilter = true;
+            }
+
+            if(gotAFilter) {
+                allFilterQuery->setBoost(0.0);
+                q->add(allFilterQuery, required, prohibited);
+            }
+        }
+    } catch(CLuceneError &e) {
+        if(e.number() == CL_ERR_Parse)
+            QMessageBox::warning(this,
+                                 trUtf8("خطأ في استعلام البحث"),
+                                 trUtf8("هنالك خطأ في احدى حقول البحث"
+                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."));
         else
-            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
+            QMessageBox::warning(0,
+                                 "CLucene Error when Indexing",
+                                 tr("Error code: %1\n%2").arg(e.number()).arg(e.what()));
 
-        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(mustQureyStr));
-        q->add(mq, BooleanClause::MUST);
+        _CLDELETE(q);
+        _CLDELETE(queryPareser);
 
+        return;
     }
+    catch(...) {
+        QMessageBox::warning(0,
+                             "Unkonw error when Indexing",
+                             tr("Unknow error"));
+        _CLDELETE(q);
+        _CLDELETE(queryPareser);
 
-    if(!shouldQureyStr.isEmpty()) {
-        if(ui->checkQueryShould->isChecked())
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-        else
-            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(shouldQureyStr));
-        q->add(mq, BooleanClause::SHOULD);
-
-    }
-
-    if(!shouldNotQureyStr.isEmpty()) {
-        if(ui->checkQueryShouldNot->isChecked())
-            queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-        else
-            queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-        Query *mq = queryPareser->parse(QSTRING_TO_TCHAR(shouldNotQureyStr));
-        q->add(mq, BooleanClause::MUST_NOT);
+        return;
     }
 
     ShamelaSearcher *m_searcher = new ShamelaSearcher;
@@ -384,9 +460,9 @@ void MainWindow::showStatistic()
         //ADD_QTREEWIDGET_ITEM("Current Version", ver));
 
         TermEnum* te = r->terms();
-        int32_t nterms;
+        int32_t nterms = 0;
 
-        bool writeToFile = false;
+        bool writeToFile = !false;
 
         if(writeToFile) {
             QFile logFile("terms.txt");
@@ -394,12 +470,12 @@ void MainWindow::showStatistic()
                 QTextStream log(&logFile);
                 for (nterms = 0; te->next() == true; nterms++) {
                     /* if(_wcsicmp(te->term()->field(), _T("bookid")) == 0) */
-                    log << TCHAR_TO_QSTRING(te->term()->toString()) << "\n";
+                    log << TCharToQString(te->term()->toString()) << "\n";
                 }
             }
         } else {
             for (nterms = 0; te->next() == true; nterms++) {
-                /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
+                /* qDebug() << TCharToQString(te->term()->text()); */
             }
         }
 
@@ -474,14 +550,14 @@ bool MainWindow::openDB()
 
     m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
     QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                      .arg(m_currentIndex->shamelaDbPath());
+                      .arg(m_currentIndex->shamelaMainDbPath());
     m_bookDB.setDatabaseName(mdbpath);
 
     if (!m_bookDB.open()) {
         QMessageBox::warning(0, "Error opening database", "Cannot open main.mdb database.");
         return false;
     }
-    m_bookQuery = new QSqlQuery(m_bookDB);
+//    m_bookQuery = new QSqlQuery(m_bookDB);
     m_dbIsOpen = true;
 
     return true;
@@ -556,7 +632,8 @@ void MainWindow::doneIndexing(int indexingTime)
         int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
         QString txt;
-        txt.append(tr("[+] Date: %1\n").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy - HH:MM:ss")));
+        txt.append(tr("[+] Date: %1\n")
+                   .arg(QDateTime::currentDateTime().toString("dd/MM/yyyy - HH:MM:ss")));
 #ifdef GITVERSION
         txt.append(tr("[+] Git: %1 - Change number: %2\n").arg(GITVERSION).arg(GITCHANGENUMBER));
 #endif
@@ -567,7 +644,7 @@ void MainWindow::doneIndexing(int indexingTime)
         TermEnum* te = r->terms();
         int32_t nterms;
         for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << TCHAR_TO_QSTRING(te->term()->text()); */
+            /* qDebug() << TCharToQString(te->term()->text()); */
         }
         txt.append(tr("[+] Indexing took: %1 s\n").arg(indexingTime/1000.0));
         txt.append(tr("[+] Term count: %1\n").arg(nterms));
@@ -592,9 +669,7 @@ void MainWindow::doneIndexing(int indexingTime)
 void MainWindow::showSettingsDialog()
 {
     SettingsDialog dialog(this);
-    dialog.setWindowTitle(APP_NAME);
-
-    connect(&dialog, SIGNAL(settingsUpdated()), this, SLOT(loadSettings()));
+    connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
 
     dialog.exec();
 }
@@ -602,7 +677,104 @@ void MainWindow::showSettingsDialog()
 QString MainWindow::buildFilePath(QString bkid, int archive)
 {
     if(!archive)
-        return QString("%1/Books/%2/%3.mdb").arg(m_currentIndex->shamelaPath()).arg(bkid.right(1)).arg(bkid);
+        return QString("%1/Books/%2/%3.mdb")
+        .arg(m_currentIndex->shamelaPath())
+        .arg(bkid.right(1)).arg(bkid);
     else
-        return QString("%1/Books/Archive/%2.mdb").arg(m_currentIndex->shamelaPath()).arg(archive);
+        return QString("%1/Books/Archive/%2.mdb")
+                .arg(m_currentIndex->shamelaPath())
+                .arg(archive);
 }
+
+void MainWindow::aboutApp()
+{
+    QString aTitle(trUtf8(" حول البرنامج"));
+    QString aText(trUtf8("برنامج %1 للبحث في كتب المكتبة الشاملة"
+                         "<br>"
+                         "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION));
+
+    QMessageBox::information(this, aTitle, aText);
+}
+
+Query *MainWindow::getBooksListQuery()
+{
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedBooks()) {
+        TermQuery *term = new TermQuery(new Term(_T("bookid"), QStringToTChar(QString::number(id))));
+        q->add(term,  BooleanClause::SHOULD);
+        count++;
+    }
+
+    return count ? q : NULL;
+}
+
+Query *MainWindow::getCatsListQuery()
+{
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedCats()) {
+        TermQuery *term = new TermQuery(new Term(_T("cat"), QStringToTChar(QString::number(id))));
+        q->add(term,  BooleanClause::SHOULD);
+        count++;
+    }
+
+    return count ? q : NULL;
+}
+
+Query *MainWindow::getAuthorsListQuery()
+{
+    int count = 0;
+    BooleanQuery *q = new BooleanQuery();
+    foreach(int id, m_shaModel->getSelectedAuthors()) {
+        TermQuery *term = new TermQuery(new Term(_T("author"), QStringToTChar(QString::number(id))));
+        q->add(term, BooleanClause::SHOULD);
+        count++;
+    }
+
+    return count ? q : NULL;
+}
+
+void MainWindow::chooseProxy()
+{
+    QStandardItemModel *model;
+    int index = ui->tabWidgetFilter->currentIndex();
+
+    if(index == 0)
+        model = m_shaModel->booksModel();
+
+    else if(index == 1)
+        model = m_shaModel->catsModel();
+
+    else
+        model = m_shaModel->authorsModel();
+
+    m_filterProxy->setSourceModel(model);
+
+    if(index == 0)
+        ui->treeViewBooks->setModel(m_filterProxy);
+
+    else if(index == 1)
+        ui->treeViewCats->setModel(m_filterProxy);
+
+    else
+        ui->treeViewAuthors->setModel(m_filterProxy);
+}
+
+void MainWindow::on_lineFilter_textChanged(QString text)
+{
+    m_filterText[ui->tabWidgetFilter->currentIndex()] = text;
+
+    text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
+    text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
+    text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
+
+    m_filterProxy->setFilterRegExp(text);
+}
+
+void MainWindow::on_tabWidgetFilter_currentChanged(int index)
+{
+    chooseProxy();
+    ui->lineFilter->setText(m_filterText.at(index));
+}
+

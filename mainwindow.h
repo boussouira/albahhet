@@ -4,12 +4,17 @@
 #include <qmainwindow.h>
 #include <qsqldatabase.h>
 #include <qhash.h>
+#include <qabstractitemmodel.h>
+#include <qsortfilterproxymodel.h>
+#include "cl_common.h"
 
 namespace Ui {
     class MainWindow;
 }
 
 class IndexInfo;
+class BooksDB;
+class ShamelaModels;
 class QSqlQuery;
 class QProgressBar;
 class QLabel;
@@ -20,10 +25,11 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void loadIndexesList();
     void selectIndex(QString name);
     void selectIndex(QAction *action);
     void indexChanged();
+    void loadIndexesList();
+    void haveIndexesCheck();
 
 protected:
     void closeEvent(QCloseEvent *e);
@@ -31,6 +37,10 @@ protected:
     QString getBooksSize();
     qint64 getDirSize(const QString &path);
     void doneIndexing(int indexingTime);
+    Query *getBooksListQuery();
+    Query *getCatsListQuery();
+    Query *getAuthorsListQuery();
+    void chooseProxy();
 
 protected slots:
     void saveSettings();
@@ -46,10 +56,13 @@ protected slots:
     void tabCountChange(int count);
     void closeTab(int index);
     QString buildFilePath(QString bkid, int archive);
+    void aboutApp();
 
 
 protected:
     IndexInfo *m_currentIndex;
+    BooksDB *m_book;
+    ShamelaModels *m_shaModel;
     QSqlDatabase m_bookDB;
     QSqlQuery *m_bookQuery;
     QString m_titleName;
@@ -57,11 +70,8 @@ protected:
     QString m_searchQuery;
     QString m_highLightRE;
     QHash<QString, IndexInfo*> m_indexInfoMap;
-
-    QProgressBar *m_fetechProgressBar;
-    QLabel *m_searchTimeLabel;
-    QLabel *m_searchResultsLabel;
-
+    QSortFilterProxyModel *m_filterProxy;
+    QStringList m_filterText;
     int m_resultParPage;
     int m_searchCount;
     bool m_dbIsOpen;
@@ -70,6 +80,8 @@ protected:
     Ui::MainWindow *ui;
 
 private slots:
+    void on_tabWidgetFilter_currentChanged(int index);
+    void on_lineFilter_textChanged(QString text);
     void showSettingsDialog();
     void on_lineQueryMust_returnPressed();
     void on_lineQueryShould_returnPressed();
