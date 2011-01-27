@@ -12,5 +12,6 @@
         <file>bin/data/images/checkall.png</file>
         <file>bin/data/images/magnifier.png</file>
         <file>bin/data/images/clear.png</file>
+        <file>bin/data/images/compress.png</file>
     </qresource>
 </RCC>

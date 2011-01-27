@@ -7,6 +7,7 @@
 #include <qabstractitemmodel.h>
 #include <qsortfilterproxymodel.h>
 #include "cl_common.h"
+#include "searchfilterhandler.h"
 
 namespace Ui {
     class MainWindow;
@@ -40,7 +41,7 @@ protected:
     Query *getBooksListQuery();
     Query *getCatsListQuery();
     Query *getAuthorsListQuery();
-    void chooseProxy();
+    void chooseProxy(int index);
 
 protected slots:
     void saveSettings();
@@ -63,6 +64,7 @@ protected:
     IndexInfo *m_currentIndex;
     BooksDB *m_book;
     ShamelaModels *m_shaModel;
+    SearchFilterHandler *m_filterHandler;
     QSqlDatabase m_bookDB;
     QSqlQuery *m_bookQuery;
     QString m_titleName;
@@ -70,7 +72,6 @@ protected:
     QString m_searchQuery;
     QString m_highLightRE;
     QHash<QString, IndexInfo*> m_indexInfoMap;
-    QSortFilterProxyModel *m_filterProxy;
     QStringList m_filterText;
     int m_resultParPage;
     int m_searchCount;

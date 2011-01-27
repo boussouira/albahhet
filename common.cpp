@@ -3,9 +3,11 @@
 
 TCHAR* QStringToTChar(const QString &str)
 {
-    TCHAR *string = new TCHAR[(str.length() +1) * sizeof(TCHAR)];
-    memset(string, 0, (str.length() +1) * sizeof(TCHAR));
+    //    TCHAR *string = new TCHAR[(str.length() +1) * sizeof(TCHAR)];
+    //    memset(string, 0, (str.length() +1) * sizeof(TCHAR));
+    TCHAR *string = new TCHAR[str.length()+1];
     str.toWCharArray(string);
+    string[str.length()] = 0;
 
     return string;
 }
@@ -54,4 +56,24 @@ QString arPlural(int count, PULRAL word, bool html)
         str = QString();
 
     return html ? QString("<strong>%1</strong>").arg(str) : str;
+}
+
+QString indexHashName(QString name)
+{
+    return QString("i_%1").arg(IndexInfo::nameHash(name));
+}
+
+QString indexHashName(IndexInfo *index)
+{
+    return indexHashName(index->name());
+}
+
+void normaliseSearchString(QString &text)
+{
+    text.replace(QRegExp(QObject::trUtf8("ـفق")), "(");
+    text.replace(QRegExp(QObject::trUtf8("ـغق")), ")");
+    text.replace(QRegExp(QObject::trUtf8("ـ[أا]و")), "OR");
+    text.replace(QRegExp(QObject::trUtf8("ـو")), "AND");
+    text.replace(QRegExp(QObject::trUtf8("ـبدون")), "NOT");
+    text.replace(QObject::trUtf8("؟"), "?");
 }

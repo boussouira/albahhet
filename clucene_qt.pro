@@ -3,7 +3,7 @@ QT += core \
     sql \
     webkit
 TEMPLATE = app
-TARGET = clucene_qt
+TARGET = al-bahhet
 
 MOC_DIR += .moc
 OBJECTS_DIR += .obj
@@ -29,7 +29,8 @@ SOURCES += main.cpp \
     shamelamodels.cpp \
     bookinfo.cpp \
     fancylineedit.cpp \
-    common.cpp
+    common.cpp \
+    searchfilterhandler.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -47,7 +48,8 @@ HEADERS += mainwindow.h \
     indexesdialog.h \
     shamelamodels.h \
     bookinfo.h \
-    fancylineedit.h
+    fancylineedit.h \
+    searchfilterhandler.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \

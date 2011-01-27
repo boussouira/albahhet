@@ -47,7 +47,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>C:/Documents and Settings/Naruto/Bureau/e-shamela</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -81,7 +81,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>TestX</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -91,7 +91,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>C:/Documents and Settings/Naruto/Bureau/qqqq</string>
+               <string/>
               </property>
              </widget>
             </item>

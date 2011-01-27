@@ -97,9 +97,7 @@ void ShamelaResultWidget::searchStarted()
                                  "</html>")
                          .arg(appPath));
 
-    ui->labelNav->clear();
-
-    buttonStat(1, 1);
+    showNavigationButton(false);
 
     ui->progressBar->setMaximum(0);
     ui->progressBar->show();
@@ -169,6 +167,7 @@ void ShamelaResultWidget::gotException(QString what, int id)
     ui->webView->page()->mainFrame()->evaluateJavaScript(QString("searchException('%1', '%2');")
                                                          .arg(str)
                                                          .arg(desc));
+    ui->progressBar->hide();
 }
 
 void ShamelaResultWidget::populateJavaScriptWindowObject()

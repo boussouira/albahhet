@@ -96,7 +96,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/bin/data/images/checkall.png</normaloff>:/bin/data/images/checkall.png</iconset>
+         <normaloff>:/bin/data/images/compress.png</normaloff>:/bin/data/images/compress.png</iconset>
        </property>
        <property name="iconSize">
         <size>

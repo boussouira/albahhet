@@ -6,8 +6,25 @@
 #include <CLucene/SharedHeader.h>
 #include "indexinfo.h"
 
-#define APP_VERSION "0.8"
+#define APP_VERSION "1.0"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
+
+enum PULRAL{
+    SECOND  = 1,
+    MINUTE  = 2,
+    HOUR    = 3,
+    BOOK    = 4
+};
+
+TCHAR* QStringToTChar(const QString &str);
+QString TCharToQString(const TCHAR *string);
+
+QString arPlural(int count, PULRAL word, bool html=false);
+
+QString indexHashName(QString name);
+QString indexHashName(IndexInfo *index);
+
+void normaliseSearchString(QString &text);
 
 #ifdef Q_OS_WIN32
         #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
@@ -20,22 +37,7 @@
         #include "mdbconverter.h"
 #endif
 
-TCHAR* QStringToTChar(const QString &str);
-QString TCharToQString(const TCHAR *string);
-
-enum PULRAL{
-    SECOND  = 1,
-    MINUTE  = 2,
-    HOUR    = 3,
-    BOOK    = 4
-};
-
-QString arPlural(int count, PULRAL word, bool html=false);
-
 #define SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
-#define NEW_QSETTINGS QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-
-#define INDEX_HASH(name) QString("i_%1").arg(IndexInfo::nameHash(name))
 
 #define DEL_DB(name) QSqlDatabase::removeDatabase(name);
 #define DEL_DBS(list) {foreach(QString n, list){ DEL_DB(n);}}
@@ -54,11 +56,6 @@ QString arPlural(int count, PULRAL word, bool html=false);
 #define FORCE_RTL(x)    x->setLayoutDirection(Qt::LeftToRight); \
                         x->setLayoutDirection(Qt::RightToLeft);
 
-#define NORMALISE_SEARCH_STRING(x)  x.replace(QRegExp(trUtf8("ـفق")), "("); \
-                                    x.replace(QRegExp(trUtf8("ـغق")), ")"); \
-                                    x.replace(QRegExp(trUtf8("ـ[أا]و")), "OR"); \
-                                    x.replace(QRegExp(trUtf8("ـو")), "AND"); \
-                                    x.replace(QRegExp(trUtf8("ـبدون")), "NOT"); \
-                                    x.replace(trUtf8("؟"), "?");
+#define NORMALISE_SEARCH_STRING(x)  normaliseSearchString(x)
 
 #endif // COMMON_H

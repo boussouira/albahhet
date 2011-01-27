@@ -35,8 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_currentIndex = new IndexInfo();
     m_book = new BooksDB();
     m_shaModel = new ShamelaModels(this);
-    m_filterProxy = new QSortFilterProxyModel(this);
-    m_filterProxy->setDynamicSortFilter(true);
+
+    m_filterHandler = new SearchFilterHandler(this);
+    m_filterHandler->setShamelaModels(m_shaModel);
 
     m_filterText << "" << "" << "";
 
@@ -62,6 +63,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
     ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
+
+    ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
 
     connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(startSearching()));
@@ -196,7 +199,7 @@ void MainWindow::indexChanged()
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     if(!m_currentIndex->name().isEmpty())
-        settings.setValue("current_index", INDEX_HASH(m_currentIndex->name()));
+        settings.setValue("current_index", indexHashName(m_currentIndex->name()));
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 
@@ -226,7 +229,7 @@ void MainWindow::indexChanged()
     ui->treeViewAuthors->setModel(authModel);
 
     // Set the proxy model
-    chooseProxy();
+    chooseProxy(ui->tabWidgetFilter->currentIndex());
 
     progress.setValue(progress.maximum());
 }
@@ -388,7 +391,10 @@ void MainWindow::startSearching()
             QMessageBox::warning(this,
                                  trUtf8("خطأ في استعلام البحث"),
                                  trUtf8("هنالك خطأ في احدى حقول البحث"
-                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."));
+                                        "\n"
+                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."
+                                        "\n"
+                                        "او تأكد من أنك تستخدمها بشكل صحيح"));
         else
             QMessageBox::warning(0,
                                  "CLucene Error when Indexing",
@@ -462,7 +468,7 @@ void MainWindow::showStatistic()
         TermEnum* te = r->terms();
         int32_t nterms = 0;
 
-        bool writeToFile = !false;
+        bool writeToFile = false;
 
         if(writeToFile) {
             QFile logFile("terms.txt");
@@ -735,46 +741,31 @@ Query *MainWindow::getAuthorsListQuery()
     return count ? q : NULL;
 }
 
-void MainWindow::chooseProxy()
+void MainWindow::chooseProxy(int index)
 {
-    QStandardItemModel *model;
-    int index = ui->tabWidgetFilter->currentIndex();
+    m_filterHandler->setFilterSourceModel(index);
 
     if(index == 0)
-        model = m_shaModel->booksModel();
+        ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
 
     else if(index == 1)
-        model = m_shaModel->catsModel();
+        ui->treeViewCats->setModel(m_filterHandler->getFilterModel());
 
     else
-        model = m_shaModel->authorsModel();
-
-    m_filterProxy->setSourceModel(model);
-
-    if(index == 0)
-        ui->treeViewBooks->setModel(m_filterProxy);
-
-    else if(index == 1)
-        ui->treeViewCats->setModel(m_filterProxy);
-
-    else
-        ui->treeViewAuthors->setModel(m_filterProxy);
+        ui->treeViewAuthors->setModel(m_filterHandler->getFilterModel());
 }
 
 void MainWindow::on_lineFilter_textChanged(QString text)
 {
     m_filterText[ui->tabWidgetFilter->currentIndex()] = text;
 
-    text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-    text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
-    text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
-
-    m_filterProxy->setFilterRegExp(text);
+    m_filterHandler->setFilterText(text);
 }
 
 void MainWindow::on_tabWidgetFilter_currentChanged(int index)
 {
-    chooseProxy();
+    chooseProxy(index);
+
     ui->lineFilter->setText(m_filterText.at(index));
 }
 
