@@ -29,7 +29,7 @@ void normaliseSearchString(QString &text);
 #ifdef Q_OS_WIN32
         #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
         #define FIELD_TO_INT(name, d)   _wtoi(d->get(_T(name)))
-        #define QSTRING_TO_TCHAR(s)     QStringToTChar(s)
+        #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
 #else
         #define TCHAR_TO_QSTRING(s)   QString::fromWCharArray(s)
         #define FIELD_TO_INT(name, d) QString::fromWCharArray(d->get(_T(name))).toInt()

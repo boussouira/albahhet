@@ -66,29 +66,24 @@ void IndexingThread::indexBook(BookInfo *book)
         shaQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ")
                          .arg((!book->archive()) ? "book" : QString("b%1").arg(book->id())));
         Document doc;
-        TCHAR *text;
-        TCHAR *id;
+
         int tokenAndNoStore = Field::STORE_NO | Field::INDEX_TOKENIZED;
         int storeAndNoToken = Field::STORE_YES | Field::INDEX_UNTOKENIZED;
 
         while(shaQuery.next())
         {
-            id = QStringToTChar(shaQuery.value(0).toString());
-            text = QStringToTChar(shaQuery.value(1).toString());
-
-            doc.add( *_CLNEW Field(_T("id"), id, storeAndNoToken));
+           doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()),
+                                   storeAndNoToken));
             doc.add( *_CLNEW Field(_T("bookid"), book->idT(), storeAndNoToken));
             doc.add( *_CLNEW Field(_T("archive"), book->archiveT(), storeAndNoToken));
             doc.add( *_CLNEW Field(_T("cat"), book->catT(), storeAndNoToken));
             doc.add( *_CLNEW Field(_T("author"), book->authorIDT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("text"), text, tokenAndNoStore));
+            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()),
+                                   tokenAndNoStore));
 
             m_writer->addDocument(&doc);
 
             doc.clear();
-            delete [] id;
-            delete [] text;
-
         }
 
         mdbDB.close();

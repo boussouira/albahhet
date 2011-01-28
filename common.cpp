@@ -14,8 +14,7 @@ TCHAR* QStringToTChar(const QString &str)
 
 QString TCharToQString(const TCHAR *string)
 {
-    QString retValue = QString::fromWCharArray(string);
-    return retValue;
+    return QString::fromWCharArray(string);
 }
 
 QString arPlural(int count, PULRAL word, bool html)
