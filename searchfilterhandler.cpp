@@ -11,7 +11,7 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
 //    m_filterProxy->setDynamicSortFilter(true);
 
     m_menu = new QMenu(0);
-    QAction *actionIgnore = new QAction(trUtf8("تجاهل الفروف في الهمزات ونحوها"), this);
+    QAction *actionIgnore = new QAction(trUtf8("تجاهل الفروق في الهمزات ونحوها"), this);
     actionIgnore->setCheckable(true);
     actionIgnore->setChecked(true);
 
@@ -54,6 +54,7 @@ void SearchFilterHandler::setFilterText(QString text)
         text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
         text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
         text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
+        text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
     }
 
     m_filterProxy->setFilterRole(Qt::DisplayRole);
