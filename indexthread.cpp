@@ -72,7 +72,7 @@ void IndexingThread::indexBook(BookInfo *book)
 
         while(shaQuery.next())
         {
-           doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()),
+           doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(0).toString()),
                                    storeAndNoToken));
             doc.add( *_CLNEW Field(_T("bookid"), book->idT(), storeAndNoToken));
             doc.add( *_CLNEW Field(_T("archive"), book->archiveT(), storeAndNoToken));
