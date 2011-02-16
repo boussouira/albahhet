@@ -198,11 +198,13 @@ void BooksDB::openShamelaSpecialDB()
 
 void BooksDB::queryBooksToIndex()
 {
+    openIndexDB();
     m_indexQuery->exec("SELECT shamelaID, bookName, filePath, archive, cat, authorId FROM books");
 }
 
 void BooksDB::queryBooksToIndex(QList<int> ids)
 {
+    openIndexDB();
     QString whereIds;
 
     for(int i=0; i<ids.count(); i++) {

@@ -343,6 +343,8 @@ void IndexingDialg::checkIndex()
             ui->pushNext->setText(trUtf8("انتهى"));
             ui->pushCancel->hide();
             ui->stackedWidget->setCurrentIndex(4);
+
+            m_indexInfo->setRamSize(100);
         }
 
         r->close();
