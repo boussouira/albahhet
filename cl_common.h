@@ -55,4 +55,7 @@ public:
     }
 };
 
+#define IS_NUMBER(c) (0x30 <= c &&  c <= 0x39)
+#define IS_ARABIC_CHAR(c) (0x0621 <= c &&  c <= 0x06ED)
+
 #endif // CL_COMMON_H

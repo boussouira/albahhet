@@ -5,14 +5,11 @@
 
 class ArabicTokenizer: public CharTokenizer {
 public:
-        /** Construct a new ArabicTokenizer. */
         ArabicTokenizer(Reader* in);
         virtual ~ArabicTokenizer();
-protected:
-        /** Collects only characters which do not satisfy _istspace.*/
-        bool isTokenChar(const TCHAR c) const;
 
-        /** Collects only characters which satisfy _totlower. */
+protected:
+        bool isTokenChar(const TCHAR c) const;
         TCHAR normalize(const TCHAR chr) const;
 };
 

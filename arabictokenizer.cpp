@@ -9,12 +9,7 @@ ArabicTokenizer::~ArabicTokenizer()
 
 bool ArabicTokenizer::isTokenChar(const TCHAR c)  const
 {
-    if(_istspace(c))
-        return false;
-    else if(0x0621 <= c &&  c <= 0x06ED)
-        return true;
-    else
-        return false;
+    return (IS_ARABIC_CHAR(c) || IS_NUMBER(c));
 }
 
 TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
