@@ -20,18 +20,18 @@ BookInfo::BookInfo(int id, QString name, QString path, int archive):
 
 BookInfo::~BookInfo()
 {
-    delete [] m_idT;
-    delete [] m_archiveT;
-    delete [] m_authorIDT;
-    delete [] m_catT;
+    free(m_idT);
+    free(m_archiveT);
+    free(m_authorIDT);
+    free(m_catT);
 }
 
 void BookInfo::init()
 {
-    m_idT = new TCHAR[10];
-    m_archiveT = new TCHAR[5];
-    m_catT = new TCHAR[10];
-    m_authorIDT = new TCHAR[10];
+    m_idT       = (TCHAR*) malloc(sizeof(TCHAR) * 10);
+    m_archiveT  = (TCHAR*) malloc(sizeof(TCHAR) * 10);
+    m_catT      = (TCHAR*) malloc(sizeof(TCHAR) * 10);
+    m_authorIDT = (TCHAR*) malloc(sizeof(TCHAR) * 10);
 }
 
 void BookInfo::setId(int id)
