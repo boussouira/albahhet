@@ -59,7 +59,7 @@ win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"
         CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
-        
+
         DEFINES +=  _CRT_SECURE_NO_DEPRECATE \
                     _CRT_NONSTDC_NO_DEPRECATE
     } else {
