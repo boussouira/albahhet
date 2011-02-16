@@ -93,7 +93,7 @@ void ShamelaResultWidget::searchStarted()
                                  "</head>"
                                  "<body></body>"
                                  "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\" />"
-                                 "<script type=\"text/javascript\" src=\"%1/data/scripts.js\" />"
+                                 "<script type=\"text/javascript\" src=\"%1/data/shamela.js\" />"
                                  "</html>")
                          .arg(appPath));
 
