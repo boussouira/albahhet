@@ -103,7 +103,7 @@ void BooksDB::setBookIndexed(int shaId)
 }
 void BooksDB::getAuthorFromShamela(int id)
 {
-    if(id == 0)
+    if(!id || m_savedAuthors.contains(id))
         return;
 
     openIndexDB();
@@ -120,6 +120,7 @@ void BooksDB::getAuthorFromShamela(int id)
                 query.exec(QString("INSERT INTO authors VALUES (NULL, %1, '%2')")
                            .arg(id)
                            .arg(shamelaQuery.value(1).toString()));
+                m_savedAuthors.append(id);
             }
         }
     }

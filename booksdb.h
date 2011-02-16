@@ -61,6 +61,7 @@ protected:
     QString m_shaSpeConnName;
     QMutex m_mutex;
     QHash<int, BookInfo*> m_bookInfoHash;
+    QList<int> m_savedAuthors;
 };
 
 #endif // BOOKSDB_H
