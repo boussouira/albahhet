@@ -59,6 +59,9 @@ win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"
         CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+        
+        DEFINES +=  _CRT_SECURE_NO_DEPRECATE \
+                    _CRT_NONSTDC_NO_DEPRECATE
     } else {
         CLUCENE_PATH = "C:/clucene-2.3.2_mingw"
         CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
@@ -66,22 +69,7 @@ win32 {
     DESTDIR = bin
     RC_FILE = win_rc.rc
 }
-unix { 
-    CLUCENE_PATH = "/home/naruto/Bureau/clucene-2.3.2"
-    CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
-    HEADERS += mdbconverter.h
-    SOURCES += mdbconverter.cpp
-    LIBS += -L/usr/local/lib \
-        -lmdb \
-        -lglib-2.0 \
-        -lsqlite3
-    INCLUDEPATH += /usr/include/glib-2.0 \
-        /usr/lib/glib-2.0/include
-}
-win32-msvc* { 
-    QMAKE_CXXFLAGS -= -Zc:wchar_t-
-    QMAKE_CFLAGS -= -Zc:wchar_t-
-}
+
 exists(.git/HEAD) { 
     GITVERSION = $$system(git log -n1 --pretty=format:%h)
     !isEmpty(GITVERSION) { 
