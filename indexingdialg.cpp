@@ -17,9 +17,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_stopIndexing = false;
 
     ui->spinThreadCount->setValue(QThread::idealThreadCount());
-ui->lineIndexName->setText("Test");
-ui->lineShamelaPath->setText("C:/Documents and Settings/Naruto/Bureau/e-shamela");
-ui->lineIndexPath->setText("C:/Documents and Settings/Naruto/Bureau/indexes");
+
     setRamSize();
     ui->spinRamSize->hide();
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(setRamSize()));

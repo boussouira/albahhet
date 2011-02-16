@@ -5,6 +5,8 @@
 #include <tchar.h>
 #include <qdebug.h>
 
+class IndexInfo;
+
 class BookInfo
 {
 public:
@@ -18,6 +20,11 @@ public:
     int authorID() { return m_authorID; }
     QString name() { return m_name; }
     QString path() { return m_path; }
+    QString mainTable() { return m_mainTable; }
+    QString tocTable() { return m_tocTable; }
+
+    void genInfo();
+    void genInfo(IndexInfo *info);
 
     TCHAR *idT() { return m_idT; }
     TCHAR *archiveT() { return m_archiveT; }
@@ -31,6 +38,8 @@ public:
     void setName(const QString &name);
     void setPath(const QString &path);
 
+    void debug();
+
 protected:
     void init();
 
@@ -38,6 +47,8 @@ protected:
     int m_id;
     QString m_name;
     QString m_path;
+    QString m_mainTable;
+    QString m_tocTable;
     int m_archive;
     int m_cat;
     int m_authorID;
@@ -46,6 +57,5 @@ protected:
     TCHAR *m_authorIDT;
     TCHAR *m_catT;
 };
-
 
 #endif // BOOKINFO_H

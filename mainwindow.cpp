@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(APP_NAME);
 
     m_currentIndex = new IndexInfo();
-    m_book = new BooksDB();
+    m_booksDB = new BooksDB();
     m_shaModel = new ShamelaModels(this);
 
     m_filterHandler = new SearchFilterHandler(this);
@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    deleteBooksDb(m_book);
+    deleteBooksDb(m_booksDB);
     delete ui;
 }
 
@@ -203,21 +203,21 @@ void MainWindow::indexChanged()
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 
-    deleteBooksDb(m_book);
+    deleteBooksDb(m_booksDB);
 
-    m_book = new BooksDB();
-    m_book->setIndexInfo(m_currentIndex);
+    m_booksDB = new BooksDB();
+    m_booksDB->setIndexInfo(m_currentIndex);
 
     QProgressDialog progress(trUtf8("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
     progress.setModal(Qt::WindowModal);
 
-    QStandardItemModel *catsModel = m_book->getCatsListModel();
+    QStandardItemModel *catsModel = m_booksDB->getCatsListModel();
     PROGRESS_DIALOG_STEP("انشاء لائحة الأقسام");
 
-    QStandardItemModel *booksModel = m_book->getBooksListModel();
+    QStandardItemModel *booksModel = m_booksDB->getBooksListModel();
     PROGRESS_DIALOG_STEP("انشاء لائحة الكتب");
 
-    QStandardItemModel *authModel = m_book->getAuthorsListModel();
+    QStandardItemModel *authModel = m_booksDB->getAuthorsListModel();
     PROGRESS_DIALOG_STEP("انشاء لائحة المؤلفيين");
 
     m_shaModel->setBooksListModel(booksModel);
@@ -416,6 +416,7 @@ void MainWindow::startSearching()
     }
 
     ShamelaSearcher *m_searcher = new ShamelaSearcher;
+    m_searcher->setBooksDb(m_booksDB);
     m_searcher->setIndexInfo(m_currentIndex);
     m_searcher->setQueryString(m_searchQuery);
     m_searcher->setQuery(q);

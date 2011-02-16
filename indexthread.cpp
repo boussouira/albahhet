@@ -75,9 +75,8 @@ void IndexingThread::indexBook(BookInfo *book)
            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(0).toString()),
                                    storeAndNoToken));
             doc.add( *_CLNEW Field(_T("bookid"), book->idT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("archive"), book->archiveT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("cat"), book->catT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("author"), book->authorIDT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(_T("cat"), book->catT(), tokenAndNoStore));
+            doc.add( *_CLNEW Field(_T("author"), book->authorIDT(), tokenAndNoStore));
             doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()),
                                    tokenAndNoStore));
 

@@ -386,7 +386,7 @@ QString ShamelaResultWidget::getPage(QString href)
                    __LINE__,
                    qPrintable(buildFilePath(QString::number(bookID), archive)));
 
-            return QString("Error!");
+            return QString("Error: Cannot open database.");
         }
         QSqlQuery m_bookQuery(m_bookDB);
 

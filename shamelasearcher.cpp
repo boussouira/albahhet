@@ -2,6 +2,8 @@
 #include "arabicanalyzer.h"
 #include "common.h"
 #include "cl_common.h"
+#include "booksdb.h"
+#include "bookinfo.h"
 #include "indexinfo.h"
 #include "shamelaresult.h"
 #include <cmath>
@@ -111,28 +113,29 @@ void ShamelaSearcher::fetech()
         //Document doc = m_hits->doc(i);
         entryID = idAt(i);
         int bookID = bookIdAt(i);
-        int archive = ArchiveAt(i);
         int score = (int) (scoreAt(i) * 100.0);
+
+        BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
 
         ShamelaResult *savedResult = m_resultsHash.value(entryID, 0);
         if(savedResult != 0
-           && archive == savedResult->archive()
+           && bookInfo->archive() == savedResult->archive()
            && bookID == savedResult->bookId()) {
             emit gotResult(savedResult);
             continue;
         }
 
-        QString connName = (archive) ? QString("bid_%1").arg(archive) :
-                           QString("bid_%1_%2").arg(archive).arg(bookID);
+        QString connName = (bookInfo->archive()) ? QString("bid_%1").arg(bookInfo->archive()) :
+                           QString("bid_%1_%2").arg(bookInfo->archive()).arg(bookID);
 
         {
             QSqlDatabase bookDB;
-            if(archive && QSqlDatabase::contains(connName)) {
+            if(bookInfo->archive() && QSqlDatabase::contains(connName)) {
                 bookDB = QSqlDatabase::database(connName);
             } else {
                 bookDB = QSqlDatabase::addDatabase("QODBC", connName);
                 QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                                  .arg(buildFilePath(QString::number(bookID), archive));
+                                  .arg(bookInfo->path());
                 bookDB.setDatabaseName(mdbpath);
             }
 
@@ -140,7 +143,7 @@ void ShamelaSearcher::fetech()
                 qDebug("[%s:%d] Cannot open database at \"%s\".",
                        __FILE__,
                        __LINE__,
-                       qPrintable(buildFilePath(QString::number(bookID), archive)));
+                       qPrintable(bookInfo->path()));
 
                 continue;
             }
@@ -148,12 +151,12 @@ void ShamelaSearcher::fetech()
             QSqlQuery bookQuery(bookDB);
 
             bookQuery.exec(QString("SELECT nass, page, part FROM %1 WHERE id = %2")
-                             .arg((!archive) ? "book" : QString("b%1").arg(bookID))
+                             .arg(bookInfo->mainTable())
                              .arg(entryID));
             if(bookQuery.first()){
                 ShamelaResult *result = new ShamelaResult;
                 result->setBookId(bookID);
-                result->setArchive(archive);
+                result->setArchive(bookInfo->archive());
                 result->setId(entryID);
                 result->setPage(bookQuery.value(1).toInt());
                 result->setPart(bookQuery.value(2).toInt());
@@ -189,7 +192,7 @@ void ShamelaSearcher::fetech()
                 m_resultsHash.insert(entryID, result);
             }
         }
-        if(!archive)
+        if(!bookInfo->archive())
             QSqlDatabase::removeDatabase(connName);
     }
 
@@ -250,6 +253,11 @@ int ShamelaSearcher::currentPage()
 void ShamelaSearcher::setIndexInfo(IndexInfo *index)
 {
     m_indexInfo = index;
+}
+
+void ShamelaSearcher::setBooksDb(BooksDB *db)
+{
+    m_booksDb = db;
 }
 
 void ShamelaSearcher::setsetDefaultOperator(bool defautIsAnd)

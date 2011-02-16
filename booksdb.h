@@ -5,6 +5,7 @@
 #include <qmutex.h>
 #include <qsqldatabase.h>
 #include <qstringlist.h>
+#include <qhash.h>
 #include <qdebug.h>
 
 class BookInfo;
@@ -17,6 +18,7 @@ class BooksDB : public QThread
 public:
     BooksDB();
     ~BooksDB();
+    BookInfo *getBookInfo(int id);
     BookInfo *next();
     void setIndexInfo(IndexInfo* info);
     void openIndexDB();
@@ -58,6 +60,7 @@ protected:
     QString m_indexConnName;
     QString m_shaSpeConnName;
     QMutex m_mutex;
+    QHash<int, BookInfo*> m_bookInfoHash;
 };
 
 #endif // BOOKSDB_H

@@ -6,7 +6,7 @@ class SavedStreams : public TokenStream {
 public:
     SavedStreams(): tokenStream(NULL), filteredTokenStream(NULL){}
     void close(){}
-    Token* next(Token* token) {return NULL;}
+    Token* next(Token* /*token*/) {return NULL;}
 
     ArabicTokenizer* tokenStream;
     TokenStream* filteredTokenStream;
@@ -29,7 +29,7 @@ TokenStream* ArabicAnalyzer::tokenStream(const TCHAR* /*fieldName*/, Reader* rea
     return ret;
 }
 
-TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader)
+TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* /*fieldName*/, CL_NS(util)::Reader* reader)
 {
     SavedStreams* streams = reinterpret_cast<SavedStreams*>(getPreviousTokenStream());
     if (streams == NULL) {

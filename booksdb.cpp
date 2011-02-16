@@ -18,6 +18,30 @@ BooksDB::~BooksDB()
     close();
 }
 
+BookInfo *BooksDB::getBookInfo(int id)
+{
+    openShamelaDB();
+    BookInfo *book = m_bookInfoHash.value(id, 0);
+
+    if(book)
+        return book;
+
+    book = new BookInfo();
+
+    m_shamelaQuery->exec(QString("SELECT bk, Archive FROM 0bok WHERE bkid = %1").arg(id));
+
+    if(m_shamelaQuery->next()) {
+        book->setId(id);
+        book->setArchive(m_shamelaQuery->value(1).toInt());
+        book->setName(m_shamelaQuery->value(0).toString());
+        book->genInfo(m_indexInfo);
+
+        m_bookInfoHash.insert(id, book);
+    }
+
+    return book;
+}
+
 BookInfo *BooksDB::next()
 {
     QMutexLocker locker(&m_mutex);
@@ -62,6 +86,11 @@ void BooksDB::close()
 
         m_shamelaSpecialDB.close();
         m_shamelaSpecialDbIsOpen = false;
+    }
+
+    if(!m_bookInfoHash.isEmpty()) {
+        qDeleteAll(m_bookInfoHash);
+        m_bookInfoHash.clear();
     }
 }
 

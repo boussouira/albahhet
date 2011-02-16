@@ -1,4 +1,5 @@
 #include "bookinfo.h"
+#include "indexinfo.h"
 #include <stdlib.h>
 
 BookInfo::BookInfo()
@@ -34,6 +35,19 @@ void BookInfo::init()
     m_authorIDT = (TCHAR*) malloc(sizeof(TCHAR) * 10);
 }
 
+void BookInfo::genInfo()
+{
+    m_mainTable = (m_archive) ? QString("b%1").arg(m_id) : "book";
+    m_tocTable = (m_archive) ? QString("t%1").arg(m_id) : "title";
+}
+
+void BookInfo::genInfo(IndexInfo *info)
+{
+    genInfo();
+
+    m_path = info->buildFilePath(QString::number(m_id), m_archive);
+}
+
 void BookInfo::setId(int id)
 {
     m_id = id;
@@ -66,4 +80,15 @@ void BookInfo::setName(const QString &name)
 void BookInfo::setPath(const QString &path)
 {
     m_path = path;
+}
+
+void BookInfo::debug()
+{
+    qDebug() /*<< QDebug::nospace()*/
+            << "(ID:" << id()
+            << ", Archive:" << archive()
+            << ", Path:" << path()
+            << ", Tables('" << mainTable() << "', '" << tocTable() << "')"
+            << "Name:" << name()
+            << ")";
 }

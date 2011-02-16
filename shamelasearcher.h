@@ -7,6 +7,7 @@
 #include <qhash.h>
 
 class IndexInfo;
+class BooksDB;
 class ShamelaResult;
 
 class ShamelaSearcher : public QThread
@@ -36,6 +37,7 @@ public:
     int resultsPeerPage() { return m_resultParPage;}
     QString queryString() { return m_queryStr; }
 
+    void setBooksDb(BooksDB *db);
     void setIndexInfo(IndexInfo *index);
     void setPageCount(int pageCount);
     void setCurrentPage(int page);
@@ -72,6 +74,7 @@ signals:
 private:
     Action m_action;
     IndexInfo *m_indexInfo;
+    BooksDB *m_booksDb;
     Hits* m_hits;
     Query* m_query;
     QString m_queryStr;

@@ -62,7 +62,7 @@ protected slots:
 
 protected:
     IndexInfo *m_currentIndex;
-    BooksDB *m_book;
+    BooksDB *m_booksDB;
     ShamelaModels *m_shaModel;
     SearchFilterHandler *m_filterHandler;
     QSqlDatabase m_bookDB;
