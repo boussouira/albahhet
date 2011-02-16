@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    DEL_BOOKS_DB(m_book);
+    deleteBooksDb(m_book);
     delete ui;
 }
 
@@ -203,7 +203,7 @@ void MainWindow::indexChanged()
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 
-    DEL_BOOKS_DB(m_book);
+    deleteBooksDb(m_book);
 
     m_book = new BooksDB();
     m_book->setIndexInfo(m_currentIndex);
@@ -311,9 +311,9 @@ void MainWindow::startSearching()
     QString shouldQureyStr = ui->lineQueryShould->text();
     QString shouldNotQureyStr = ui->lineQueryShouldNot->text();
 
-    NORMALISE_SEARCH_STRING(mustQureyStr);
-    NORMALISE_SEARCH_STRING(shouldQureyStr);
-    NORMALISE_SEARCH_STRING(shouldNotQureyStr);
+    normaliseSearchString(mustQureyStr);
+    normaliseSearchString(shouldQureyStr);
+    normaliseSearchString(shouldNotQureyStr);
 
     m_searchQuery = mustQureyStr + " " + shouldQureyStr;
 

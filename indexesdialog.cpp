@@ -276,7 +276,7 @@ void IndexesDialog::on_pushUpDate_clicked()
                                  trUtf8("تحديث فهرس"),
                                  msg);
 
-        DEL_BOOKS_DB(bookDb);
+        deleteBooksDb(bookDb);
 
     } else {
         QMessageBox::warning(this,

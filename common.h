@@ -5,6 +5,7 @@
 #include <CLucene/clucene-config.h>
 #include <CLucene/SharedHeader.h>
 #include "indexinfo.h"
+#include "booksdb.h"
 
 #define APP_VERSION "1.0"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
@@ -25,6 +26,7 @@ QString indexHashName(QString name);
 QString indexHashName(IndexInfo *index);
 
 void normaliseSearchString(QString &text);
+void deleteBooksDb(BooksDB *db);
 
 #ifdef Q_OS_WIN32
         #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
@@ -39,10 +41,6 @@ void normaliseSearchString(QString &text);
 
 #define SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
 
-#define DEL_DB(name) QSqlDatabase::removeDatabase(name);
-#define DEL_DBS(list) {foreach(QString n, list){ DEL_DB(n);}}
-#define DEL_BOOKS_DB(db) {QStringList conn = db->connections(); delete db; DEL_DBS(conn);}
-
 #define ADD_QTREEWIDGET_ITEM(name, value) { \
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \
         item->setData(0, Qt::DisplayRole, trUtf8(name)); \
@@ -55,7 +53,5 @@ void normaliseSearchString(QString &text);
 
 #define FORCE_RTL(x)    x->setLayoutDirection(Qt::LeftToRight); \
                         x->setLayoutDirection(Qt::RightToLeft);
-
-#define NORMALISE_SEARCH_STRING(x)  normaliseSearchString(x)
 
 #endif // COMMON_H

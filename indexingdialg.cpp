@@ -17,7 +17,9 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_stopIndexing = false;
 
     ui->spinThreadCount->setValue(QThread::idealThreadCount());
-
+ui->lineIndexName->setText("Test");
+ui->lineShamelaPath->setText("C:/Documents and Settings/Naruto/Bureau/e-shamela");
+ui->lineIndexPath->setText("C:/Documents and Settings/Naruto/Bureau/indexes");
     setRamSize();
     ui->spinRamSize->hide();
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(setRamSize()));
@@ -27,7 +29,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 IndexingDialg::~IndexingDialg()
 {
     delete ui;
-    DEL_BOOKS_DB(m_bookDB);
+    deleteBooksDb(m_bookDB);
 }
 
 void IndexingDialg::showBooks()
@@ -320,7 +322,7 @@ void IndexingDialg::saveIndexInfo()
     settings.setValue("optimizeIndex", m_indexInfo->optimize());
     settings.endGroup();
 
-    DEL_BOOKS_DB(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
+    deleteBooksDb(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
     m_bookDB = new BooksDB();
 
     emit indexCreated();

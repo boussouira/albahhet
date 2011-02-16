@@ -76,3 +76,12 @@ void normaliseSearchString(QString &text)
     text.replace(QRegExp(QObject::trUtf8("ـبدون")), "NOT");
     text.replace(QObject::trUtf8("؟"), "?");
 }
+
+void deleteBooksDb(BooksDB *db)
+{
+    QStringList connList = db->connections();
+    delete db;
+
+    foreach(QString conn, connList)
+        QSqlDatabase::removeDatabase(conn);
+}
