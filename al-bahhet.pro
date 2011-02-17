@@ -30,7 +30,8 @@ SOURCES += main.cpp \
     bookinfo.cpp \
     fancylineedit.cpp \
     common.cpp \
-    searchfilterhandler.cpp
+    searchfilterhandler.cpp \
+    settingschecker.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -49,7 +50,8 @@ HEADERS += mainwindow.h \
     shamelamodels.h \
     bookinfo.h \
     fancylineedit.h \
-    searchfilterhandler.h
+    searchfilterhandler.h \
+    settingschecker.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \

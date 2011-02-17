@@ -48,6 +48,7 @@ set(bahhet_SRCS
     mainwindow.cpp
     searchfilterhandler.cpp
     settingsdialog.cpp
+    settingschecker.cpp
     shamelamodels.cpp
     shamelaresult.cpp
     shamelaresultwidget.cpp

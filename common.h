@@ -7,7 +7,7 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define APP_VERSION "1.0"
+#define APP_VERSION "1.0.1"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
 
 enum PULRAL{

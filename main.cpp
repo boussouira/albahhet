@@ -1,6 +1,7 @@
 #include <QtGui/QApplication>
 #include <QTranslator>
 #include "mainwindow.h"
+#include "settingschecker.h"
 
 int main(int argc, char *argv[])
 {
@@ -9,6 +10,9 @@ int main(int argc, char *argv[])
     QTranslator translator;
     translator.load("qt_ar", ":/");
     app.installTranslator(&translator);
+
+    SettingsChecker check;
+    check.checkIndexes();
 
     MainWindow w;
     w.show();

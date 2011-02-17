@@ -148,7 +148,7 @@ void BooksDB::openIndexDB()
     m_indexDB.setDatabaseName(book);
 
     if (!m_indexDB.open()) {
-        qDebug("[%s:%d] Cannot open database.", __FILE__, __LINE__);
+        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
         return;
     }
 
@@ -168,7 +168,7 @@ void BooksDB::openShamelaDB()
     m_shamelaDB.setDatabaseName(mdbpath);
 
     if (!m_shamelaDB.open()) {
-        qDebug("[%s:%d] Cannot open database.", __FILE__, __LINE__);
+        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
         return;
     }
 
@@ -188,7 +188,7 @@ void BooksDB::openShamelaSpecialDB()
     m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
     if (!m_shamelaSpecialDB.open()) {
-        qDebug("[%s:%d] Cannot open database.", __FILE__, __LINE__);
+        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
         return;
     }
 
