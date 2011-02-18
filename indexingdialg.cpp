@@ -10,6 +10,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     ui(new Ui::IndexingDialg)
 {
     ui->setupUi(this);
+    hideHelpButton(this);
 
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();

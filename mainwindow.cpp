@@ -495,6 +495,8 @@ void MainWindow::showStatistic()
         treeWidget->resizeColumnToContents(0);
 
         QDialog *dialog = new QDialog(this);
+        hideHelpButton(dialog);
+
         QVBoxLayout *layout = new QVBoxLayout();
         QLabel *label = new QLabel(trUtf8("معلومات حول الفهرس:"), dialog);
         layout->addWidget(label);

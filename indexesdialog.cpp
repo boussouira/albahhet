@@ -17,6 +17,7 @@ IndexesDialog::IndexesDialog(QWidget *parent) :
     ui(new Ui::IndexesDialog)
 {
     ui->setupUi(this);
+    hideHelpButton(this);
 
     loadIndexesList();
 }

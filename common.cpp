@@ -85,3 +85,12 @@ void deleteBooksDb(BooksDB *db)
     foreach(QString conn, connList)
         QSqlDatabase::removeDatabase(conn);
 }
+
+void hideHelpButton(QWidget *w)
+{
+    Qt::WindowFlags flags = w->windowFlags();
+    flags |= Qt::WindowContextHelpButtonHint;
+    flags ^= Qt::WindowContextHelpButtonHint;
+
+    w->setWindowFlags(flags);
+}

@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <qobject.h>
+#include <qwidget.h>
 #include <CLucene/clucene-config.h>
 #include <CLucene/SharedHeader.h>
 #include "indexinfo.h"
@@ -27,6 +27,8 @@ QString indexHashName(IndexInfo *index);
 
 void normaliseSearchString(QString &text);
 void deleteBooksDb(BooksDB *db);
+
+void hideHelpButton(QWidget *w);
 
 #ifdef Q_OS_WIN32
         #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
