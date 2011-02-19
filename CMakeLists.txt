@@ -43,7 +43,7 @@ set(bahhet_SRCS
     indexesdialog.cpp
     indexinfo.cpp
     indexingdialg.cpp
-    indexthread.cpp
+    shamelaindexer.cpp
     main.cpp
     mainwindow.cpp
     searchfilterhandler.cpp
@@ -67,7 +67,7 @@ set(bahhet_MOCS
     fancylineedit.h
     indexesdialog.h
     indexingdialg.h
-    indexthread.h
+    shamelaindexer.h
     mainwindow.h
     searchfilterhandler.h
     settingsdialog.h

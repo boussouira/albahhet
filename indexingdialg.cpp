@@ -85,7 +85,7 @@ void IndexingDialg::startIndexing()
     indexingTime.start();
 
     for(int i=0;i<m_threadCount;i++) {
-        IndexingThread *indexThread = new IndexingThread();
+        ShamelaIndexer *indexThread = new ShamelaIndexer();
         connect(indexThread, SIGNAL(fileIndexed(QString)), SLOT(addBook(QString)));
         connect(indexThread, SIGNAL(finished()), SLOT(doneIndexing()));
         connect(indexThread, SIGNAL(indexingError()), SLOT(indexingError()));

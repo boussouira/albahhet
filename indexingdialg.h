@@ -5,7 +5,7 @@
 #include <QTime>
 #include <QSettings>
 #include "booksdb.h"
-#include "indexthread.h"
+#include "shamelaindexer.h"
 #include "indexinfo.h"
 
 namespace Ui {

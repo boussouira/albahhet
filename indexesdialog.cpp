@@ -347,7 +347,7 @@ void IndexesDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info)
     bookDB->queryBooksToIndex(ids);
 
 
-    IndexingThread *indexThread = new IndexingThread();
+    ShamelaIndexer *indexThread = new ShamelaIndexer();
     indexThread->setIndexInfo(info);
     indexThread->setBookDB(bookDB);
     indexThread->setWirter(writer);

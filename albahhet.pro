@@ -3,7 +3,7 @@ QT += core \
     sql \
     webkit
 TEMPLATE = app
-TARGET = al-bahhet
+TARGET = albahhet
 
 MOC_DIR += .moc
 OBJECTS_DIR += .obj
@@ -16,7 +16,7 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
     indexingdialg.cpp \
-    indexthread.cpp \
+    shamelaindexer.cpp \
     booksdb.cpp \
     indexinfo.cpp \
     shamelasearcher.cpp \
@@ -35,7 +35,7 @@ SOURCES += main.cpp \
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
-    indexthread.h \
+    shamelaindexer.h \
     common.h \
     booksdb.h \
     indexinfo.h \

@@ -1,5 +1,5 @@
-#ifndef INDEXTHREAD_H
-#define INDEXTHREAD_H
+#ifndef SHAMELAINDEXER_H
+#define SHAMELAINDEXER_H
 
 #include <qthread.h>
 #include "arabicanalyzer.h"
@@ -8,11 +8,11 @@ class BooksDB;
 class BookInfo;
 class IndexInfo;
 
-class IndexingThread : public QThread
+class ShamelaIndexer : public QThread
 {
     Q_OBJECT
 public:
-    IndexingThread();
+    ShamelaIndexer();
     void setBookDB(BooksDB *bookDB) { m_bookDB = bookDB; }
     void setWirter(IndexWriter* writer) { m_writer = writer;}
     void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
@@ -34,4 +34,4 @@ protected:
     bool m_stopIndexing;
 };
 
-#endif // INDEXTHREAD_H
+#endif // SHAMELAINDEXER_H

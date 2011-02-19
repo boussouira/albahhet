@@ -1,4 +1,4 @@
-#include "indexthread.h"
+#include "shamelaindexer.h"
 #include "common.h"
 #include "booksdb.h"
 #include "indexinfo.h"
@@ -7,17 +7,17 @@
 #include <qsqlquery.h>
 #include <qmessagebox.h>
 
-IndexingThread::IndexingThread()
+ShamelaIndexer::ShamelaIndexer()
 {
     m_stopIndexing = false;
 }
 
-void IndexingThread::run()
+void ShamelaIndexer::run()
 {
     startIndexing();
 }
 
-void IndexingThread::startIndexing()
+void ShamelaIndexer::startIndexing()
 {
     try {
         BookInfo *book = m_bookDB->next();
@@ -49,7 +49,7 @@ void IndexingThread::startIndexing()
     }
 }
 
-void IndexingThread::indexBook(BookInfo *book)
+void ShamelaIndexer::indexBook(BookInfo *book)
 {
 //    qDebug() << " *" << book->name();
     {
