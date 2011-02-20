@@ -20,9 +20,6 @@ public:
     ~IndexesDialog();
     bool changeIndexName(IndexInfo *index, QString newName);
     bool deleteIndex(IndexInfo *index);
-    void removeSameIds(QList<int> &bigList, QList<int> &smalList);
-    void indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info);
-    void deletBooksFromIndex(QList<int> ids, IndexInfo *info);
     void optimizeIndex(IndexInfo *info);
 
 protected slots:

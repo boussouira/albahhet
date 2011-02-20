@@ -69,7 +69,6 @@ void IndexingDialg::startIndexing()
         dir.mkdir(qPrintable(m_indexInfo->path()));
     if ( IndexReader::indexExists(qPrintable(m_indexInfo->path())) ){
         if ( IndexReader::isLocked(qPrintable(m_indexInfo->path())) ){
-            printf("Index was locked... unlocking it.\n");
             IndexReader::unlock(qPrintable(m_indexInfo->path()));
         }
 

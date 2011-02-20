@@ -7,6 +7,7 @@
 #include "indexinfo.h"
 #include "shamelaresult.h"
 #include <cmath>
+#include <exception>
 #include <qdatetime.h>
 #include <qstringlist.h>
 #include <qsqlquery.h>
@@ -65,9 +66,13 @@ void ShamelaSearcher::run()
     } catch(CLuceneError &e) {
         qDebug() << "Error when searching:" << e.what() << "\ncode:" << e.number();
         emit gotException(e.what(), e.number());
-    } catch(...) {
+    }
+    catch(std::exception &e){
+     emit gotException(e.what(), 0);
+    }
+    catch(...) {
         qDebug() << "Error when searching at : " << m_indexInfo->path();
-        gotException("UNKNOW", -1);
+        emit gotException("UNKNOW", -1);
     }
 
 }

@@ -21,6 +21,7 @@ public:
     BookInfo *getBookInfo(int id);
     BookInfo *next();
     void setIndexInfo(IndexInfo* info);
+    IndexInfo *indexInfo() { return m_indexInfo; }
     void openIndexDB();
     void openShamelaDB();
     void openShamelaSpecialDB();
@@ -36,8 +37,8 @@ public:
     QList<int> getShamelaIds();
     QList<int> getSavedIds();
 
-    int addBooks(QList<int> shaIds);
-    int removeBooks(QList<int> savedIds);
+    QStringList addBooks(QList<int> shaIds);
+    QStringList removeBooks(QList<int> savedIds);
 
     QStandardItemModel *getBooksListModel();
     QStandardItemModel *getCatsListModel();

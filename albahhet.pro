@@ -31,7 +31,8 @@ SOURCES += main.cpp \
     fancylineedit.cpp \
     common.cpp \
     searchfilterhandler.cpp \
-    settingschecker.cpp
+    settingschecker.cpp \
+    shamelaupdaterdialog.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -51,16 +52,26 @@ HEADERS += mainwindow.h \
     bookinfo.h \
     fancylineedit.h \
     searchfilterhandler.h \
-    settingschecker.h
+    settingschecker.h \
+    shamelaupdaterdialog.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
     settingsdialog.ui \
-    indexesdialog.ui
+    indexesdialog.ui \
+    shamelaupdaterdialog.ui
 win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"
-        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+
+        CONFIG(debug, debug|release) {
+            CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/debug
+            CLUCENE_LIB_SUFFIX = "d"
+        }
+
+        CONFIG(release, debug|release) {
+            CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+        }
 
         DEFINES +=  _CRT_SECURE_NO_DEPRECATE \
                     _CRT_NONSTDC_NO_DEPRECATE
@@ -68,6 +79,7 @@ win32 {
         CLUCENE_PATH = "C:/clucene-2.3.2_mingw"
         CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
     }
+
     DESTDIR = bin
     RC_FILE = win_rc.rc
 }
@@ -84,15 +96,16 @@ DEFINES += _REENTRANT \
     _UCS2 \
     _UNICODE
 
-INCLUDEPATH += $$CLUCENE_PATH/src/core
-INCLUDEPATH += $$CLUCENE_PATH/src/ext
-INCLUDEPATH += $$CLUCENE_PATH/src/shared
-INCLUDEPATH += $$CLUCENE_PATH/src/contribs-lib
+INCLUDEPATH += $$CLUCENE_PATH/src/core \
+        $$CLUCENE_PATH/src/ext \
+        $$CLUCENE_PATH/src/shared \
+        $$CLUCENE_PATH/src/contribs-lib
 
-LIBS += -lclucene-core \
-    -lclucene-shared \
-    -lclucene-contribs-lib \
-    -L$$CLUCENE_LIBS_PATH
+LIBS += -lclucene-core$$CLUCENE_LIB_SUFFIX \
+        -lclucene-shared$$CLUCENE_LIB_SUFFIX \
+        -lclucene-contribs-lib$$CLUCENE_LIB_SUFFIX \
+        -L$$CLUCENE_LIBS_PATH
 
-RESOURCES += \
-    resources.qrc
+#message(The project will be linked with $$LIBS)
+
+RESOURCES += resources.qrc

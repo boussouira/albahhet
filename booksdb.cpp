@@ -290,13 +290,13 @@ QList<int> BooksDB::getSavedIds()
     return savedIds;
 }
 
-int BooksDB::addBooks(QList<int> shaIds)
+QStringList BooksDB::addBooks(QList<int> shaIds)
 {
-    if(shaIds.count() <= 0)
-        return 0;
-
+    QStringList addedBooksName;
     QString whereIds;
-    int addedBooks = 0;
+
+    if(shaIds.count() <= 0)
+        return addedBooksName;
 
     for(int i=0; i<shaIds.count(); i++) {
         if(i>0)
@@ -309,6 +309,8 @@ int BooksDB::addBooks(QList<int> shaIds)
                 .arg(whereIds));
 
     m_shamelaQuery->exec(sql);
+
+
     while(m_shamelaQuery->next()) {
         int archive = m_shamelaQuery->value(4).toInt();
         sql = QString("INSERT INTO books VALUES "
@@ -323,22 +325,22 @@ int BooksDB::addBooks(QList<int> shaIds)
                 .arg((!archive) ? "book" : QString("b%1").arg(m_shamelaQuery->value(1).toInt()));
 
         if(m_indexQuery->exec(sql)) {
-            addedBooks++;
+            addedBooksName << m_shamelaQuery->value(0).toString();
         } else {
             qDebug()<< "ERROR:" << m_indexQuery->lastError().text();
         }
     }
 
-    if(m_indexDB.commit())
-        return addedBooks;
-    else
-        return -1;
+    m_indexDB.commit();
+
+    return addedBooksName;
 }
 
-int BooksDB::removeBooks(QList<int> savedIds)
+QStringList BooksDB::removeBooks(QList<int> savedIds)
 {
+    QStringList removedBooks;
     if(savedIds.count() <= 0)
-        return 0;
+        return removedBooks;
 
     QString whereIds;
     for(int i=0; i<savedIds.count(); i++) {
@@ -347,13 +349,22 @@ int BooksDB::removeBooks(QList<int> savedIds)
         whereIds.append(QString::number(savedIds.at(i)));
     }
 
-    QString sql(QString("DELETE FROM books WHERE shamelaID IN(%1)").arg(whereIds));
+    QString selectSql(QString("SELECT bookName FROM books WHERE shamelaID IN(%1)").arg(whereIds));
 
-    if(m_indexQuery->exec(sql)) {
-        return savedIds.count();
+    if(m_indexQuery->exec(selectSql)) {
+        while(m_indexQuery->next()) {
+            removedBooks << m_indexQuery->value(0).toString();
+        }
+    }
+
+
+    QString deleteSql(QString("DELETE FROM books WHERE shamelaID IN(%1)").arg(whereIds));
+
+    if(m_indexQuery->exec(deleteSql)) {
+        return removedBooks;
     } else {
-        qDebug()<< "ERROR:" << m_indexQuery->lastError().text();
-        return -1;
+        qDebug() << "ERROR:" << m_indexQuery->lastError().text();
+        return QStringList();
     }
 }
 

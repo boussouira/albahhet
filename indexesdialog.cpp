@@ -5,6 +5,7 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 #include "indexingdialg.h"
+#include "shamelaupdaterdialog.h"
 #include <qsettings.h>
 #include <qmessagebox.h>
 #include <qinputdialog.h>
@@ -25,6 +26,7 @@ IndexesDialog::IndexesDialog(QWidget *parent) :
 IndexesDialog::~IndexesDialog()
 {
     delete ui;
+    qDeleteAll(m_indexInfoMap);
 }
 
 bool IndexesDialog::changeIndexName(IndexInfo *index, QString newName)
@@ -87,26 +89,6 @@ bool IndexesDialog::deleteIndex(IndexInfo *index)
     }
 
     return false;
-}
-
-void IndexesDialog::removeSameIds(QList<int> &bigList, QList<int> &smalList)
-{
-    int i=0;
-
-    qDebug() << "small.count():" << smalList.count();
-    qDebug() << "big.count():" << bigList.count();
-
-    for(i=0; i < smalList.count(); i++) {
-        int val = smalList.at(i);
-        int index = bigList.indexOf(val);
-
-        if(index != -1) {
-            smalList.removeAt(i);
-            bigList.removeAt(index);
-            i--;
-        }
-    }
-
 }
 
 void IndexesDialog::loadIndexesList()
@@ -211,9 +193,6 @@ void IndexesDialog::on_pushDelete_clicked()
 void IndexesDialog::on_pushUpDate_clicked()
 {
     QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
-    int added = 0;
-    int removed = 0;
-    int progressMax = 7;
 
     if(items.count() > 0) {
         IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
@@ -221,62 +200,11 @@ void IndexesDialog::on_pushUpDate_clicked()
         BooksDB *bookDb = new BooksDB();
         bookDb->setIndexInfo(indexInfo);
 
-        // Progress dialog
-        QProgressDialog progress(trUtf8("جاري تحديث فهرس %1...").arg(indexInfo->name()),
-                                 QString(),
-                                 0,
-                                 progressMax,
-                                 this);
-        progress.setWindowModality(Qt::WindowModal);
+        ShamelaUpdaterDialog updater(this);
+        updater.setBooksDB(bookDb);
+        updater.resize(size());
 
-        PROGRESS_DIALOG_STEP("التعرف على كتب الشاملة");
-
-        QList<int> shaIds = bookDb->getShamelaIds();
-        QList<int> savedIds = bookDb->getSavedIds();
-
-        PROGRESS_DIALOG_STEP("مقارنة الكتب");
-
-        if(shaIds.count() > savedIds.count())
-            removeSameIds(shaIds, savedIds);
-        else
-            removeSameIds(savedIds, shaIds);
-
-//        qDebug() << "SHAMELA:" << shaIds.count() << ":" << shaIds;
-//        qDebug() << "SAVED:" << savedIds.count() << ":" << savedIds;
-
-        if(shaIds.count() > 0) {
-            PROGRESS_DIALOG_STEP("اضافة الكتب الجديدة الى قاعدة البيانات");
-            added = bookDb->addBooks(shaIds);
-        }
-
-        if(savedIds.count() > 0) {
-            PROGRESS_DIALOG_STEP("حذف الكتب من قاعدة البيانات");
-            removed = bookDb->removeBooks(savedIds);
-        }
-
-        QString msg(trUtf8("ثم تحديث الفهرس بنجاح." "<br>"));
-        if(added > 0) {
-            PROGRESS_DIALOG_STEP("فهرسة الكتب الجديدة");
-
-            msg.append(trUtf8("ثم اضافة %1." "<br>").arg(arPlural(added, BOOK)));
-            indexBooks(shaIds, bookDb, indexInfo);
-        }
-
-        if(removed > 0) {
-            PROGRESS_DIALOG_STEP("حذف الكتب من الفهرس");
-
-            msg.append(trUtf8("ثم حذف %1." "<br>").arg(arPlural(removed, BOOK)));
-            deletBooksFromIndex(savedIds, indexInfo);
-        }
-
-        if(added <= 0 && removed <= 0)
-            msg.append(trUtf8("لم يتم اضافة او حذف اي كتاب."));
-
-        progress.setValue(progressMax);
-
-        QMessageBox::information(this,
-                                 trUtf8("تحديث فهرس"),
-                                 msg);
+        updater.exec();
 
         deleteBooksDb(bookDb);
 
@@ -324,83 +252,6 @@ void IndexesDialog::on_pushOptimize_clicked()
     }
 }
 
-void IndexesDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info)
-{
-    IndexWriter *writer = NULL;
-    QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(qPrintable(info->path())))
-        dir.mkdir(qPrintable(info->path()));
-    if ( IndexReader::indexExists(qPrintable(info->path())) ){
-        if ( IndexReader::isLocked(qPrintable(info->path())) ){
-            printf("Index was locked... unlocking it.\n");
-            IndexReader::unlock(qPrintable(info->path()));
-        }
-
-        writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
-    } else {
-        QMessageBox::critical(this,
-                              trUtf8("خطأ عند التحديث"),
-                              trUtf8("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
-        return;
-    }
-
-    writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-    writer->setRAMBufferSizeMB(info->ramSize());
-
-    bookDB->queryBooksToIndex(ids);
-
-
-    ShamelaIndexer *indexThread = new ShamelaIndexer();
-    indexThread->setIndexInfo(info);
-    indexThread->setBookDB(bookDB);
-    indexThread->setWirter(writer);
-
-    indexThread->run();
-
-//    writer->optimize();
-    writer->close();
-
-    _CLDELETE(writer);
-    _CLDELETE(indexThread);
-}
-
-void IndexesDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
-{
-    IndexWriter *writer = NULL;
-    QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(qPrintable(info->path())))
-        dir.mkdir(qPrintable(info->path()));
-    if ( IndexReader::indexExists(qPrintable(info->path())) ){
-        if ( IndexReader::isLocked(qPrintable(info->path())) ){
-            printf("Index was locked... unlocking it.\n");
-            IndexReader::unlock(qPrintable(info->path()));
-        }
-
-        writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
-    } else {
-        QMessageBox::critical(this,
-                              trUtf8("خطأ عند التحديث"),
-                              trUtf8("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
-        return;
-    }
-
-    for(int i=0; i<ids.count(); i++) {
-        TCHAR str[10];
-        Term *term = new Term(_itow(ids.at(i), str, 10), _T("bookid"));
-        writer->deleteDocuments(term);
-
-        _CLDELETE(term);
-    }
-
-
-//    writer->optimize();
-    writer->close();
-
-    _CLDELETE(writer);
-}
-
 void IndexesDialog::optimizeIndex(IndexInfo *info)
 {
     IndexWriter *writer = NULL;
@@ -410,7 +261,6 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
         dir.mkdir(qPrintable(info->path()));
     if ( IndexReader::indexExists(qPrintable(info->path())) ){
         if ( IndexReader::isLocked(qPrintable(info->path())) ){
-            printf("Index was locked... unlocking it.\n");
             IndexReader::unlock(qPrintable(info->path()));
         }
 
