@@ -408,7 +408,7 @@ QStandardItemModel *BooksDB::getCatsListModel()
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
-    m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY id");
+    m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord");
 
     while(m_shamelaQuery->next()) {
         item = new QStandardItem(m_shamelaQuery->value(1).toString());
