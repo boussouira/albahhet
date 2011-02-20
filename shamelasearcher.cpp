@@ -160,13 +160,15 @@ void ShamelaSearcher::fetech()
                              .arg(entryID));
             if(bookQuery.first()){
                 ShamelaResult *result = new ShamelaResult;
+                QString pageText(bookQuery.value(0).toString());
+
                 result->setBookId(bookID);
                 result->setArchive(bookInfo->archive());
                 result->setId(entryID);
                 result->setPage(bookQuery.value(1).toInt());
                 result->setPart(bookQuery.value(2).toInt());
                 result->setScore(score);
-                result->setText(bookQuery.value(0).toString());
+                result->setText(pageText);
                 result->setTitle(getTitleId(bookDB, result));
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
                 //result->setSnippet(hiText(abbreviate(result->text(), 320), m_queryStr));
@@ -176,7 +178,7 @@ void ShamelaSearcher::fetech()
                 SimpleFragmenter frag(20);
                 highlighter.setTextFragmenter(&frag);
 
-                const TCHAR* text = QStringToTChar(bookQuery.value(0).toString());
+                const TCHAR* text = QStringToTChar(pageText);
                 StringReader reader(text);
                 TokenStream* tokenStream = hl_analyzer.tokenStream(_T("text"), &reader);
 

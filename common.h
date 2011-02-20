@@ -31,6 +31,7 @@ void normaliseSearchString(QString &text);
 void deleteBooksDb(BooksDB *db);
 
 void hideHelpButton(QWidget *w);
+void clearShorts(QString &str);
 void forceRTL(QWidget *widget);
 
 #define ADD_QTREEWIDGET_ITEM(name, value) { \

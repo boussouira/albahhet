@@ -96,6 +96,8 @@ void ShamelaResult::setText(const QString &text)
 
     if(m_text != text) {
         m_text = text;
+        clearShorts(m_text);
+
         m_edited = true;
     }
 }
@@ -113,6 +115,8 @@ void ShamelaResult::setSnippet(const QString &snippet)
 {
     if(m_snippet != snippet) {
         m_snippet = snippet;
+        clearShorts(m_snippet);
+
         m_edited = true;
     }
 }

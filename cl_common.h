@@ -1,5 +1,6 @@
 #ifndef CL_COMMON_H
 #define CL_COMMON_H
+
 #include <CLucene.h>
 #include <CLucene/StdHeader.h>
 
@@ -47,7 +48,7 @@ public:
 
         int len = _tcslen(originalText) + 40;
         TCHAR* ret = _CL_NEWARRAY(TCHAR, len + 1);
-        _tcscpy(ret, _T("<b style=\"background-color:#FFFF63\">"));
+        _tcscpy(ret, _T("<b style=\"background-color:#ffff63\">"));
         _tcscat(ret, originalText);
         _tcscat(ret, _T("</b>"));
 

@@ -47,7 +47,6 @@ protected slots:
     void gotResult(ShamelaResult *result);
     void gotException(QString what, int id);
     void populateJavaScriptWindowObject();
-    void resultLinkClicked(const QUrl &url);
 
 protected:
     QString buildFilePath(QString bkid, int archive);

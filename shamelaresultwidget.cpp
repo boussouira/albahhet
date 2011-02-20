@@ -34,17 +34,16 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->progressBar->hide();
 
-    m_colors.append("#FFFF63");
-    m_colors.append("#A5FFFF");
-    m_colors.append("#FF9A9C");
-    m_colors.append("#9CFF9C");
-    m_colors.append("#EF86FB");
+    m_colors.append("#ffff63");
+    m_colors.append("#a5ffff");
+    m_colors.append("#ff9a9c");
+    m_colors.append("#9cff9c");
+    m_colors.append("#ef86fb");
 
     m_currentShownId = 0;
 
     ui->webView->installEventFilter(this);
 
-    connect(ui->webView, SIGNAL(linkClicked(QUrl)), SLOT(resultLinkClicked(QUrl)));
     connect(ui->webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
 }
@@ -318,52 +317,6 @@ void ShamelaResultWidget::buttonStat(int currentPage, int pageCount)
     ui->buttonGoLast->setEnabled(next);
 }
 
-
-void ShamelaResultWidget::resultLinkClicked(const QUrl &url)
-{
-    return;
-    int rid = url.queryItems().at(0).second.toInt();
-    int bookID = url.queryItems().at(1).second.toInt();
-    int archive = url.queryItems().at(2).second.toInt();
-
-    QDialog *dialog = new QDialog(this);
-    QVBoxLayout *layout= new QVBoxLayout(dialog);
-    QTextBrowser *textBrowser = new QTextBrowser(0);
-    QString text;
-    layout->addWidget(textBrowser);
-    {
-        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                          .arg(buildFilePath(QString::number(bookID), archive));
-        m_bookDB.setDatabaseName(mdbpath);
-
-        if (!m_bookDB.open()) {
-            qDebug("[%s:%d] Cannot open database at \"%s\".",
-                   __FILE__,
-                   __LINE__,
-                   qPrintable(buildFilePath(QString::number(bookID), archive)));
-            return;
-        }
-        QSqlQuery m_bookQuery(m_bookDB);
-
-        m_bookQuery.exec(QString("SELECT page, part, nass FROM %1 WHERE id = %2")
-                         .arg((!archive) ? "book" : QString("b%1").arg(bookID))
-                         .arg(rid));
-        if(m_bookQuery.first())
-            text = m_bookQuery.value(2).toString();
-
-        text.replace(QRegExp("[\\r\\n]"),"<br/>");
-    }
-    QSqlDatabase::removeDatabase("disBook");
-
-    textBrowser->setHtml(hiText(text, m_searcher->queryString()));
-    textBrowser->setAlignment(Qt::AlignRight);
-
-    dialog->setLayout(layout);
-    dialog->resize(500,500);
-    dialog->show();
-}
-
 QString ShamelaResultWidget::getPage(QString href)
 {
     QUrl url(href);
@@ -397,6 +350,7 @@ QString ShamelaResultWidget::getPage(QString href)
                          .arg(rid));
         if(m_bookQuery.first()) {
             text = m_bookQuery.value(1).toString();
+
             m_currentShownId = m_bookQuery.value(0).toInt();
             m_currentPage = m_bookQuery.value(2).toInt();
             m_currentPart = m_bookQuery.value(3).toInt();
@@ -407,7 +361,10 @@ QString ShamelaResultWidget::getPage(QString href)
     }
     QSqlDatabase::removeDatabase("disBook");
 
-    return hiText(text, m_searcher->queryString());
+    clearShorts(text);
+    text = hiText(text, m_searcher->queryString());
+
+    return text;
 }
 
 QString ShamelaResultWidget::currentBookName()

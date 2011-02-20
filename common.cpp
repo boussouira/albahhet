@@ -90,3 +90,12 @@ void forceRTL(QWidget *widget)
     widget->setLayoutDirection(Qt::LeftToRight);
     widget->setLayoutDirection(Qt::RightToLeft);
 }
+
+void clearShorts(QString &str)
+{
+    str.replace('A', QObject::trUtf8("صلى الله عليه وسلم"));
+    str.replace('B', QObject::trUtf8("رضي الله عن"));
+    str.replace('C', QObject::trUtf8("رحمه الله"));
+    str.replace('D', QObject::trUtf8("عز وجل"));
+    str.replace('E', QObject::trUtf8("عليه الصلاة و السلام"));
+}
