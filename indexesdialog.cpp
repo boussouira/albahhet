@@ -172,7 +172,9 @@ void IndexesDialog::on_pushEdit_clicked()
                     emit indexesChanged();
                 }
             } else {
-                qDebug("Aleardy exist");
+                QMessageBox::warning(this,
+                                     trUtf8("تعديل فهرس"),
+                                     trUtf8("الاسم المدخل موجود مسبفا"));
             }
         }
 
