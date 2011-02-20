@@ -221,12 +221,11 @@ void IndexesDialog::on_pushUpDate_clicked()
 
         // Progress dialog
         QProgressDialog progress(trUtf8("جاري تحديث فهرس %1...").arg(indexInfo->name()),
-                                 trUtf8("الغاء"),
+                                 QString(),
                                  0,
                                  progressMax,
                                  this);
         progress.setWindowModality(Qt::WindowModal);
-        progress.setCancelButton(0);
 
         PROGRESS_DIALOG_STEP("التعرف على كتب الشاملة");
 
@@ -300,17 +299,20 @@ void IndexesDialog::on_pushOptimize_clicked()
 
         if(rep == QMessageBox::Yes){
             QProgressDialog progress(trUtf8("جاري ضغط فهرس %1...").arg(indexInfo->name()),
-                                     trUtf8("الغاء"),
+                                     QString(),
                                      0,
                                      1,
                                      this);
             progress.setWindowModality(Qt::WindowModal);
-            progress.setCancelButton(0);
             progress.setMinimumDuration(0);
 
             optimizeIndex(indexInfo);
 
             progress.setValue(1);
+
+            QMessageBox::information(this,
+                                     trUtf8("ضغط فهرس"),
+                                     trUtf8("ثم ضغط الفهرس بنجاح"));
         }
 
     } else {
