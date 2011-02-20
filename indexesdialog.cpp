@@ -190,7 +190,7 @@ void IndexesDialog::on_pushDelete_clicked()
         IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
         int rep = QMessageBox::question(this,
                              trUtf8("حذف فهرس"),
-                             trUtf8("هل تريد خذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
+                             trUtf8("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
                              QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes) {
