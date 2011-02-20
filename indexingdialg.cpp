@@ -115,7 +115,7 @@ void IndexingDialg::nextStep()
                 throw trUtf8("لم تقم باختيار مسار وضع الفهرس");
 
             QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-            QString hash = QString("i_%1").arg(IndexInfo::nameHash(ui->lineIndexName->text()));
+            QString hash = IndexInfo::indexHash(ui->lineIndexName->text());
 
             if(settings.childGroups().contains(hash))
                 throw trUtf8("اسم الفهرس المدخل موجودا مسبقا");
@@ -305,8 +305,7 @@ void IndexingDialg::saveIndexInfo()
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    QString nameHash = m_indexInfo->nameHash();
-    QString indexName = QString("i_%1").arg(nameHash);
+    QString indexName = m_indexInfo->indexHash();
 
     QStringList indexes = settings.value("indexes_list").toStringList();
 

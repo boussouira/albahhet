@@ -61,14 +61,14 @@ int IndexInfo::ramSize()
     return m_ramSize;
 }
 
-QString IndexInfo::nameHash()
+QString IndexInfo::indexHash()
 {
-    return nameHash(m_name);
+    return indexHash(m_name);
 }
 
-QString IndexInfo::nameHash(QString name)
+QString IndexInfo::indexHash(QString name)
 {
-    return QString::number(qChecksum(qPrintable(name), name.size()+1));
+    return QString("i_%1").arg(qChecksum(qPrintable(name), name.size()+1));
 }
 
 QString IndexInfo::shamelaMainDbName()
@@ -110,7 +110,12 @@ QString IndexInfo::indexDbPath()
 QString IndexInfo::buildFilePath(QString bkid, int archive)
 {
     if(!archive)
-        return QString("%1/Books/%2/%3.mdb").arg(shamelaPath()).arg(bkid.right(1)).arg(bkid);
+        return QString("%1/Books/%2/%3.mdb").arg(m_shamelaPath).arg(bkid.right(1)).arg(bkid);
     else
-        return QString("%1/Books/Archive/%2.mdb").arg(shamelaPath()).arg(archive);
+        return QString("%1/Books/Archive/%2.mdb").arg(m_shamelaPath).arg(archive);
+}
+
+QString IndexInfo::buildFilePath(int bkid, int archive)
+{
+    return buildFilePath(QString::number(bkid), archive);
 }

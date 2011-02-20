@@ -32,8 +32,8 @@ bool IndexesDialog::changeIndexName(IndexInfo *index, QString newName)
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
     QStringList list =  settings.value("indexes_list").toStringList();
 
-    QString oldHash = indexHashName(index->name());
-    QString newHash = indexHashName(newName);
+    QString oldHash = index->indexHash();
+    QString newHash = IndexInfo::indexHash(newName);
 
     int oldIndex = list.indexOf(oldHash);
     if(oldIndex != -1) {
@@ -64,7 +64,7 @@ bool IndexesDialog::deleteIndex(IndexInfo *index)
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
     QStringList list =  settings.value("indexes_list").toStringList();
-    QString indexHash = indexHashName(index->name());
+    QString indexHash = index->indexHash();
 
     int indexIndex = list.indexOf(indexHash);
 
@@ -166,7 +166,7 @@ void IndexesDialog::on_pushEdit_clicked()
                                              indexInfo->name(),
                                              &ok);
         if (ok && !text.isEmpty() && text != indexInfo->name()) {
-            if(!m_indexInfoMap.keys().contains(indexHashName(text))) {
+            if(!m_indexInfoMap.keys().contains(IndexInfo::indexHash(text))) {
                 if(changeIndexName(indexInfo, text)) {
                     loadIndexesList();
                     emit indexesChanged();

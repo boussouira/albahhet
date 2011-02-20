@@ -1,5 +1,6 @@
 #include "settingschecker.h"
 #include <qapplication.h>
+#include <qstringlist.h>
 #include <qfile.h>
 
 SettingsChecker::SettingsChecker()

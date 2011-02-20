@@ -57,16 +57,6 @@ QString arPlural(int count, PULRAL word, bool html)
     return html ? QString("<strong>%1</strong>").arg(str) : str;
 }
 
-QString indexHashName(QString name)
-{
-    return QString("i_%1").arg(IndexInfo::nameHash(name));
-}
-
-QString indexHashName(IndexInfo *index)
-{
-    return indexHashName(index->name());
-}
-
 void normaliseSearchString(QString &text)
 {
     text.replace(QRegExp(QObject::trUtf8("ـفق")), "(");
@@ -93,4 +83,10 @@ void hideHelpButton(QWidget *w)
     flags ^= Qt::WindowContextHelpButtonHint;
 
     w->setWindowFlags(flags);
+}
+
+void forceRTL(QWidget *widget)
+{
+    widget->setLayoutDirection(Qt::LeftToRight);
+    widget->setLayoutDirection(Qt::RightToLeft);
 }

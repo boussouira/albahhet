@@ -18,8 +18,8 @@ public:
     QString shamelaPath();
     bool optimize();
     int ramSize();
-    QString nameHash();
-    static QString nameHash(QString name);
+    QString indexHash();
+    static QString indexHash(QString name);
 
     QString shamelaMainDbName();
     QString shamelaMainDbPath();
@@ -31,6 +31,7 @@ public:
     QString indexDbPath();
 
     QString buildFilePath(QString bkid, int archive);
+    QString buildFilePath(int bkid, int archive);
 
 
 protected:

@@ -45,10 +45,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_resultParPage = 10;
     m_dbIsOpen = false;
 
-    FORCE_RTL(ui->lineQueryMust);
-    FORCE_RTL(ui->lineQueryShould);
-    FORCE_RTL(ui->lineQueryShouldNot);
-    FORCE_RTL(ui->lineFilter);
+    forceRTL(ui->lineQueryMust);
+    forceRTL(ui->lineQueryShould);
+    forceRTL(ui->lineQueryShouldNot);
+    forceRTL(ui->lineFilter);
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
@@ -99,8 +99,7 @@ void MainWindow::saveSettings()
     settings.endGroup();
 
     if(!m_currentIndex->name().isEmpty())
-        settings.setValue("current_index",
-                          QString("i_%1").arg(IndexInfo::nameHash(m_currentIndex->name())));
+        settings.setValue("current_index", m_currentIndex->indexHash());
 }
 
 void MainWindow::loadSettings()
@@ -199,7 +198,7 @@ void MainWindow::indexChanged()
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     if(!m_currentIndex->name().isEmpty())
-        settings.setValue("current_index", indexHashName(m_currentIndex->name()));
+        settings.setValue("current_index", m_currentIndex->indexHash());
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 

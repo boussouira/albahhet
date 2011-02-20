@@ -131,7 +131,7 @@ void BooksDB::setIndexInfo(IndexInfo *info)
     close();
 
     m_indexInfo = info;
-    QString hash = m_indexInfo->nameHash();
+    QString hash = m_indexInfo->indexHash();
     m_indexConnName = "indexDb_" + hash;
     m_shaConnName = "shamelaBookDb_" + hash;
     m_shaSpeConnName = "shamelaSpecialDb_" + hash;
