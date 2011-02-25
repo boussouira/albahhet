@@ -64,14 +64,14 @@ void ShamelaSearcher::run()
             fetech();
         }
     } catch(CLuceneError &e) {
-        qDebug() << "Error when searching:" << e.what() << "\ncode:" << e.number();
+        qCritical("Error when searching: %s\ncode: %d", e.what(), e.number());
         emit gotException(e.what(), e.number());
     }
     catch(std::exception &e){
      emit gotException(e.what(), 0);
     }
     catch(...) {
-        qDebug() << "Error when searching at : " << m_indexInfo->path();
+        qCritical("Unknow error when searching at \"%s\".", qPrintable(m_indexInfo->path()));
         emit gotException("UNKNOW", -1);
     }
 
@@ -86,7 +86,7 @@ void ShamelaSearcher::search()
 
     m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
 
-    qDebug() << "Query: " << TCharToQString(m_query->toString(_T("text")));
+    qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
 
     QTime time;
     time.start();
@@ -145,11 +145,7 @@ void ShamelaSearcher::fetech()
             }
 
             if (!bookDB.open()) {
-                qDebug("[%s:%d] Cannot open database at \"%s\".",
-                       __FILE__,
-                       __LINE__,
-                       qPrintable(bookInfo->path()));
-
+                DB_OPEN_ERROR(bookInfo->path());
                 continue;
             }
 
@@ -318,17 +314,16 @@ QString ShamelaSearcher::buildFilePath(QString bkid, int archive)
 QString ShamelaSearcher::getTitleId(const QSqlDatabase &db, ShamelaResult *result)
 {
     QSqlQuery m_bookQuery(db);
-    m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
-                     .arg((!result->archive()) ? "title" : QString("t%1").arg(result->bookId()))
-                     .arg(result->id()));
+    bool exec;
 
-    if(m_bookQuery.first())
-        return m_bookQuery.value(0).toString();
-    else {
-        qDebug() << m_bookQuery.lastError().text();
-        return QString();
-    }
+    exec = m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
+                            .arg((!result->archive()) ? "title" : QString("t%1").arg(result->bookId()))
+                            .arg(result->id()));
 
+    if(!exec)
+        SQL_ERROR(m_bookQuery.lastError().text());
+
+    return m_bookQuery.first() ? m_bookQuery.value(0).toString() : QString();
 }
 
 void ShamelaSearcher::nextPage()

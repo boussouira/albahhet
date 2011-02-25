@@ -259,17 +259,16 @@ QString ShamelaResultWidget::abbreviate(QString str, int size) {
 QString ShamelaResultWidget::getTitleId(const QSqlDatabase &db, int pageID, int archive, int bookID)
 {
     QSqlQuery m_bookQuery(db);
-    m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
+    bool exec;
+
+    exec = m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
                      .arg((!archive) ? "title" : QString("t%1").arg(bookID))
                      .arg(pageID));
 
-    if(m_bookQuery.first())
-        return m_bookQuery.value(0).toString();
-    else {
-        qDebug() << m_bookQuery.lastError().text();
-        return QString();
-    }
+    if(!exec)
+        SQL_ERROR(m_bookQuery.lastError().text());
 
+    return m_bookQuery.first() ? m_bookQuery.value(0).toString() : QString();
 }
 
 QString ShamelaResultWidget::getBookName(int bookID)
@@ -279,7 +278,9 @@ QString ShamelaResultWidget::getBookName(int bookID)
         return name;
     } else {
         QSqlQuery m_bookQuery(QSqlDatabase::database("shamelaBook"));
-        m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
+        bool exec;
+
+        exec = m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
 
         if(m_bookQuery.first()){
             QString bookName = m_bookQuery.value(0).toString();
@@ -287,7 +288,8 @@ QString ShamelaResultWidget::getBookName(int bookID)
             return bookName;
         }
         else {
-            qDebug() << m_bookQuery.lastError().text();
+            if(!exec)
+                SQL_ERROR(m_bookQuery.lastError().text());
             return QString();
         }
     }
@@ -334,10 +336,7 @@ QString ShamelaResultWidget::getPage(QString href)
         m_bookDB.setDatabaseName(mdbpath);
 
         if (!m_bookDB.open()) {
-            qDebug("[%s:%d] Cannot open database at \"%s\".",
-                   __FILE__,
-                   __LINE__,
-                   qPrintable(buildFilePath(QString::number(bookID), archive)));
+            DB_OPEN_ERROR(buildFilePath(QString::number(bookID), archive));
 
             return QString("Error: Cannot open database.");
         }
@@ -355,7 +354,7 @@ QString ShamelaResultWidget::getPage(QString href)
             m_currentPage = m_bookQuery.value(2).toInt();
             m_currentPart = m_bookQuery.value(3).toInt();
         } else {
-            qDebug() << "No page:" << rid;
+            qWarning("No page at: %d", rid);
         }
         text.replace(QRegExp("[\\r\\n]"),"<br/>");
     }

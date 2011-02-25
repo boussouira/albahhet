@@ -42,7 +42,8 @@ void myMessageOutput(QtMsgType type, const char *msg)
 int main(int argc, char *argv[])
 {
     qInstallMsgHandler(myMessageOutput);
-    qDebug("Starting the application");
+    qDebug("Starting the application at (%s)",
+           qPrintable(QDateTime::currentDateTime().toString("dd/MM/yyyy")));
 
     QApplication app(argc, argv);
 
@@ -59,5 +60,12 @@ int main(int argc, char *argv[])
     w.loadIndexesList();
     w.haveIndexesCheck();
 
-    return app.exec();
+    int ret = app.exec();
+
+    if(!ret)
+        qDebug("Exit with success");
+    else
+        qDebug("Exit with code: %d", ret);
+
+    return ret;
 }

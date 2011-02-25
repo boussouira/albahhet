@@ -44,5 +44,16 @@ void forceRTL(QWidget *widget);
 #define PROGRESS_DIALOG_STEP(text)     progress.setValue(progress.value()+1); \
                                 progress.setLabelText(trUtf8("جاري " text "..."));
 
+#define DB_OPEN_ERROR(path) qCritical("[%s:%d] Cannot open database at \"%s\".", \
+                                __FILE__, \
+                                __LINE__, \
+                                qPrintable(path));
+
+#define SQL_ERROR(error) qCritical("[%s:%d] SQL error: \"%s\".", \
+                                          __FILE__, \
+                                          __LINE__, \
+                                          qPrintable(error));
+
+
 
 #endif // COMMON_H

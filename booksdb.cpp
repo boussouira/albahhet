@@ -1,4 +1,5 @@
 #include "booksdb.h"
+#include "common.h"
 #include "bookinfo.h"
 #include "indexinfo.h"
 #include <qvariant.h>
@@ -148,7 +149,7 @@ void BooksDB::openIndexDB()
     m_indexDB.setDatabaseName(book);
 
     if (!m_indexDB.open()) {
-        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
+        DB_OPEN_ERROR(book);
         return;
     }
 
@@ -168,7 +169,7 @@ void BooksDB::openShamelaDB()
     m_shamelaDB.setDatabaseName(mdbpath);
 
     if (!m_shamelaDB.open()) {
-        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
+        DB_OPEN_ERROR(book);
         return;
     }
 
@@ -188,7 +189,7 @@ void BooksDB::openShamelaSpecialDB()
     m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
     if (!m_shamelaSpecialDB.open()) {
-        qDebug("[%s:%d] Cannot open database at \"%s\".", __FILE__, __LINE__, qPrintable(book));
+        DB_OPEN_ERROR(book);
         return;
     }
 
@@ -252,7 +253,8 @@ void BooksDB::importBooksListFromShamela()
                 .arg(m_shamelaQuery->value(5).toInt());
 
         if(!m_indexQuery->exec(sql))
-            qDebug()<< "ERROR:" << m_indexQuery->lastError().text();
+            SQL_ERROR(m_indexQuery->lastError().text());
+
     }
 
     m_indexDB.commit();
@@ -327,7 +329,7 @@ QStringList BooksDB::addBooks(QList<int> shaIds)
         if(m_indexQuery->exec(sql)) {
             addedBooksName << m_shamelaQuery->value(0).toString();
         } else {
-            qDebug()<< "ERROR:" << m_indexQuery->lastError().text();
+            SQL_ERROR(m_indexQuery->lastError().text());
         }
     }
 
@@ -363,7 +365,7 @@ QStringList BooksDB::removeBooks(QList<int> savedIds)
     if(m_indexQuery->exec(deleteSql)) {
         return removedBooks;
     } else {
-        qDebug() << "ERROR:" << m_indexQuery->lastError().text();
+        SQL_ERROR(m_indexQuery->lastError().text());
         return QStringList();
     }
 }

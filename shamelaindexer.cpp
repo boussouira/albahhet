@@ -58,7 +58,7 @@ void ShamelaIndexer::indexBook(BookInfo *book)
                                  .arg(book->path()));
 
         if (!mdbDB.open()) {
-            qDebug("[%s:%d] Cannot open database.", __FILE__, __LINE__);
+            DB_OPEN_ERROR(book->path());
             return;
         }
         QSqlQuery shaQuery(mdbDB);

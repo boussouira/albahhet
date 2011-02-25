@@ -84,6 +84,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::saveSettings()
 {
+    qDebug("Save settings");
+
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     settings.setValue("lastQueryMust", ui->lineQueryMust->text());
@@ -514,7 +516,10 @@ void MainWindow::showStatistic()
         QMessageBox::warning(0, "Error search", err.what());
     }
     catch(...) {
-        qDebug() << "Error when opening : " << m_currentIndex->path();
+        qCritical("[%s:%d] Cannot open index at \"%s\".",
+               __FILE__,
+               __LINE__,
+               qPrintable(m_currentIndex->path()));
     }
 
 }
@@ -562,10 +567,10 @@ bool MainWindow::openDB()
     m_bookDB.setDatabaseName(mdbpath);
 
     if (!m_bookDB.open()) {
-        QMessageBox::warning(0, "Error opening database", "Cannot open main.mdb database.");
+        DB_OPEN_ERROR(m_currentIndex->shamelaMainDbPath());
         return false;
     }
-//    m_bookQuery = new QSqlQuery(m_bookDB);
+
     m_dbIsOpen = true;
 
     return true;
