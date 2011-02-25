@@ -65,8 +65,8 @@ void IndexingDialg::startIndexing()
     m_writer = NULL;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(qPrintable(m_indexInfo->path())))
-        dir.mkdir(qPrintable(m_indexInfo->path()));
+    if(!dir.exists(m_indexInfo->path()))
+        dir.mkdir(m_indexInfo->path());
     if ( IndexReader::indexExists(qPrintable(m_indexInfo->path())) ){
         if ( IndexReader::isLocked(qPrintable(m_indexInfo->path())) ){
             IndexReader::unlock(qPrintable(m_indexInfo->path()));

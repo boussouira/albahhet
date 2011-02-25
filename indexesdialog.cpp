@@ -257,8 +257,8 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     IndexWriter *writer = NULL;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(qPrintable(info->path())))
-        dir.mkdir(qPrintable(info->path()));
+    if(!dir.exists(info->path()))
+        dir.mkdir(info->path());
     if ( IndexReader::indexExists(qPrintable(info->path())) ){
         if ( IndexReader::isLocked(qPrintable(info->path())) ){
             IndexReader::unlock(qPrintable(info->path()));

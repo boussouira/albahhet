@@ -136,8 +136,8 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
         IndexWriter *writer = NULL;
         QDir dir;
         ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-        if(!dir.exists(qPrintable(info->path())))
-            dir.mkdir(qPrintable(info->path()));
+        if(!dir.exists(info->path()))
+            dir.mkdir(info->path());
         if ( IndexReader::indexExists(qPrintable(info->path())) ){
             if ( IndexReader::isLocked(qPrintable(info->path())) ){
                 IndexReader::unlock(qPrintable(info->path()));
@@ -189,8 +189,8 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
 
         QDir dir;
         ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-        if(!dir.exists(qPrintable(info->path())))
-            dir.mkdir(qPrintable(info->path()));
+        if(!dir.exists(info->path()))
+            dir.mkdir(info->path());
         if ( IndexReader::indexExists(qPrintable(info->path())) ){
             if ( IndexReader::isLocked(qPrintable(info->path())) ){
                 IndexReader::unlock(qPrintable(info->path()));
