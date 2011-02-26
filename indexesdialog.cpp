@@ -21,6 +21,7 @@ IndexesDialog::IndexesDialog(QWidget *parent) :
     hideHelpButton(this);
 
     loadIndexesList();
+    ui->widgetIndexInfo->hide();
 }
 
 IndexesDialog::~IndexesDialog()
@@ -224,7 +225,8 @@ void IndexesDialog::on_pushOptimize_clicked()
                              trUtf8("ضغط فهرس"),
                              trUtf8("هل تريد ضغط فهرس <strong>%1</strong>؟"
                                     "<br>"
-                                    "هذه العملية قد تأخذ بعض الوقت وقد يتجمد البرنامج قليلا.").arg(indexInfo->name()),
+                                    "هذه العملية قد تأخذ بعض الوقت وقد يتجمد البرنامج قليلا.")
+                             .arg(indexInfo->name()),
                              QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes){
@@ -276,4 +278,18 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     writer->close();
 
     _CLDELETE(writer);
+}
+
+void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int column)
+{
+    if(column != -1) {
+        IndexInfo *indexInfo = m_indexInfoMap[item->data(0, Qt::UserRole).toString()];
+        ui->labelIndexName->setText(indexInfo->name());
+        ui->labelShaPath->setText(indexInfo->shamelaPath());
+        ui->labelIndexPath->setText(indexInfo->path());
+
+        ui->widgetIndexInfo->show();
+    } else {
+        ui->widgetIndexInfo->hide();
+    }
 }

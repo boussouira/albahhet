@@ -10,6 +10,7 @@ namespace Ui {
 
 class IndexInfo;
 class BooksDB;
+class QTreeWidgetItem;
 
 class IndexesDialog : public QDialog
 {
@@ -33,6 +34,7 @@ private:
     QHash<QString, IndexInfo*> m_indexInfoMap;
 
 private slots:
+    void on_treeWidget_itemActivated(QTreeWidgetItem* item, int column);
     void on_pushOptimize_clicked();
     void on_pushUpDate_clicked();
     void on_pushDelete_clicked();
