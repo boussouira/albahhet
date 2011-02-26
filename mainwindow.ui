@@ -399,7 +399,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionSearchSettings">
    <property name="text">
-    <string>اعدادات البحث...</string>
+    <string>اعدادات...</string>
    </property>
   </action>
   <action name="actionEditIndexes">
