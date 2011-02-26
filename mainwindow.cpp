@@ -174,16 +174,21 @@ void MainWindow::selectIndex(QAction *action)
     action->setCheckable(true);
     action->setChecked(true);
 
+    bool haveIndex;
+
     try {
         indexChanged();
+        haveIndex = true;
     } catch (QString &str) {
         QMessageBox::critical(this, trUtf8("تحميل فهرس"),
                               trUtf8("حدث خطأ عند تحميل الفهرس:"
                                      "\n"
                                      "%1").arg(str));
-        ui->tabWidget->setEnabled(false);
-        ui->actionIndexInfo->setEnabled(false);
+        haveIndex = false;
     }
+
+    ui->tabWidget->setEnabled(haveIndex);
+    ui->actionIndexInfo->setEnabled(haveIndex);
 }
 
 void MainWindow::changeIndex()
