@@ -156,7 +156,7 @@ void IndexesDialog::on_pushEdit_clicked()
             } else {
                 QMessageBox::warning(this,
                                      trUtf8("تعديل فهرس"),
-                                     trUtf8("الاسم المدخل موجود مسبفا"));
+                                     trUtf8("الاسم المدخل موجود مسبقا"));
             }
         }
 
