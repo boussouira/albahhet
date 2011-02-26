@@ -14,6 +14,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     ui->spinBox->setValue(settings.value("resultPeerPage", 10).toInt());
     ui->checkBox->setChecked(settings.value("useTabs", true).toBool());
+    ui->checkScanIndexes->setChecked(settings.value("checkIndexes", true).toBool());
+    ui->checkShowNewIndex->setChecked(settings.value("showNewIndexMsg", true).toBool());
 }
 
 SettingsDialog::~SettingsDialog()
@@ -27,6 +29,8 @@ void SettingsDialog::saveSettings()
 
     settings.setValue("resultPeerPage", ui->spinBox->value());
     settings.setValue("useTabs", ui->checkBox->isChecked());
+    settings.setValue("checkIndexes", ui->checkScanIndexes->isChecked());
+    settings.setValue("showNewIndexMsg", ui->checkShowNewIndex->isChecked());
 
     emit settingsUpdated();
 }

@@ -150,7 +150,9 @@ void BooksDB::openIndexDB()
 
     if (!m_indexDB.open()) {
         DB_OPEN_ERROR(book);
-        return;
+
+        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                     "\n" "%1").arg(book);
     }
 
     m_indexQuery = new QSqlQuery(m_indexDB);
@@ -170,7 +172,9 @@ void BooksDB::openShamelaDB()
 
     if (!m_shamelaDB.open()) {
         DB_OPEN_ERROR(book);
-        return;
+
+        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                     "\n" "%1").arg(book);
     }
 
     m_shamelaQuery = new QSqlQuery(m_shamelaDB);
@@ -190,7 +194,9 @@ void BooksDB::openShamelaSpecialDB()
 
     if (!m_shamelaSpecialDB.open()) {
         DB_OPEN_ERROR(book);
-        return;
+
+        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                     "\n" "%1").arg(book);
     }
 
     m_shamelaSpecialQuery = new QSqlQuery(m_shamelaDB);

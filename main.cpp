@@ -51,8 +51,14 @@ int main(int argc, char *argv[])
     translator.load("qt_ar", ":/");
     app.installTranslator(&translator);
 
-    SettingsChecker check;
-    check.checkIndexes();
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+
+    bool checkIndexes = settings.value("checkIndexes", true).toBool();
+
+    if(checkIndexes) {
+        SettingsChecker check;
+        check.checkIndexes();
+    }
 
     MainWindow w;
     w.show();

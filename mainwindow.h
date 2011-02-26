@@ -78,6 +78,7 @@ protected:
     bool m_dbIsOpen;
     bool m_haveMainTable;
     bool m_useMultiTab;
+    bool m_showNewIndexMsg;
     Ui::MainWindow *ui;
 
 private slots:

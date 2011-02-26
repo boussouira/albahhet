@@ -2,6 +2,9 @@
 #include <qapplication.h>
 #include <qstringlist.h>
 #include <qfile.h>
+#include <qdir.h>
+#include <qmessagebox.h>
+#include <qdebug.h>
 
 SettingsChecker::SettingsChecker()
 {
@@ -15,12 +18,21 @@ void SettingsChecker::checkIndexes()
 
     foreach(QString index, indexesList) {
         if(!checkIndex(index)) {
-            indexesList.removeAll(index);
-            settings.remove(index);
+            int rep = QMessageBox::question(0,
+                                            QObject::trUtf8("فحص الفهارس"),
+                                            QObject::trUtf8("لم يتم العثور على بعض مجلدات او ملفات الفهرس %1"
+                                                            "\n"
+                                                            "هل تريد حذفه؟").arg(index)
+                                            , QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+            if(rep == QMessageBox::Yes) {
+                qWarning() << "SettingsChecker:" << "Remove" << index;
+                indexesList.removeAll(index);
+                settings.remove(index);
 
-            if(index == currentIndex) {
-                if(!indexesList.isEmpty())
-                    settings.setValue("current_index", indexesList.first());
+                if(index == currentIndex) {
+                    if(!indexesList.isEmpty())
+                        settings.setValue("current_index", indexesList.first());
+                }
             }
         }
     }
@@ -42,8 +54,17 @@ bool SettingsChecker::checkIndex(QString index)
     QString shaPath = settings.value("shamela_path").toString();
     int ramSize = settings.value("ram_size").toInt();
 
-    if(!QFile::exists(indexPath) || !QFile::exists(shaPath))
+    QDir indexDir(indexPath);
+    if(!indexDir.exists()) {
+        qWarning() << "Directory" << indexPath << "not found";
         return false;
+    }
+
+    QDir shaDir(shaPath);
+    if(!shaDir.exists()) {
+        qWarning() << "Directory" << shaPath << "not found";
+        return false;
+    }
 
     if(ramSize <= 0)
         settings.setValue("ram_size", 100);

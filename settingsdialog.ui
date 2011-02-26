@@ -19,7 +19,30 @@
   <property name="locale">
    <locale language="Arabic" country="Morocco"/>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>اعدادت عامة:</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="checkScanIndexes">
+        <property name="text">
+         <string>فحص الفهارس عند تشغيل البرنامج</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkShowNewIndex">
+        <property name="text">
+         <string>عرض رسالة انشاء فهرس جديد</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="sizePolicy">

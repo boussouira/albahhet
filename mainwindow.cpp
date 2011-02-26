@@ -52,13 +52,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
-    m_useMultiTab = settings.value("useTabs", true).toBool();
-
     settings.beginGroup("MainWindow");
     resize(settings.value("size", size()).toSize());
     move(settings.value("pos", pos()).toPoint());
     settings.endGroup();
+
+    loadSettings();
 
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
@@ -106,20 +105,24 @@ void MainWindow::saveSettings()
 
 void MainWindow::loadSettings()
 {
+    qDebug("Load settings");
+
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
     m_useMultiTab = settings.value("useTabs", true).toBool();
+    m_showNewIndexMsg = settings.value("showNewIndexMsg", true).toBool();
 }
 
 void MainWindow::loadIndexesList()
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
     QStringList list =  settings.value("indexes_list").toStringList();
+    QString current;
     bool haveIndexes = !list.isEmpty();
 
     if(haveIndexes) {
-        QString current = settings.value("current_index").toString();
+        current = settings.value("current_index").toString();
         if(current.isEmpty() || !list.contains(current))
             current = list.first();
 
@@ -141,14 +144,15 @@ void MainWindow::loadIndexesList()
 
             ui->menuIndexesList->addAction(action);
         }
-
-        selectIndex(current);
     }
 
     ui->tabWidget->setEnabled(haveIndexes);
     ui->actionIndexInfo->setEnabled(haveIndexes);
     ui->actionEditIndexes->setEnabled(haveIndexes);
     ui->menuIndexesList->setEnabled(haveIndexes);
+
+    if(haveIndexes)
+        selectIndex(current);
 }
 
 void MainWindow::selectIndex(QString name)
@@ -168,7 +172,16 @@ void MainWindow::selectIndex(QAction *action)
     action->setCheckable(true);
     action->setChecked(true);
 
-    indexChanged();
+    try {
+        indexChanged();
+    } catch (QString &str) {
+        QMessageBox::critical(this, trUtf8("تحميل فهرس"),
+                              trUtf8("حدث خطأ عند تحميل الفهرس:"
+                                     "\n"
+                                     "%1").arg(str));
+        ui->tabWidget->setEnabled(false);
+        ui->actionIndexInfo->setEnabled(false);
+    }
 }
 
 void MainWindow::changeIndex()
@@ -238,7 +251,7 @@ void MainWindow::indexChanged()
 void MainWindow::haveIndexesCheck()
 {
     // Check if we have any index
-    if(ui->menuIndexesList->actions().isEmpty()) {
+    if(ui->menuIndexesList->actions().isEmpty() && m_showNewIndexMsg) {
         int rep = QMessageBox::question(this,
                                         trUtf8("انشاء فهرس"),
                                         trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
