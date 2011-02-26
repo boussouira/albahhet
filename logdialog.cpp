@@ -1,5 +1,6 @@
 #include "logdialog.h"
 #include "ui_logdialog.h"
+#include "loghighlighter.h"
 #include <qfilesystemwatcher.h>
 #include <qfile.h>
 #include <qtextstream.h>
@@ -12,6 +13,7 @@ LogDialog::LogDialog(QWidget *parent) :
 
     m_logPath = qApp->applicationDirPath() + "/log.txt";
     m_watcher = new QFileSystemWatcher(this);
+    m_highlighter = new LogHighlighter(ui->textBrowser->document());
 
     m_watcher->addPath(m_logPath);
     connect(m_watcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
@@ -24,6 +26,8 @@ LogDialog::LogDialog(QWidget *parent) :
 LogDialog::~LogDialog()
 {
     delete ui;
+    delete m_watcher;
+    delete m_highlighter;
 }
 
 void LogDialog::fileChanged(const QString &path)

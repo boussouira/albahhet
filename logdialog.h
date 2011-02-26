@@ -8,6 +8,7 @@ namespace Ui {
 }
 
 class QFileSystemWatcher;
+class LogHighlighter;
 
 class LogDialog : public QDialog
 {
@@ -25,6 +26,7 @@ private:
     Ui::LogDialog *ui;
     QFileSystemWatcher *m_watcher;
     QString m_logPath;
+    LogHighlighter *m_highlighter;
 };
 
 #endif // LOGDIALOG_H

@@ -33,7 +33,8 @@ SOURCES += main.cpp \
     searchfilterhandler.cpp \
     settingschecker.cpp \
     shamelaupdaterdialog.cpp \
-    logdialog.cpp
+    logdialog.cpp \
+    loghighlighter.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -55,7 +56,8 @@ HEADERS += mainwindow.h \
     searchfilterhandler.h \
     settingschecker.h \
     shamelaupdaterdialog.h \
-    logdialog.h
+    logdialog.h \
+    loghighlighter.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \

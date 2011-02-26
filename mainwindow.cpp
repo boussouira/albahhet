@@ -731,11 +731,10 @@ void MainWindow::aboutApp()
 
 void MainWindow::showLogDialog()
 {
-    LogDialog *dialog = new LogDialog(this);
-    hideHelpButton(dialog);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    LogDialog dialog(this);
+    hideHelpButton(&dialog);
 
-    dialog->show();
+    dialog.exec();
 }
 
 Query *MainWindow::getBooksListQuery()

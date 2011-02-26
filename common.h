@@ -6,7 +6,7 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define APP_VERSION "1.0.1"
+#define APP_VERSION "1.0.5"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
