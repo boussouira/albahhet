@@ -58,6 +58,7 @@ protected slots:
     void closeTab(int index);
     QString buildFilePath(QString bkid, int archive);
     void aboutApp();
+    void showLogDialog();
 
 
 protected:

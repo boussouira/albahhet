@@ -379,6 +379,8 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>مساعدة</string>
     </property>
+    <addaction name="actionLogDialog"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menu"/>
@@ -408,6 +410,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionAbout">
    <property name="text">
     <string>حول البر نامج</string>
+   </property>
+  </action>
+  <action name="actionLogDialog">
+   <property name="text">
+    <string>نافذة الاخطاء</string>
    </property>
   </action>
  </widget>

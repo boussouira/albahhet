@@ -32,7 +32,8 @@ SOURCES += main.cpp \
     common.cpp \
     searchfilterhandler.cpp \
     settingschecker.cpp \
-    shamelaupdaterdialog.cpp
+    shamelaupdaterdialog.cpp \
+    logdialog.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -53,13 +54,15 @@ HEADERS += mainwindow.h \
     fancylineedit.h \
     searchfilterhandler.h \
     settingschecker.h \
-    shamelaupdaterdialog.h
+    shamelaupdaterdialog.h \
+    logdialog.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
     settingsdialog.ui \
     indexesdialog.ui \
-    shamelaupdaterdialog.ui
+    shamelaupdaterdialog.ui \
+    logdialog.ui
 win32 {
     win32-msvc* {
         CLUCENE_PATH = "C:/clucene-2.3.2"

@@ -10,6 +10,7 @@
 #include "settingsdialog.h"
 #include "indexesdialog.h"
 #include "shamelamodels.h"
+#include "logdialog.h"
 
 #include <qtextbrowser.h>
 #include <qfiledialog.h>
@@ -71,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSearchSettings, SIGNAL(triggered()), SLOT(showSettingsDialog()));
     connect(ui->actionEditIndexes, SIGNAL(triggered()), SLOT(editIndexes()));
     connect(ui->actionAbout, SIGNAL(triggered()), SLOT(aboutApp()));
+    connect(ui->actionLogDialog, SIGNAL(triggered()), SLOT(showLogDialog()));
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), SLOT(tabCountChange(int)));
     connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), SLOT(closeTab(int)));
 }
@@ -720,6 +722,15 @@ void MainWindow::aboutApp()
                          "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION));
 
     QMessageBox::information(this, aTitle, aText);
+}
+
+void MainWindow::showLogDialog()
+{
+    LogDialog *dialog = new LogDialog(this);
+    hideHelpButton(dialog);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    dialog->show();
 }
 
 Query *MainWindow::getBooksListQuery()
