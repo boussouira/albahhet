@@ -17,24 +17,20 @@ void myMessageOutput(QtMsgType type, const char *msg)
     QTextStream out(&debugFile);
     out.setCodec("utf-8");
 
-    QDateTime time = QDateTime::currentDateTime();
+    QString dateTime = QDateTime::currentDateTime().toString("[dd/MM/yyyy] [hh:mm:ss:zzz] ");
 
     switch (type) {
     case QtDebugMsg:
-        out << "[" << time.toString("hh:mm:ss:zzz") << "] "
-                << "[DEBUG] " << QString::fromLocal8Bit(msg) << "\n";
+        out << dateTime << "[DEBUG] " << QString::fromLocal8Bit(msg) << "\n";
         break;
     case QtWarningMsg:
-        out << "[" << time.toString("hh:mm:ss:zzz") << "] "
-                << "[WARNING] " << QString::fromLocal8Bit(msg) << "\n";
+        out << dateTime << "[WARNING] " << QString::fromLocal8Bit(msg) << "\n";
         break;
     case QtCriticalMsg:
-        out << "[" << time.toString("hh:mm:ss:zzz") << "] "
-                << "[CRITICAL] " << QString::fromLocal8Bit(msg) << "\n";
+        out << dateTime << "[CRITICAL] " << QString::fromLocal8Bit(msg) << "\n";
         break;
     case QtFatalMsg:
-        out << "[" << time.toString("hh:mm:ss:zzz") << "] "
-                << "[FATAL] " << QString::fromLocal8Bit(msg) << "\n";
+        out << dateTime << "[FATAL] " << QString::fromLocal8Bit(msg) << "\n";
         abort();
     }
 }
@@ -42,8 +38,7 @@ void myMessageOutput(QtMsgType type, const char *msg)
 int main(int argc, char *argv[])
 {
     qInstallMsgHandler(myMessageOutput);
-    qDebug("Starting the application at (%s)",
-           qPrintable(QDateTime::currentDateTime().toString("dd/MM/yyyy")));
+    qDebug("Starting the application");
 
     QApplication app(argc, argv);
 
@@ -52,13 +47,10 @@ int main(int argc, char *argv[])
     app.installTranslator(&translator);
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    SettingsChecker check;
 
-    bool checkIndexes = settings.value("checkIndexes", true).toBool();
-
-    if(checkIndexes) {
-        SettingsChecker check;
+    if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();
-    }
 
     MainWindow w;
     w.show();
