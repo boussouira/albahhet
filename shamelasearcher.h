@@ -25,11 +25,6 @@ public:
     void run();
     void clear();
 
-    int idAt(int index);
-    int bookIdAt(int index);
-    int ArchiveAt(int index);
-    float_t scoreAt(int index);
-
     int pageCount();
     int currentPage();
     int resultsCount();
@@ -48,7 +43,6 @@ public:
     void setsetDefaultOperator(bool DefautIsAnd);
     void setResultsPeerPage(int count) { m_resultParPage = count; }
 
-    QString buildFilePath(QString bkid, int archive);
     QString getTitleId(const QSqlDatabase &db, ShamelaResult *result);
 
 protected:

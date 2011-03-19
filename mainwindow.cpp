@@ -544,10 +544,6 @@ void MainWindow::showStatistic()
 
 }
 
-void MainWindow::resultsCount()
-{
-}
-
 void MainWindow::on_lineQueryMust_returnPressed()
 {
     startSearching();
@@ -658,65 +654,12 @@ qint64 MainWindow::getDirSize(const QString &path)
     return size;
 }
 
-void MainWindow::doneIndexing(int indexingTime)
-{
-    try {
-        IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->path()));
-        int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
-
-        QString txt;
-        txt.append(tr("[+] Date: %1\n")
-                   .arg(QDateTime::currentDateTime().toString("dd/MM/yyyy - HH:MM:ss")));
-#ifdef GITVERSION
-        txt.append(tr("[+] Git: %1 - Change number: %2\n").arg(GITVERSION).arg(GITCHANGENUMBER));
-#endif
-        txt.append(tr("[+] Statistics for \"%1\"\n").arg(m_currentIndex->path()));
-        txt.append(tr("[+] Current Version: %1\n").arg(ver)) ;
-        txt.append(tr("[+] Num Docs: %1\n").arg(r->numDocs()));
-
-        TermEnum* te = r->terms();
-        int32_t nterms;
-        for (nterms = 0; te->next() == true; nterms++) {
-            /* qDebug() << TCharToQString(te->term()->text()); */
-        }
-        txt.append(tr("[+] Indexing took: %1 s\n").arg(indexingTime/1000.0));
-        txt.append(tr("[+] Term count: %1\n").arg(nterms));
-        txt.append(tr("[+] Index size: %1\n").arg(getIndexSize()));
-        txt.append(tr("[+] Books size: %1\n").arg(getBooksSize()));
-        txt.append("\n");
-        _CLLDELETE(te);
-
-        r->close();
-        _CLLDELETE(r);
-
-        QFile logFile("statistic.txt");
-        if(logFile.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text)) {
-             QTextStream log(&logFile);
-             log << txt;
-        }
-    }
-    catch(...) {}
-
-}
-
 void MainWindow::showSettingsDialog()
 {
     SettingsDialog dialog(this);
     connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
 
     dialog.exec();
-}
-
-QString MainWindow::buildFilePath(QString bkid, int archive)
-{
-    if(!archive)
-        return QString("%1/Books/%2/%3.mdb")
-        .arg(m_currentIndex->shamelaPath())
-        .arg(bkid.right(1)).arg(bkid);
-    else
-        return QString("%1/Books/Archive/%2.mdb")
-                .arg(m_currentIndex->shamelaPath())
-                .arg(archive);
 }
 
 void MainWindow::aboutApp()

@@ -10,7 +10,6 @@
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
-#define FIELD_TO_INT(name, d)   _wtoi(d->get(_T(name)))
 #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
 
 #define SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")

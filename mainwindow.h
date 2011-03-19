@@ -37,7 +37,6 @@ protected:
     QString getIndexSize();
     QString getBooksSize();
     qint64 getDirSize(const QString &path);
-    void doneIndexing(int indexingTime);
     Query *getBooksListQuery();
     Query *getCatsListQuery();
     Query *getAuthorsListQuery();
@@ -52,11 +51,9 @@ protected slots:
     void editIndexes();
     void startSearching();
     void showStatistic();
-    void resultsCount();
     bool openDB();
     void tabCountChange(int count);
     void closeTab(int index);
-    QString buildFilePath(QString bkid, int archive);
     void aboutApp();
     void showLogDialog();
 

@@ -145,8 +145,6 @@ void ShamelaResultWidget::fetechFinnished()
 
 void ShamelaResultWidget::gotResult(ShamelaResult *result)
 {
-    result->setBookName(getBookName(result->bookId()));
-
     ui->webView->page()->mainFrame()->evaluateJavaScript(QString("addResult('%1');").arg(result->toHtml()));
     ui->progressBar->setValue(ui->progressBar->value()+1);
 }

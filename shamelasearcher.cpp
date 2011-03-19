@@ -112,23 +112,22 @@ void ShamelaSearcher::fetech()
     int start = m_currentPage * m_resultParPage;
     int maxResult  =  (resultsCount() >= start+m_resultParPage)
                       ? (start+m_resultParPage) : resultsCount();
-    int entryID;
+
     bool whiteBG = false;
     for(int i=start; i < maxResult;i++){
-        //Document doc = m_hits->doc(i);
-        entryID = idAt(i);
-        int bookID = bookIdAt(i);
-        int score = (int) (scoreAt(i) * 100.0);
 
-        BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
-
-        ShamelaResult *savedResult = m_resultsHash.value(entryID, 0);
-        if(savedResult != 0
-           && bookInfo->archive() == savedResult->archive()
-           && bookID == savedResult->bookId()) {
+        ShamelaResult *savedResult = m_resultsHash.value(i, 0);
+        if(savedResult) {
             emit gotResult(savedResult);
             continue;
         }
+
+        Document &doc = m_hits->doc(i);
+        int entryID = _wtoi(doc.get(_T("id")));
+        int bookID = _wtoi(doc.get(_T("bookid")));
+        int score = (int) (m_hits->score(i) * 100.0);
+
+        BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
 
         QString connName = (bookInfo->archive()) ? QString("bid_%1").arg(bookInfo->archive()) :
                            QString("bid_%1_%2").arg(bookInfo->archive()).arg(bookID);
@@ -161,6 +160,7 @@ void ShamelaSearcher::fetech()
                 result->setBookId(bookID);
                 result->setArchive(bookInfo->archive());
                 result->setId(entryID);
+                result->setBookName(bookInfo->name());
                 result->setPage(bookQuery.value(1).toInt());
                 result->setPart(bookQuery.value(2).toInt());
                 result->setScore(score);
@@ -192,7 +192,7 @@ void ShamelaSearcher::fetech()
                 /**/
 
                         emit gotResult(result);
-                m_resultsHash.insert(entryID, result);
+                m_resultsHash.insert(i, result);
             }
         }
         if(!bookInfo->archive())
@@ -221,26 +221,6 @@ void ShamelaSearcher::clear()
     m_currentPage = 0;
     m_pageCount = 0;
     m_timeSearch = 0;
-}
-
-int ShamelaSearcher::idAt(int index)
-{
-    return FIELD_TO_INT("id", (&m_hits->doc(index)));
-}
-
-int ShamelaSearcher::bookIdAt(int index)
-{
-    return FIELD_TO_INT("bookid", (&m_hits->doc(index)));
-}
-
-int ShamelaSearcher::ArchiveAt(int index)
-{
-    return FIELD_TO_INT("archive", (&m_hits->doc(index)));
-}
-
-float_t ShamelaSearcher::scoreAt(int index)
-{
-    return m_hits->score(index);
 }
 
 int ShamelaSearcher::pageCount()
@@ -301,14 +281,6 @@ void ShamelaSearcher::setSearcher(IndexSearcher *searcher)
 int ShamelaSearcher::resultsCount()
 {
     return m_hits->length();
-}
-
-QString ShamelaSearcher::buildFilePath(QString bkid, int archive)
-{
-    if(!archive)
-        return QString("%1/Books/%2/%3.mdb").arg(m_indexInfo->shamelaPath()).arg(bkid.right(1)).arg(bkid);
-    else
-        return QString("%1/Books/Archive/%2.mdb").arg(m_indexInfo->shamelaPath()).arg(archive);
 }
 
 QString ShamelaSearcher::getTitleId(const QSqlDatabase &db, ShamelaResult *result)
