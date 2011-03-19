@@ -8,6 +8,10 @@
 #include <qtextcodec.h>
 #include <qdatetime.h>
 
+#ifdef Q_OS_WIN
+    #include <Windows.h>
+#endif
+
 void myMessageOutput(QtMsgType type, const char *msg)
 {
     QFile debugFile("log.txt");
@@ -35,6 +39,18 @@ void myMessageOutput(QtMsgType type, const char *msg)
     }
 }
 
+#ifdef Q_OS_WIN
+void useArabicKeyboardLayout()
+{
+    HKL local = LoadKeyboardLayout(L"00000401", KLF_ACTIVATE);
+
+    if(local != NULL)
+        ActivateKeyboardLayout(local, KLF_ACTIVATE);
+    else
+        qWarning("Can't load Arabic Keyboard Layout");
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     qInstallMsgHandler(myMessageOutput);
@@ -51,6 +67,10 @@ int main(int argc, char *argv[])
 
     if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();
+
+#ifdef Q_OS_WIN
+    useArabicKeyboardLayout();
+#endif
 
     MainWindow w;
     w.show();

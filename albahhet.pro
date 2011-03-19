@@ -88,6 +88,7 @@ win32 {
         CLUCENE_LIBS_PATH = $$CLUCENE_BUILD_PATH/bin
     }
 
+    LIBS += -luser32
     DESTDIR = bin
     RC_FILE = win_rc.rc
 }
