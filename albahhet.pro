@@ -65,24 +65,27 @@ FORMS += mainwindow.ui \
     indexesdialog.ui \
     shamelaupdaterdialog.ui \
     logdialog.ui
+
+CLUCENE_SOURCE_PATH = $$(CLUCENE_SOURCE_PATH)
+CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)
+
 win32 {
     win32-msvc* {
-        CLUCENE_PATH = "C:/clucene-2.3.2"
-
         CONFIG(debug, debug|release) {
-            CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/debug
+            CLUCENE_LIBS_PATH = $$CLUCENE_BUILD_PATH/bin/debug
             CLUCENE_LIB_SUFFIX = "d"
         }
 
         CONFIG(release, debug|release) {
-            CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin/release
+            CLUCENE_LIBS_PATH = $$CLUCENE_BUILD_PATH/bin/release
         }
 
         DEFINES +=  _CRT_SECURE_NO_DEPRECATE \
                     _CRT_NONSTDC_NO_DEPRECATE
-    } else {
-        CLUCENE_PATH = "C:/clucene-2.3.2_mingw"
-        CLUCENE_LIBS_PATH = $$CLUCENE_PATH/bin
+    }
+
+    win32-g++ {
+        CLUCENE_LIBS_PATH = $$CLUCENE_BUILD_PATH/bin
     }
 
     DESTDIR = bin
@@ -101,10 +104,11 @@ DEFINES += _REENTRANT \
     _UCS2 \
     _UNICODE
 
-INCLUDEPATH += $$CLUCENE_PATH/src/core \
-        $$CLUCENE_PATH/src/ext \
-        $$CLUCENE_PATH/src/shared \
-        $$CLUCENE_PATH/src/contribs-lib
+INCLUDEPATH += $$CLUCENE_SOURCE_PATH/src/core \
+        $$CLUCENE_SOURCE_PATH/src/ext \
+        $$CLUCENE_SOURCE_PATH/src/shared \
+        $$CLUCENE_SOURCE_PATH/src/contribs-lib \
+        $$CLUCENE_BUILD_PATH/src/shared
 
 LIBS += -lclucene-core$$CLUCENE_LIB_SUFFIX \
         -lclucene-shared$$CLUCENE_LIB_SUFFIX \
