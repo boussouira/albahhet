@@ -406,7 +406,7 @@ void MainWindow::aboutApp()
     QString aTitle(trUtf8(" حول البرنامج"));
     QString aText(trUtf8("برنامج %1 للبحث في كتب المكتبة الشاملة"
                          "<br>"
-                         "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION));
+                         "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION_STR));
 
     QMessageBox::information(this, aTitle, aText);
 }

@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
     w.loadIndexesList();
     w.haveIndexesCheck();
 
+    QObject::connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
+
     int ret = app.exec();
 
     if(!ret)

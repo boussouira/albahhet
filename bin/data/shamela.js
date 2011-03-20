@@ -46,7 +46,7 @@ function handleEvents() {
 		
 		var bookNameText = bookReader.bookName();
 		
-		var locationBarText  = ' (' + 'الصغحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
+		var locationBarText  = ' (' + 'الصفحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
 		
 		var pageHead = $('<div>', {'class': 'pageHead'});
 		var bookNameDiv = $('<span>', {'text': bookNameText, 'class': 'bookNameDiv'});
@@ -75,7 +75,7 @@ function updateLinks(nextUrl, prevUrl) {
 
 function updateInfoBar() {
     var infoBar = $('body').find('.bLocation');
-    var infoText = ' (' + 'الصغحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
+    var infoText = ' (' + 'الصفحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
                 
     infoBar.text(infoText);
 }
