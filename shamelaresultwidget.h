@@ -45,10 +45,6 @@ protected slots:
     void populateJavaScriptWindowObject();
 
 protected:
-    QString hiText(const QString &text, const QString &strToHi);
-    QStringList buildRegExp(const QString &str);
-    QString abbreviate(QString str, int size);
-    QString cleanString(QString str);
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
 
@@ -58,12 +54,6 @@ protected:
     ShamelaBooksReader *m_bookReader;
     IndexInfo *m_indexInfo;
     BooksDB *m_booksDb;
-    QList<QString> m_colors;
-    QHash<int, QString> m_booksName;
-    int m_currentShownId;
-    int m_currentBookId;
-    int m_currentPage;
-    int m_currentPart;
     Ui::ShamelaResultWidget *ui;
 
 private slots:

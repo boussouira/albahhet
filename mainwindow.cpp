@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     deleteBooksDb(m_booksDB);
+    delete m_tabWidget;
     delete ui;
 }
 
@@ -63,6 +64,8 @@ void MainWindow::saveSettings()
 
     if(!m_currentIndex->name().isEmpty())
         settings.setValue("current_index", m_currentIndex->indexHash());
+
+    m_searchWidget->saveSettings();
 }
 
 void MainWindow::loadSettings()

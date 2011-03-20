@@ -29,29 +29,18 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
     ui->progressBar->hide();
-
-    m_colors.append("#ffff63");
-    m_colors.append("#a5ffff");
-    m_colors.append("#ff9a9c");
-    m_colors.append("#9cff9c");
-    m_colors.append("#ef86fb");
-
-    m_currentShownId = 0;
-
-    m_webView->installEventFilter(this);
-
     connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
 }
 
 ShamelaResultWidget::~ShamelaResultWidget()
 {
-    m_booksName.clear();
     delete ui;
 
     if(m_searcher->isRunning())
         m_searcher->wait();
 
+    delete m_bookReader;
     delete m_searcher;
 }
 
@@ -169,80 +158,6 @@ void ShamelaResultWidget::populateJavaScriptWindowObject()
     m_webView->addObject("bookReader", m_bookReader);
 }
 
-QString ShamelaResultWidget::cleanString(QString str)
-{
-    str.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-    str.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA -> HEH
-
-    return str;
-}
-
-QString ShamelaResultWidget::hiText(const QString &text, const QString &strToHi)
-{
-    QStringList regExpStr = buildRegExp(strToHi);
-    QString finlStr  = text;
-    int color = 0;
-    bool useColors = (regExpStr.size() <= m_colors.size());
-
-    foreach(QString regExp, regExpStr)
-        finlStr.replace(QRegExp(cleanString(regExp)),
-                        QString("<b style=\"background-color:%1\">\\1</b>")
-                        .arg(m_colors.at(useColors ? color++ : color)));
-
-//    if(!useColors)
-//        finlStr.replace(QRegExp("<\\/b>([\\s])<b style=\"background-color:[^\"]+\">"), "\\1");
-
-    return finlStr;
-}
-
-QStringList ShamelaResultWidget::buildRegExp(const QString &str)
-{
-    QString text = str;
-    text.remove(QRegExp(trUtf8("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
-
-    QStringList strWords = text.split(QRegExp(trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
-    QStringList regExpList;
-    QChar opPar('(');
-    QChar clPar(')');
-    foreach(QString word, strWords)
-    {
-        QString regExpStr;
-        regExpStr.append("\\b");
-        regExpStr.append(opPar);
-
-        for (int i=0; i< word.size();i++) {
-            if(word.at(i) == QChar('~'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('*'))
-                regExpStr.append("[\\S]*");
-            else if(word.at(i) == QChar('?'))
-                regExpStr.append("\\S");
-            else if( word.at(i) == QChar('"') || word.at(i) == opPar || word.at(i) == opPar )
-                continue;
-            else {
-                regExpStr.append(word.at(i));
-                regExpStr.append(trUtf8("[ًٌٍَُِّْ]*"));
-            }
-        }
-
-        regExpStr.append(clPar);
-        regExpStr.append("\\b");
-        regExpList.append(regExpStr);
-    }
-
-    return regExpList;
-}
-
-QString ShamelaResultWidget::abbreviate(QString str, int size) {
-        if (str.length() <= size-3)
-                return str;
-        str.simplified();
-        int index = str.lastIndexOf(' ', size-3);
-        if (index <= -1)
-                return "";
-        return str.left(index).append("...");
-}
-
 void ShamelaResultWidget::setPageCount(int current, int count)
 {
     int start = (current * m_searcher->resultsPeerPage()) + 1 ;
@@ -276,6 +191,7 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
 
     m_bookReader->setBookInfo(info);
     m_bookReader->setResult(result);
+    m_bookReader->setStringTohighlight(m_searcher->queryString());
 
     if(!m_bookReader->open())
         qFatal("Can't open book");

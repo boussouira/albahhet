@@ -38,7 +38,8 @@ SOURCES += main.cpp \
     webview.cpp \
     tabwidget.cpp \
     shamelasearchwidget.cpp \
-    shamelabooksreader.cpp
+    shamelabooksreader.cpp \
+    qthighlighter.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -65,7 +66,8 @@ HEADERS += mainwindow.h \
     webview.h \
     tabwidget.h \
     shamelasearchwidget.h \
-    shamelabooksreader.h
+    shamelabooksreader.h \
+    qthighlighter.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \

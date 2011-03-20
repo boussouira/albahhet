@@ -8,6 +8,8 @@
 
 #include "bookinfo.h"
 #include "shamelaresult.h"
+#include "qthighlighter.h"
+#include "qthighlighter.h"
 
 class ShamelaBooksReader : public QObject
 {
@@ -17,6 +19,7 @@ public:
     ~ShamelaBooksReader();
     void setResult(ShamelaResult *result);
     void setBookInfo(BookInfo *bookInfo);
+    void setStringTohighlight(QString str);
     bool open();
     void close();
 
@@ -31,6 +34,7 @@ public slots:
 
 protected:
     QSqlDatabase m_bookDB;
+    QtHighLighter m_textHighlighter;
     QSqlQuery *m_query;
     BookInfo *m_bookInfo;
     ShamelaResult *m_shamelaResult;

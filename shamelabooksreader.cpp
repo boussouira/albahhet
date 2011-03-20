@@ -9,6 +9,7 @@ ShamelaBooksReader::ShamelaBooksReader(QObject *parent) : QObject(parent)
 
 ShamelaBooksReader::~ShamelaBooksReader()
 {
+    close();
 }
 
 void ShamelaBooksReader::setResult(ShamelaResult *result)
@@ -74,12 +75,14 @@ QString ShamelaBooksReader::page(int id, bool hihgLight)
         m_currentPart = m_query->value(3).toInt();
     } else {
         qWarning("No page at: %d", id);
+        return "Error occured!";
     }
     text.replace(QRegExp("[\\r\\n]"),"<br/>");
 
     clearShorts(text);
-//    if(hihgLight)
-//        text = hiText(text, m_searcher->queryString());
+
+    if(hihgLight || m_shamelaResult->pageID() == m_currentID)
+        text = m_textHighlighter.hiText(text);
 
     return text;
 }
@@ -108,4 +111,11 @@ void ShamelaBooksReader::close()
 
     if(m_bookDB.isOpen())
         m_bookDB.close();
+
+    m_textHighlighter.clear();
+}
+
+void ShamelaBooksReader::setStringTohighlight(QString str)
+{
+    m_textHighlighter.setStringToHighlight(str);
 }

@@ -12,6 +12,18 @@ TabWidget::TabWidget(QWidget *parent) : QTabWidget(parent)
     connect(m_tabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
 }
 
+TabWidget::~TabWidget()
+{
+    for(int i=0; i < count(); i++) {
+        QWidget *w = widget(i);
+
+        if(w) {
+            removeTab(i);
+            delete w;
+        }
+    }
+}
+
 void TabWidget::updateTabBar()
 {
     if(m_tabBar->count() > 1)

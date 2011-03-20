@@ -164,10 +164,8 @@ void ShamelaSearcher::fetech()
                 result->setPage(bookQuery.value(1).toInt());
                 result->setPart(bookQuery.value(2).toInt());
                 result->setScore(score);
-                result->setText(pageText);
                 result->setTitle(getTitleId(bookDB, result));
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
-                //result->setSnippet(hiText(abbreviate(result->text(), 320), m_queryStr));
 
                 /* Highlight the text */
                 Highlighter highlighter(&hl_formatter, &scorer);
