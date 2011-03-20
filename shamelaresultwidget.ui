@@ -16,16 +16,7 @@
   <property name="layoutDirection">
    <enum>Qt::RightToLeft</enum>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
-   <item>
-    <widget class="QWebView" name="webView">
-     <property name="url">
-      <url>
-       <string>about:blank</string>
-      </url>
-     </property>
-    </widget>
-   </item>
+  <layout class="QVBoxLayout" name="mainVerticalLayout">
    <item>
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
@@ -185,13 +176,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QWebView</class>
-   <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="resources.qrc"/>
  </resources>

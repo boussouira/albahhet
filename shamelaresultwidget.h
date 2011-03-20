@@ -1,7 +1,6 @@
 #ifndef SHAMELARESULTWIDGET_H
 #define SHAMELARESULTWIDGET_H
 
-#include "cl_common.h"
 #include <qwidget.h>
 #include <qsqldatabase.h>
 #include <qhash.h>
@@ -12,6 +11,7 @@ namespace Ui {
 }
 
 class ShamelaSearcher;
+class WebView;
 class IndexInfo;
 class ShamelaResult;
 
@@ -36,9 +36,6 @@ public slots:
     void updateNavgitionLinks(QString href);
     void showNavigationButton(bool show);
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
-
 protected slots:
     void searchStarted();
     void searchFinnished();
@@ -62,6 +59,7 @@ protected:
     void buttonStat(int currentPage, int pageCount);
 
 protected:
+    WebView *m_webView;
     ShamelaSearcher *m_searcher;
     IndexInfo *m_indexInfo;
     QList<QString> m_colors;

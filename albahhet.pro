@@ -34,7 +34,10 @@ SOURCES += main.cpp \
     settingschecker.cpp \
     shamelaupdaterdialog.cpp \
     logdialog.cpp \
-    loghighlighter.cpp
+    loghighlighter.cpp \
+    webview.cpp \
+    tabwidget.cpp \
+    shamelasearchwidget.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -57,14 +60,18 @@ HEADERS += mainwindow.h \
     settingschecker.h \
     shamelaupdaterdialog.h \
     logdialog.h \
-    loghighlighter.h
+    loghighlighter.h \
+    webview.h \
+    tabwidget.h \
+    shamelasearchwidget.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
     settingsdialog.ui \
     indexesdialog.ui \
     shamelaupdaterdialog.ui \
-    logdialog.ui
+    logdialog.ui \
+    shamelasearchwidget.ui
 
 CLUCENE_SOURCE_PATH = $$(CLUCENE_SOURCE_PATH)
 CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)

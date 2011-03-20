@@ -2,30 +2,21 @@
 #include "ui_mainwindow.h"
 
 #include "common.h"
-#include "indexinfo.h"
 #include "indexingdialg.h"
-#include "shamelasearcher.h"
-#include "shamelaresultwidget.h"
-#include "arabicanalyzer.h"
+#include "shamelasearchwidget.h"
 #include "settingsdialog.h"
 #include "indexesdialog.h"
-#include "shamelamodels.h"
 #include "logdialog.h"
+#include "tabwidget.h"
 
 #include <qtextbrowser.h>
-#include <qfiledialog.h>
+#include <qfile.h>
+#include <qdir.h>
 #include <qsettings.h>
-#include <qspinbox.h>
-#include <qstandarditemmodel.h>
-#include <qaction.h>
-#include <qprogressbar.h>
 #include <qlabel.h>
-#include <qwebframe.h>
 #include <qtreewidget.h>
 #include <qevent.h>
 #include <qmessagebox.h>
-#include <qsqlquery.h>
-#include <qprogressdialog.h>
 
 MainWindow::MainWindow(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::MainWindow)
@@ -33,48 +24,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle(APP_NAME);
 
+    m_tabWidget = new TabWidget(this);
+    m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
+    m_searchWidget->setTabWidget(m_tabWidget);
+
+    m_tabWidget->addTab(m_searchWidget,
+                        QIcon(":/bin/data/images/find.png"),
+                        trUtf8("بحث"));
+    setCentralWidget(m_tabWidget);
+
     m_currentIndex = new IndexInfo();
     m_booksDB = new BooksDB();
-    m_shaModel = new ShamelaModels(this);
-
-    m_filterHandler = new SearchFilterHandler(this);
-    m_filterHandler->setShamelaModels(m_shaModel);
-
-    m_filterText << "" << "" << "";
-
-    m_searchCount = 0;
-    m_resultParPage = 10;
-    m_dbIsOpen = false;
-
-    forceRTL(ui->lineQueryMust);
-    forceRTL(ui->lineQueryShould);
-    forceRTL(ui->lineQueryShouldNot);
-    forceRTL(ui->lineFilter);
-
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-
-    settings.beginGroup("MainWindow");
-    resize(settings.value("size", size()).toSize());
-    move(settings.value("pos", pos()).toPoint());
-    settings.endGroup();
 
     loadSettings();
 
-    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
-    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
-    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
-
-    ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
-
     connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
-    connect(ui->pushSearch, SIGNAL(clicked()), SLOT(startSearching()));
     connect(ui->actionIndexInfo, SIGNAL(triggered()), SLOT(showStatistic()));
     connect(ui->actionSearchSettings, SIGNAL(triggered()), SLOT(showSettingsDialog()));
     connect(ui->actionEditIndexes, SIGNAL(triggered()), SLOT(editIndexes()));
     connect(ui->actionAbout, SIGNAL(triggered()), SLOT(aboutApp()));
     connect(ui->actionLogDialog, SIGNAL(triggered()), SLOT(showLogDialog()));
-    connect(ui->tabWidget, SIGNAL(currentChanged(int)), SLOT(tabCountChange(int)));
-    connect(ui->tabWidget, SIGNAL(tabCloseRequested(int)), SLOT(closeTab(int)));
 }
 
 MainWindow::~MainWindow()
@@ -85,16 +54,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::saveSettings()
 {
-    qDebug("Save settings");
-
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-
-    settings.setValue("lastQueryMust", ui->lineQueryMust->text());
-    settings.setValue("lastQueryShould", ui->lineQueryShould->text());
-    settings.setValue("lastQueryShouldNot", ui->lineQueryShouldNot->text());
-
-    settings.setValue("resultPeerPage", m_resultParPage);
-    settings.setValue("useTabs", m_useMultiTab);
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
@@ -107,13 +67,13 @@ void MainWindow::saveSettings()
 
 void MainWindow::loadSettings()
 {
-    qDebug("Load settings");
-
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-
-    m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
-    m_useMultiTab = settings.value("useTabs", true).toBool();
     m_showNewIndexMsg = settings.value("showNewIndexMsg", true).toBool();
+
+    settings.beginGroup("MainWindow");
+    resize(settings.value("size", size()).toSize());
+    move(settings.value("pos", pos()).toPoint());
+    settings.endGroup();
 }
 
 void MainWindow::loadIndexesList()
@@ -148,7 +108,7 @@ void MainWindow::loadIndexesList()
         }
     }
 
-    ui->tabWidget->setEnabled(haveIndexes);
+    m_tabWidget->setEnabled(haveIndexes);
     ui->actionIndexInfo->setEnabled(haveIndexes);
     ui->actionEditIndexes->setEnabled(haveIndexes);
     ui->menuIndexesList->setEnabled(haveIndexes);
@@ -187,7 +147,7 @@ void MainWindow::selectIndex(QAction *action)
         haveIndex = false;
     }
 
-    ui->tabWidget->setEnabled(haveIndex);
+    m_tabWidget->setEnabled(haveIndex);
     ui->actionIndexInfo->setEnabled(haveIndex);
 }
 
@@ -211,12 +171,6 @@ void MainWindow::changeIndex()
 
 void MainWindow::indexChanged()
 {
-    if(m_bookDB.isOpen()) {
-//        delete m_bookQuery;
-        m_bookDB.close();
-    }
-    m_dbIsOpen = false;
-
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
     if(!m_currentIndex->name().isEmpty())
@@ -229,30 +183,9 @@ void MainWindow::indexChanged()
     m_booksDB = new BooksDB();
     m_booksDB->setIndexInfo(m_currentIndex);
 
-    QProgressDialog progress(trUtf8("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
-    progress.setModal(Qt::WindowModal);
-
-    QStandardItemModel *catsModel = m_booksDB->getCatsListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة الأقسام");
-
-    QStandardItemModel *booksModel = m_booksDB->getBooksListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة الكتب");
-
-    QStandardItemModel *authModel = m_booksDB->getAuthorsListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة المؤلفيين");
-
-    m_shaModel->setBooksListModel(booksModel);
-    m_shaModel->setCatsListModel(catsModel);
-    m_shaModel->setAuthorsListModel(authModel);
-
-    ui->treeViewBooks->setModel(booksModel);
-    ui->treeViewCats->setModel(catsModel);
-    ui->treeViewAuthors->setModel(authModel);
-
-    // Set the proxy model
-    chooseProxy(ui->tabWidgetFilter->currentIndex());
-
-    progress.setValue(progress.maximum());
+    m_searchWidget->setIndexInfo(m_currentIndex);
+    m_searchWidget->setBooksDb(m_booksDB);
+    m_searchWidget->indexChanged();
 }
 
 void MainWindow::haveIndexesCheck()
@@ -309,161 +242,6 @@ void MainWindow::editIndexes()
     connect(&dialog, SIGNAL(indexesChanged()), SLOT(updateIndexesMenu()));
 
     dialog.exec();
-}
-
-void MainWindow::startSearching()
-{
-    if(!m_dbIsOpen)
-        openDB();
-
-    if(ui->lineQueryMust->text().isEmpty()){
-        if(!ui->lineQueryShould->text().isEmpty()){
-            ui->lineQueryMust->setText(ui->lineQueryShould->text());
-            ui->lineQueryShould->clear();
-        } else {
-            QMessageBox::warning(this,
-                                 trUtf8("البحث"),
-                                 trUtf8("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
-            return;
-        }
-    }
-
-    QString mustQureyStr = ui->lineQueryMust->text();
-    QString shouldQureyStr = ui->lineQueryShould->text();
-    QString shouldNotQureyStr = ui->lineQueryShouldNot->text();
-
-    normaliseSearchString(mustQureyStr);
-    normaliseSearchString(shouldQureyStr);
-    normaliseSearchString(shouldNotQureyStr);
-
-    m_searchQuery = mustQureyStr + " " + shouldQureyStr;
-
-    ArabicAnalyzer analyzer;
-    BooleanQuery *q = new BooleanQuery;
-    BooleanQuery *allFilterQuery = new BooleanQuery;
-    QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
-    queryPareser->setAllowLeadingWildcard(true);
-
-    try {
-        if(!mustQureyStr.isEmpty()) {
-            if(ui->checkQueryMust->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(mustQureyStr));
-            q->add(mq, BooleanClause::MUST);
-
-        }
-
-        if(!shouldQureyStr.isEmpty()) {
-            if(ui->checkQueryShould->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(shouldQureyStr));
-            q->add(mq, BooleanClause::SHOULD);
-
-        }
-
-        if(!shouldNotQureyStr.isEmpty()) {
-            if(ui->checkQueryShouldNot->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(shouldNotQureyStr));
-            q->add(mq, BooleanClause::MUST_NOT);
-        }
-
-        // Filtering
-        if(ui->groupBoxFilter->isChecked()) {
-            Query * filterQuery;
-            bool required = ui->radioRequired->isChecked();
-            bool prohibited = ui->radioProhibited->isChecked();
-            bool gotAFilter = false;
-
-            filterQuery = getBooksListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
-
-            filterQuery = getCatsListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
-
-            filterQuery = getAuthorsListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
-
-            if(gotAFilter) {
-                allFilterQuery->setBoost(0.0);
-                q->add(allFilterQuery, required, prohibited);
-            }
-        }
-    } catch(CLuceneError &e) {
-        if(e.number() == CL_ERR_Parse)
-            QMessageBox::warning(this,
-                                 trUtf8("خطأ في استعلام البحث"),
-                                 trUtf8("هنالك خطأ في احدى حقول البحث"
-                                        "\n"
-                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."
-                                        "\n"
-                                        "او تأكد من أنك تستخدمها بشكل صحيح"));
-        else
-            QMessageBox::warning(0,
-                                 "CLucene Error when Indexing",
-                                 tr("Error code: %1\n%2").arg(e.number()).arg(e.what()));
-
-        _CLDELETE(q);
-        _CLDELETE(queryPareser);
-
-        return;
-    }
-    catch(...) {
-        QMessageBox::warning(0,
-                             "Unkonw error when Indexing",
-                             tr("Unknow error"));
-        _CLDELETE(q);
-        _CLDELETE(queryPareser);
-
-        return;
-    }
-
-    ShamelaSearcher *m_searcher = new ShamelaSearcher;
-    m_searcher->setBooksDb(m_booksDB);
-    m_searcher->setIndexInfo(m_currentIndex);
-    m_searcher->setQueryString(m_searchQuery);
-    m_searcher->setQuery(q);
-    m_searcher->setResultsPeerPage(m_resultParPage);
-
-    ShamelaResultWidget *widget;
-    int index=1;
-    QString title = trUtf8("%1 (%2)")
-                    .arg(m_currentIndex->name())
-                    .arg(++m_searchCount);
-
-    if(m_useMultiTab || ui->tabWidget->count() < 2) {
-        widget = new ShamelaResultWidget(this);
-        index = ui->tabWidget->addTab(widget, title);
-    } else {
-        widget = qobject_cast<ShamelaResultWidget*>(ui->tabWidget->widget(index));
-        widget->clearResults();
-    }
-
-    widget->setShamelaSearch(m_searcher);
-    widget->setIndexInfo(m_currentIndex);
-
-    ui->tabWidget->setCurrentIndex(index);
-    ui->tabWidget->setTabText(index, title);
-
-    widget->doSearch();
 }
 
 void MainWindow::showStatistic()
@@ -544,54 +322,6 @@ void MainWindow::showStatistic()
 
 }
 
-void MainWindow::on_lineQueryMust_returnPressed()
-{
-    startSearching();
-}
-
-void MainWindow::on_lineQueryShould_returnPressed()
-{
-    startSearching();
-}
-
-void MainWindow::on_lineQueryShouldNot_returnPressed()
-{
-    startSearching();
-}
-
-void MainWindow::tabCountChange(int /*count*/)
-{
-    ui->tabWidget->setTabsClosable(ui->tabWidget->count() > 1);
-}
-
-void MainWindow::closeTab(int index)
-{
-    if(index > 0) {
-        QWidget *w = ui->tabWidget->widget(index);
-        ui->tabWidget->removeTab(index);
-        delete w;
-    }
-}
-
-bool MainWindow::openDB()
-{
-    m_dbIsOpen = false;
-
-    m_bookDB = QSqlDatabase::addDatabase("QODBC", "shamelaBook");
-    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                      .arg(m_currentIndex->shamelaMainDbPath());
-    m_bookDB.setDatabaseName(mdbpath);
-
-    if (!m_bookDB.open()) {
-        DB_OPEN_ERROR(m_currentIndex->shamelaMainDbPath());
-        return false;
-    }
-
-    m_dbIsOpen = true;
-
-    return true;
-}
-
 QString MainWindow::getIndexSize()
 {
     QDir dir;
@@ -658,6 +388,7 @@ void MainWindow::showSettingsDialog()
 {
     SettingsDialog dialog(this);
     connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
+    connect(&dialog, SIGNAL(settingsUpdated()), m_searchWidget, SLOT(loadSettings()));
 
     dialog.exec();
 }
@@ -679,71 +410,3 @@ void MainWindow::showLogDialog()
 
     dialog.exec();
 }
-
-Query *MainWindow::getBooksListQuery()
-{
-    int count = 0;
-    BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedBooks()) {
-        TermQuery *term = new TermQuery(new Term(_T("bookid"), QStringToTChar(QString::number(id))));
-        q->add(term,  BooleanClause::SHOULD);
-        count++;
-    }
-
-    return count ? q : NULL;
-}
-
-Query *MainWindow::getCatsListQuery()
-{
-    int count = 0;
-    BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedCats()) {
-        TermQuery *term = new TermQuery(new Term(_T("cat"), QStringToTChar(QString::number(id))));
-        q->add(term,  BooleanClause::SHOULD);
-        count++;
-    }
-
-    return count ? q : NULL;
-}
-
-Query *MainWindow::getAuthorsListQuery()
-{
-    int count = 0;
-    BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedAuthors()) {
-        TermQuery *term = new TermQuery(new Term(_T("author"), QStringToTChar(QString::number(id))));
-        q->add(term, BooleanClause::SHOULD);
-        count++;
-    }
-
-    return count ? q : NULL;
-}
-
-void MainWindow::chooseProxy(int index)
-{
-    m_filterHandler->setFilterSourceModel(index);
-
-    if(index == 0)
-        ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
-
-    else if(index == 1)
-        ui->treeViewCats->setModel(m_filterHandler->getFilterModel());
-
-    else
-        ui->treeViewAuthors->setModel(m_filterHandler->getFilterModel());
-}
-
-void MainWindow::on_lineFilter_textChanged(QString text)
-{
-    m_filterText[ui->tabWidgetFilter->currentIndex()] = text;
-
-    m_filterHandler->setFilterText(text);
-}
-
-void MainWindow::on_tabWidgetFilter_currentChanged(int index)
-{
-    chooseProxy(index);
-
-    ui->lineFilter->setText(m_filterText.at(index));
-}
-

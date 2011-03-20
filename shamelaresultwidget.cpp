@@ -1,28 +1,19 @@
 #include "shamelaresultwidget.h"
 #include "ui_shamelaresultwidget.h"
 
-#include "shamelaresult.h"
-#include "indexinfo.h"
-#include "shamelasearcher.h"
 #include "common.h"
-#include "cl_common.h"
+#include "shamelaresult.h"
+#include "shamelasearcher.h"
+#include "webview.h"
 
-#include <qtextbrowser.h>
-#include <qfiledialog.h>
 #include <qsettings.h>
-#include <qspinbox.h>
-#include <qstandarditemmodel.h>
-#include <qaction.h>
-#include <qprogressbar.h>
-#include <qlabel.h>
-#include <qwebframe.h>
+#include <qfile.h>
 #include <qsqlquery.h>
 #include <qsqlerror.h>
 #include <qtextstream.h>
 #include <qdebug.h>
 #include <qmessagebox.h>
-#include <qmenu.h>
-#include "qevent.h"
+#include <qevent.h>
 
 ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     QWidget(parent),
@@ -31,7 +22,10 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     ui->setupUi(this);
 
     m_searcher = new ShamelaSearcher;
-    ui->webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+    m_webView = new WebView(this);
+    m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+    ui->mainVerticalLayout->insertWidget(0, m_webView);
+
     ui->progressBar->hide();
 
     m_colors.append("#ffff63");
@@ -42,9 +36,9 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
     m_currentShownId = 0;
 
-    ui->webView->installEventFilter(this);
+    m_webView->installEventFilter(this);
 
-    connect(ui->webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
+    connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
 }
 
@@ -78,7 +72,7 @@ void ShamelaResultWidget::doSearch()
 void ShamelaResultWidget::clearResults()
 {
     m_searcher->clear();
-    ui->webView->setHtml("");
+    m_webView->setHtml("");
     showNavigationButton(false);
 }
 
@@ -86,7 +80,7 @@ void ShamelaResultWidget::searchStarted()
 {
     QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
 
-    ui->webView->setHtml(QString("<html><head><title></title>"
+    m_webView->setHtml(QString("<html><head><title></title>"
                                  "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>"
                                  "<link href=\"%1/data/default.css\" rel=\"stylesheet\" type=\"text/css\"/>"
                                  "</head>"
@@ -101,18 +95,18 @@ void ShamelaResultWidget::searchStarted()
     ui->progressBar->setMaximum(0);
     ui->progressBar->show();
 
-    ui->webView->page()->mainFrame()->evaluateJavaScript("searchStarted();");
+    m_webView->execJS("searchStarted();");
 }
 
 void ShamelaResultWidget::searchFinnished()
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript("searchFinnished();");
+    m_webView->execJS("searchFinnished();");
 
     if(m_searcher->resultsCount() > 0) {
-        ui->webView->page()->mainFrame()->evaluateJavaScript(QString("setSearchTime(%1);")
+        m_webView->execJS(QString("setSearchTime(%1);")
                                                              .arg(m_searcher->searchTime()));
     } else {
-        ui->webView->page()->mainFrame()->evaluateJavaScript("noResultFound();");
+        m_webView->execJS("noResultFound();");
 
         showNavigationButton(false);
     }
@@ -122,7 +116,7 @@ void ShamelaResultWidget::searchFinnished()
 
 void ShamelaResultWidget::fetechStarted()
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript("fetechStarted();");
+    m_webView->execJS("fetechStarted();");
     showNavigationButton(false);
     ui->progressBar->setMaximum(m_searcher->resultsPeerPage());
     ui->progressBar->setValue(0);
@@ -136,7 +130,7 @@ void ShamelaResultWidget::fetechFinnished()
         setPageCount(search->currentPage(), search->resultsCount());
     }
 
-    ui->webView->page()->mainFrame()->evaluateJavaScript("handleEvents();");
+    m_webView->execJS("handleEvents();");
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressBar->hide();
     showNavigationButton(true);
@@ -145,7 +139,7 @@ void ShamelaResultWidget::fetechFinnished()
 
 void ShamelaResultWidget::gotResult(ShamelaResult *result)
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("addResult('%1');").arg(result->toHtml()));
+    m_webView->execJS(QString("addResult('%1');").arg(result->toHtml()));
     ui->progressBar->setValue(ui->progressBar->value()+1);
 }
 
@@ -161,7 +155,7 @@ void ShamelaResultWidget::gotException(QString what, int id)
         desc = what;
     }
 
-    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("searchException('%1', '%2');")
+    m_webView->execJS(QString("searchException('%1', '%2');")
                                                          .arg(str)
                                                          .arg(desc));
     ui->progressBar->hide();
@@ -169,7 +163,7 @@ void ShamelaResultWidget::gotException(QString what, int id)
 
 void ShamelaResultWidget::populateJavaScriptWindowObject()
 {
-    ui->webView->page()->mainFrame()->addToJavaScriptWindowObject("resultWidget", this);
+    m_webView->page()->mainFrame()->addToJavaScriptWindowObject("resultWidget", this);
 }
 
 QString ShamelaResultWidget::cleanString(QString str)
@@ -401,11 +395,11 @@ QString ShamelaResultWidget::formPrevUrl(QString href)
 
 void ShamelaResultWidget::updateNavgitionLinks(QString href)
 {
-    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("updateLinks('%1', '%2');")
+    m_webView->execJS(QString("updateLinks('%1', '%2');")
                                                          .arg(formNextUrl(href))
                                                          .arg(formPrevUrl(href)));
 
-    ui->webView->page()->mainFrame()->evaluateJavaScript(QString("updateInfoBar('%1', '%2', '%3');")
+    m_webView->execJS(QString("updateInfoBar('%1', '%2', '%3');")
                                                          .arg(currentBookName())
                                                          .arg(currentPage())
                                                          .arg(currentPart()));
@@ -444,25 +438,5 @@ void ShamelaResultWidget::writeHtmlResult()
 
     QTextStream out(&file);
     out.setCodec("UTF-8");
-    out << ui->webView->page()->mainFrame()->toHtml();
-}
-
-bool ShamelaResultWidget::eventFilter(QObject *obj, QEvent *event)
-{
-    /*
-    if(obj == ui->webView) {
-        if(event->type() == QEvent::ContextMenu) {
-            QContextMenuEvent *e = static_cast<QContextMenuEvent*>(event);
-//            QMenu *menu = ui->webView->page()->createStandardContextMenu();
-            QMenu *menu = new QMenu(this);
-            QAction *action = new QAction(trUtf8("نسخ"), this);
-            action->setEnabled(!ui->webView->page()->selectedText().isEmpty());
-            menu->addAction(action);
-            menu->exec(e->globalPos());
-
-            return true;
-        }
-    }
-*/
-    return QWidget::eventFilter(obj, event);
+    out << m_webView->html();
 }
