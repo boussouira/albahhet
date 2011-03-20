@@ -11,6 +11,7 @@ public:
     WebView(QWidget* parent = 0);
     void execJS(QString js);
     QString html();
+    void addObject(const QString &name, QObject *object);
 
 public slots:
     void setText(const QString &text);

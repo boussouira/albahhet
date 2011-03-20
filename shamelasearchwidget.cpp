@@ -223,6 +223,7 @@ void ShamelaSearchWidget::search()
 
     widget->setShamelaSearch(m_searcher);
     widget->setIndexInfo(m_currentIndex);
+    widget->setBooksDb(m_booksDB);
 
     m_tabWidget->setCurrentIndex(index);
     m_tabWidget->setTabText(index, title);

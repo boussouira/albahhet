@@ -19,3 +19,8 @@ QString WebView::html()
 {
     return m_frame->toHtml();
 }
+
+void WebView::addObject(const QString &name, QObject *object)
+{
+    m_frame->addToJavaScriptWindowObject(name, object);
+}

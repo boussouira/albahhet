@@ -36,24 +36,24 @@ QString ShamelaResult::toHtml()
         m_html = QObject::trUtf8("<div class=\"result %1\">"
                                  "<div class=\"result_head\">"
                                  "<h3>%2</h3>"
-                                 "<span class=\"progSpan\" style=\"width: %10px;\">"
+                                 "<span class=\"progSpan\" style=\"width: %3px;\">"
                                  "<span class=\"progSpanContainre\"></span>"
                                  "</span>"
                                  "</div>"
-                                 "<a class=\"bookLink\" href=\"http://localhost/book.html?id=%3&bookid=%8&archive=%9\">%4</a>"
-                                 "<p class=\"result_info\"> كتاب: <span class=\"bookName\">%5</span>"
-                                 "<span style=\"float: left;margin: 5px 0px\">الصفحة: <span style=\"margin-left: 7px;\">%6</span>  الجزء: <span>%7</span></span>"
+                                 "<p class=\"resultText\" bookid=\"%4\" rid=\"%5\" >%6</p>"
+                                 "<p class=\"result_info\"> كتاب: <span class=\"bookName\">%7</span>"
+                                 "<span style=\"float: left;margin: 5px 0px\">الصفحة: <span style=\"margin-left: 7px;\">%8</span>  الجزء: <span>%9</span></span>"
                                  "</p></div>")
-                .arg(m_bgColor)     // backround class name
-                .arg(m_title)       // bab
-                .arg(m_id)          // entry id
-                .arg(m_snippet.simplified())    // text snippet
-                .arg(m_bookName)     // book name
-                .arg(m_page)        // page
-                .arg(m_part)        // part
-                .arg(m_bookId)      // book id
-                .arg(m_archive)     // book archive
-                .arg(m_score);      // score
+                .arg(m_bgColor)                 // backround class name (%1)
+                .arg(m_title)                   // bab (%2)
+                .arg(m_score)                   // score (%3)
+                .arg(m_bookId)                  // Book id (%3)
+                .arg(m_id)                      // Result id (%3)
+                .arg(m_snippet.simplified())    // text snippet (%6)
+                .arg(m_bookName)                // book name (%7)
+                .arg(m_page)                    // page (%8)
+                .arg(m_part);                   // part (%9)
+
 
         m_edited = false;
     }
@@ -71,9 +71,9 @@ int ShamelaResult::part()
     return m_part;
 }
 
-int ShamelaResult::id()
+int ShamelaResult::pageID()
 {
-    return m_id;
+    return m_pageID;
 }
 
 int ShamelaResult::bookId()
@@ -156,10 +156,10 @@ void ShamelaResult::setPart(int part)
     }
 }
 
-void ShamelaResult::setId(int id)
+void ShamelaResult::setPageId(int id)
 {
-    if(m_id != id) {
-        m_id = id;
+    if(m_pageID != id) {
+        m_pageID = id;
         m_edited = true;
     }
 }
@@ -186,4 +186,17 @@ void ShamelaResult::setScore(int score)
         m_score = score;
         m_edited = true;
     }
+}
+
+void ShamelaResult::setId(int id)
+{
+    if(m_id != id) {
+        m_id = id;
+        m_edited = true;
+    }
+}
+
+int ShamelaResult::id()
+{
+    return m_id;
 }

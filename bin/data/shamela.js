@@ -5,65 +5,66 @@ var baseUrl = resultWidget.baseUrl();
 var clearBody = false;
 
 function handleEvents() {
-    $('.result .bookLink').click(function() {
+    $('.result p.resultText').click(function() {
         var d = $(this).parent('.result');
-        var a = d.find('a.bookLink');
-        var link = a.attr('href');
-        
-        if(link) {
-            lastHtml = $('body').html();
-            lastTop = d.position().top, 
-            lastLeft = d.position().left;
-            
-            var parText = $('<div>', {'class': 'parText'});
-            parText.html(resultWidget.getPage(link));
+        var p = d.find('p.resultText');
+        var bookID = p.attr('bookid');
+		var resultID = p.attr('rid');
 
-            var parNav = $('<div>', {'class': 'pageNav'});
+		lastHtml = $('body').html();
+		lastTop = d.position().top, 
+		lastLeft = d.position().left;
+		
+		var parText = $('<div>', {'class': 'parText'});
+		resultWidget.openResult(bookID, resultID);
+		
+		parText.html(bookReader.homePage());
 
-            parNav.append($('<img>', {'alt': 'الصفحة السابقة', 'src': baseUrl+'/data/images/go-next.png', 'href': link, 'class': 'prev'}).click(function() {
-                var pTxt = resultWidget.getPage($(this).attr('href'));
-                resultWidget.updateNavgitionLinks($(this).attr('href'));
-                
-                parText.html(pTxt);
-            }));   
-            
-            parNav.append($('<img>', {'alt': 'عودة للنتائج', 'src': baseUrl+'/data/images/go-up.png', 'class': 'backToResults'}).click(function() {
-                $('body').html(lastHtml);
-                scroll(lastLeft, lastTop);
-                
-                resultWidget.showNavigationButton(true);
-                handleEvents();
-            }));
-            
-            parNav.append($('<img>', {'alt': 'الصفحة التالية', 'src': baseUrl+'/data/images/go-previous.png', 'href': link, 'class': 'next'}).click(function() {
-                var nTxt = resultWidget.getPage($(this).attr('href'));
-                resultWidget.updateNavgitionLinks($(this).attr('href'));
-                
-                parText.html(nTxt);
-            }));
-            
-            var bookNameText = '<span class="bName">' + /*'كتاب: ' +*/ resultWidget.currentBookName() + '</span>';
-            
-            var locationBarText  = resultWidget.currentPage() + ' / ' + resultWidget.currentPart();
-            
-            var pageHead = $('<div>', {'class': 'pageHead'});
-            var bookNameDiv = $('<div>', {'html': bookNameText, 'class': 'bookNameDiv'});
-            var locationDiv = $('<div>', {'text': locationBarText, 'class': 'bLocation'});
-            
-            pageHead.append(bookNameDiv);
-            pageHead.append(parNav);
-            pageHead.append($('<div>', {'class': 'clearDiv'}));
-            
-            var r = $('<div>', {'class': 'currentResult'});
-            r.append(pageHead);
-            r.append(parText);
-            r.append(locationDiv);
-            
-            $('body').html(r);
-            
-            resultWidget.updateNavgitionLinks(link);
-            resultWidget.showNavigationButton(false);
-        }
+		var parNav = $('<div>', {'class': 'pageNav'});
+
+		parNav.append($('<img>', {'alt': 'الصفحة السابقة', 'src': baseUrl+'/data/images/go-next.png', 'class': 'prev'}).click(function() {
+			var pTxt = bookReader.prevPage();
+			
+			parText.html(pTxt);
+			updateInfoBar();
+		}));   
+		
+		parNav.append($('<img>', {'alt': 'عودة للنتائج', 'src': baseUrl+'/data/images/go-up.png', 'class': 'backToResults'}).click(function() {
+			$('body').html(lastHtml);
+			scroll(lastLeft, lastTop);
+			
+			resultWidget.showNavigationButton(true);
+			handleEvents();
+		}));
+		
+		parNav.append($('<img>', {'alt': 'الصفحة التالية', 'src': baseUrl+'/data/images/go-previous.png', 'class': 'next'}).click(function() {
+			var nTxt = bookReader.nextPage();
+			
+			parText.html(nTxt);
+			updateInfoBar();
+		}));
+		
+		var bookNameText = '<span class="bName">' + /*'كتاب: ' +*/ bookReader.bookName() + '</span>';
+		
+		var locationBarText  = bookReader.currentPage() + ' / ' + bookReader.currentPart();
+		
+		var pageHead = $('<div>', {'class': 'pageHead'});
+		var bookNameDiv = $('<div>', {'html': bookNameText, 'class': 'bookNameDiv'});
+		var locationDiv = $('<div>', {'text': locationBarText, 'class': 'bLocation'});
+		
+		pageHead.append(bookNameDiv);
+		pageHead.append(parNav);
+		pageHead.append($('<div>', {'class': 'clearDiv'}));
+		
+		var r = $('<div>', {'class': 'currentResult'});
+		r.append(pageHead);
+		r.append(parText);
+		r.append(locationDiv);
+		
+		$('body').html(r);
+		
+		resultWidget.showNavigationButton(false);
+		scroll(0, 0);
     });
 }
 
@@ -72,9 +73,9 @@ function updateLinks(nextUrl, prevUrl) {
     $('.prev').attr('href', prevUrl);
 }
 
-function updateInfoBar(bookName, page, part) {
+function updateInfoBar() {
     var infoBar = $('body').find('.bLocation');
-    var infoText = page + ' / ' + part ;
+    var infoText = bookReader.currentPage() + ' / ' + bookReader.currentPart() ;
                 
     infoBar.text(infoText);
     infoBar.append($('<div>', {'class': 'clearDiv'}));

@@ -36,12 +36,13 @@ body
     color:rgb(0, 68, 255);
     display:inline-block;
 } 
-.result a
+.result p.resultText
 {
     margin:0px;
     padding:5px;
     display:block;
-} 
+    cursor:pointer;
+}
 .result .result_info{
     padding:0px 10px;
     margin:5px 0px;

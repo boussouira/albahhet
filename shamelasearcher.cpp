@@ -156,10 +156,10 @@ void ShamelaSearcher::fetech()
             if(bookQuery.first()){
                 ShamelaResult *result = new ShamelaResult;
                 QString pageText(bookQuery.value(0).toString());
-
+                result->setId(i);
                 result->setBookId(bookID);
                 result->setArchive(bookInfo->archive());
-                result->setId(entryID);
+                result->setPageId(entryID);
                 result->setBookName(bookInfo->name());
                 result->setPage(bookQuery.value(1).toInt());
                 result->setPart(bookQuery.value(2).toInt());
@@ -290,7 +290,7 @@ QString ShamelaSearcher::getTitleId(const QSqlDatabase &db, ShamelaResult *resul
 
     exec = m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
                             .arg((!result->archive()) ? "title" : QString("t%1").arg(result->bookId()))
-                            .arg(result->id()));
+                            .arg(result->pageID()));
 
     if(!exec)
         SQL_ERROR(m_bookQuery.lastError().text());
@@ -352,4 +352,9 @@ void ShamelaSearcher::fetechResults(int page)
             start();
         }
     }
+}
+
+ShamelaResult * ShamelaSearcher::getSavedResult(int resultID)
+{
+    return m_resultsHash.value(resultID, 0);
 }

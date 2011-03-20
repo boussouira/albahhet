@@ -44,6 +44,7 @@ public:
     void setResultsPeerPage(int count) { m_resultParPage = count; }
 
     QString getTitleId(const QSqlDatabase &db, ShamelaResult *result);
+    ShamelaResult *getSavedResult(int resultID);
 
 protected:
     void search();

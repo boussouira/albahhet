@@ -5,6 +5,7 @@
 #include "shamelaresult.h"
 #include "shamelasearcher.h"
 #include "webview.h"
+#include "shamelabooksreader.h"
 
 #include <qsettings.h>
 #include <qfile.h>
@@ -22,6 +23,7 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     ui->setupUi(this);
 
     m_searcher = new ShamelaSearcher;
+    m_bookReader = new ShamelaBooksReader(this);
     m_webView = new WebView(this);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
@@ -163,7 +165,8 @@ void ShamelaResultWidget::gotException(QString what, int id)
 
 void ShamelaResultWidget::populateJavaScriptWindowObject()
 {
-    m_webView->page()->mainFrame()->addToJavaScriptWindowObject("resultWidget", this);
+    m_webView->addObject("resultWidget", this);
+    m_webView->addObject("bookReader", m_bookReader);
 }
 
 QString ShamelaResultWidget::cleanString(QString str)
@@ -172,14 +175,6 @@ QString ShamelaResultWidget::cleanString(QString str)
     str.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA -> HEH
 
     return str;
-}
-
-QString ShamelaResultWidget::buildFilePath(QString bkid, int archive)
-{
-    if(!archive)
-        return QString("%1/Books/%2/%3.mdb").arg(m_indexInfo->shamelaPath()).arg(bkid.right(1)).arg(bkid);
-    else
-        return QString("%1/Books/Archive/%2.mdb").arg(m_indexInfo->shamelaPath()).arg(archive);
 }
 
 QString ShamelaResultWidget::hiText(const QString &text, const QString &strToHi)
@@ -248,45 +243,6 @@ QString ShamelaResultWidget::abbreviate(QString str, int size) {
         return str.left(index).append("...");
 }
 
-QString ShamelaResultWidget::getTitleId(const QSqlDatabase &db, int pageID, int archive, int bookID)
-{
-    QSqlQuery m_bookQuery(db);
-    bool exec;
-
-    exec = m_bookQuery.exec(QString("SELECT TOP 1 tit FROM %1 WHERE id <= %2 ORDER BY id DESC")
-                     .arg((!archive) ? "title" : QString("t%1").arg(bookID))
-                     .arg(pageID));
-
-    if(!exec)
-        SQL_ERROR(m_bookQuery.lastError().text());
-
-    return m_bookQuery.first() ? m_bookQuery.value(0).toString() : QString();
-}
-
-QString ShamelaResultWidget::getBookName(int bookID)
-{
-    QString name = m_booksName.value(bookID, "");
-    if(!name.isEmpty()) {
-        return name;
-    } else {
-        QSqlQuery m_bookQuery(QSqlDatabase::database("shamelaBook"));
-        bool exec;
-
-        exec = m_bookQuery.exec(QString("SELECT bk FROM 0bok WHERE bkid = %1").arg(bookID));
-
-        if(m_bookQuery.first()){
-            QString bookName = m_bookQuery.value(0).toString();
-            m_booksName.insert(bookID, bookName);
-            return bookName;
-        }
-        else {
-            if(!exec)
-                SQL_ERROR(m_bookQuery.lastError().text());
-            return QString();
-        }
-    }
-}
-
 void ShamelaResultWidget::setPageCount(int current, int count)
 {
     int start = (current * m_searcher->resultsPeerPage()) + 1 ;
@@ -311,98 +267,23 @@ void ShamelaResultWidget::buttonStat(int currentPage, int pageCount)
     ui->buttonGoLast->setEnabled(next);
 }
 
-QString ShamelaResultWidget::getPage(QString href)
+void ShamelaResultWidget::openResult(int bookID, int resultID)
 {
-    QUrl url(href);
-    int rid = url.queryItems().at(0).second.toInt();
-    int bookID = url.queryItems().at(1).second.toInt();
-    int archive = url.queryItems().at(2).second.toInt();
+    m_bookReader->close();
 
-    m_currentBookId = bookID;
+    BookInfo *info = m_booksDb->getBookInfo(bookID);
+    ShamelaResult *result = m_searcher->getSavedResult(resultID);
 
-    QString text;
-    {
-        QSqlDatabase m_bookDB = QSqlDatabase::addDatabase("QODBC", "disBook");
-        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
-                          .arg(buildFilePath(QString::number(bookID), archive));
-        m_bookDB.setDatabaseName(mdbpath);
+    m_bookReader->setBookInfo(info);
+    m_bookReader->setResult(result);
 
-        if (!m_bookDB.open()) {
-            DB_OPEN_ERROR(buildFilePath(QString::number(bookID), archive));
-
-            return QString("Error: Cannot open database.");
-        }
-        QSqlQuery m_bookQuery(m_bookDB);
-
-//        m_bookQuery.exec(QString("SELECT TOP 1 id, nass, page, part FROM %1 "
-//                                 "WHERE id <= %2 ORDER BY id DESC")
-        m_bookQuery.exec(QString("SELECT id, nass, page, part FROM %1 WHERE id = %2")
-                         .arg((!archive) ? "book" : QString("b%1").arg(bookID))
-                         .arg(rid));
-        if(m_bookQuery.first()) {
-            text = m_bookQuery.value(1).toString();
-
-            m_currentShownId = m_bookQuery.value(0).toInt();
-            m_currentPage = m_bookQuery.value(2).toInt();
-            m_currentPart = m_bookQuery.value(3).toInt();
-        } else {
-            qWarning("No page at: %d", rid);
-        }
-        text.replace(QRegExp("[\\r\\n]"),"<br/>");
-    }
-    QSqlDatabase::removeDatabase("disBook");
-
-    clearShorts(text);
-    text = hiText(text, m_searcher->queryString());
-
-    return text;
+    if(!m_bookReader->open())
+        qFatal("Can't open book");
 }
 
-QString ShamelaResultWidget::currentBookName()
-{
-    return getBookName(m_currentBookId);
-}
 QString ShamelaResultWidget::baseUrl()
 {
     return QString("file:///%1").arg(qApp->applicationDirPath());
-}
-
-QString ShamelaResultWidget::formNextUrl(QString href)
-{
-    QUrl url(href);
-    int rid = m_currentShownId+1;
-    int bookID = url.queryItems().at(1).second.toInt();
-    int archive = url.queryItems().at(2).second.toInt();
-
-    return QString("http://localhost/book.html?id=%1&bookid=%2&archive=%3")
-            .arg(rid)
-            .arg(bookID)
-            .arg(archive);
-}
-
-QString ShamelaResultWidget::formPrevUrl(QString href)
-{
-    QUrl url(href);
-    int rid = m_currentShownId-1;
-    int bookID = url.queryItems().at(1).second.toInt();
-    int archive = url.queryItems().at(2).second.toInt();
-
-    return QString("http://localhost/book.html?id=%1&bookid=%2&archive=%3")
-            .arg(rid)
-            .arg(bookID)
-            .arg(archive);
-}
-
-void ShamelaResultWidget::updateNavgitionLinks(QString href)
-{
-    m_webView->execJS(QString("updateLinks('%1', '%2');")
-                                                         .arg(formNextUrl(href))
-                                                         .arg(formPrevUrl(href)));
-
-    m_webView->execJS(QString("updateInfoBar('%1', '%2', '%3');")
-                                                         .arg(currentBookName())
-                                                         .arg(currentPage())
-                                                         .arg(currentPart()));
 }
 
 void ShamelaResultWidget::showNavigationButton(bool show)

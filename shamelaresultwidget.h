@@ -11,8 +11,10 @@ namespace Ui {
 }
 
 class ShamelaSearcher;
+class ShamelaBooksReader;
 class WebView;
 class IndexInfo;
+class BooksDB;
 class ShamelaResult;
 
 class ShamelaResultWidget : public QWidget
@@ -24,16 +26,13 @@ public:
     ~ShamelaResultWidget();
     void setShamelaSearch(ShamelaSearcher *s);
     void setIndexInfo(IndexInfo *info) { m_indexInfo = info; }
+    void setBooksDb(BooksDB *db) {m_booksDb = db; }
     void doSearch();
     void clearResults();
 
 public slots:
-    QString getPage(QString href);
-    QString currentBookName();
-    QString currentPage() { return QString::number(m_currentPage); }
-    QString currentPart() { return QString::number(m_currentPart); }
+    void openResult(int bookID, int resultID);
     QString baseUrl();
-    void updateNavgitionLinks(QString href);
     void showNavigationButton(bool show);
 
 protected slots:
@@ -46,22 +45,19 @@ protected slots:
     void populateJavaScriptWindowObject();
 
 protected:
-    QString buildFilePath(QString bkid, int archive);
     QString hiText(const QString &text, const QString &strToHi);
     QStringList buildRegExp(const QString &str);
     QString abbreviate(QString str, int size);
     QString cleanString(QString str);
-    QString getTitleId(const QSqlDatabase &db, int pageID, int archive, int bookID);
-    QString getBookName(int bookID);
-    QString formNextUrl(QString href);
-    QString formPrevUrl(QString href);
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
 
 protected:
     WebView *m_webView;
     ShamelaSearcher *m_searcher;
+    ShamelaBooksReader *m_bookReader;
     IndexInfo *m_indexInfo;
+    BooksDB *m_booksDb;
     QList<QString> m_colors;
     QHash<int, QString> m_booksName;
     int m_currentShownId;
