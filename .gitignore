@@ -1,5 +1,5 @@
 # This file is used to ignore files which are generated
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------
 *~
 *.a
 *.core
@@ -49,22 +49,14 @@ qrc_*.cpp
 # MinGW generated files
 *.Debug
 *.Release
-# Binary files
-alkotobiya
-alkotobiya.exe
 
 # Directories to ignore
 # ---------------------
-
 build
 doc/html
-clucene_qt
-quran_index
 *.db
-tafessir_index
 debug
+release
 bin/*.exe
 bin/*.ini
 bin/*.dll
-letters.txt
-release
