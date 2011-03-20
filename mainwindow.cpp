@@ -36,6 +36,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_currentIndex = new IndexInfo();
     m_booksDB = new BooksDB();
 
+    m_logDialog = new LogDialog(this);
+    m_logDialog->hide();
+    hideHelpButton(m_logDialog);
+
     loadSettings();
 
     connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
@@ -49,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     deleteBooksDb(m_booksDB);
+    delete m_logDialog;
     delete m_tabWidget;
     delete ui;
 }
@@ -407,9 +412,7 @@ void MainWindow::aboutApp()
 }
 
 void MainWindow::showLogDialog()
-{
-    LogDialog dialog(this);
-    hideHelpButton(&dialog);
-
-    dialog.exec();
+{    
+    m_logDialog->startWatching();
+    m_logDialog->show();
 }

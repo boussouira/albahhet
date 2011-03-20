@@ -51,9 +51,18 @@ void useArabicKeyboardLayout()
 }
 #endif
 
+void clearLogFile()
+{
+    QFile debugFile("log.txt");
+    if(debugFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+        debugFile.close();
+}
+
 int main(int argc, char *argv[])
 {
+    clearLogFile();
     qInstallMsgHandler(myMessageOutput);
+
     qDebug("Starting the application");
 
     QApplication app(argc, argv);

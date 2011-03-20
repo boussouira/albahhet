@@ -12,6 +12,7 @@ class IndexInfo;
 class BooksDB;
 class TabWidget;
 class ShamelaSearchWidget;
+class LogDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -42,10 +43,10 @@ protected slots:
     void aboutApp();
     void showLogDialog();
 
-
 protected:
     TabWidget *m_tabWidget;
     ShamelaSearchWidget *m_searchWidget;
+    LogDialog *m_logDialog;
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
     QHash<QString, IndexInfo*> m_indexInfoMap;

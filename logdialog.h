@@ -17,10 +17,16 @@ class LogDialog : public QDialog
 public:
     LogDialog(QWidget *parent = 0);
     ~LogDialog();
+    void stopWatching();
+    void startWatching();
+
+protected:
+    void closeEvent(QCloseEvent *event);
 
 protected slots:
     void fileChanged(const QString & path);
     void clearLog();
+    void hideDialog();
 
 private:
     Ui::LogDialog *ui;

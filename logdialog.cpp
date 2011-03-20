@@ -4,6 +4,7 @@
 #include <qfilesystemwatcher.h>
 #include <qfile.h>
 #include <qtextstream.h>
+#include <qevent.h>
 
 LogDialog::LogDialog(QWidget *parent) :
     QDialog(parent),
@@ -15,9 +16,8 @@ LogDialog::LogDialog(QWidget *parent) :
     m_watcher = new QFileSystemWatcher(this);
     m_highlighter = new LogHighlighter(ui->textBrowser->document());
 
-    m_watcher->addPath(m_logPath);
     connect(m_watcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
-    connect(ui->pushClose, SIGNAL(clicked()), SLOT(close()));
+    connect(ui->pushClose, SIGNAL(clicked()), SLOT(hideDialog()));
     connect(ui->pushClearLog, SIGNAL(clicked()), SLOT(clearLog()));
 
     fileChanged(m_logPath);
@@ -52,4 +52,26 @@ void LogDialog::clearLog()
 {
     QFile log(m_logPath);
     log.open(QFile::WriteOnly | QFile::Text | QFile::Truncate);
+}
+
+void LogDialog::closeEvent(QCloseEvent *event)
+{
+    hideDialog();
+    event->ignore();
+}
+
+void LogDialog::stopWatching()
+{
+    m_watcher->removePath(m_logPath);
+}
+
+void LogDialog::startWatching()
+{
+    m_watcher->addPath(m_logPath);
+}
+
+void LogDialog::hideDialog()
+{
+    stopWatching();
+    hide();
 }
