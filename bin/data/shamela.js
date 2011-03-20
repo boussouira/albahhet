@@ -20,7 +20,7 @@ function handleEvents() {
 		
 		parText.html(bookReader.homePage());
 
-		var parNav = $('<div>', {'class': 'pageNav'});
+		var parNav = $('<span>', {'class': 'pageNav'});
 
 		parNav.append($('<img>', {'alt': 'الصفحة السابقة', 'src': baseUrl+'/data/images/go-next.png', 'class': 'prev'}).click(function() {
 			var pTxt = bookReader.prevPage();
@@ -44,22 +44,22 @@ function handleEvents() {
 			updateInfoBar();
 		}));
 		
-		var bookNameText = '<span class="bName">' + /*'كتاب: ' +*/ bookReader.bookName() + '</span>';
+		var bookNameText = bookReader.bookName();
 		
-		var locationBarText  = bookReader.currentPage() + ' / ' + bookReader.currentPart();
+		var locationBarText  = ' (' + 'الصغحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
 		
 		var pageHead = $('<div>', {'class': 'pageHead'});
-		var bookNameDiv = $('<div>', {'html': bookNameText, 'class': 'bookNameDiv'});
-		var locationDiv = $('<div>', {'text': locationBarText, 'class': 'bLocation'});
+		var bookNameDiv = $('<span>', {'text': bookNameText, 'class': 'bookNameDiv'});
+		var locationDiv = $('<span>', {'text': locationBarText, 'class': 'bLocation'});
 		
 		pageHead.append(bookNameDiv);
+		pageHead.append(locationDiv);
 		pageHead.append(parNav);
 		pageHead.append($('<div>', {'class': 'clearDiv'}));
 		
 		var r = $('<div>', {'class': 'currentResult'});
 		r.append(pageHead);
 		r.append(parText);
-		r.append(locationDiv);
 		
 		$('body').html(r);
 		
@@ -75,10 +75,9 @@ function updateLinks(nextUrl, prevUrl) {
 
 function updateInfoBar() {
     var infoBar = $('body').find('.bLocation');
-    var infoText = bookReader.currentPage() + ' / ' + bookReader.currentPart() ;
+    var infoText = ' (' + 'الصغحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
                 
     infoBar.text(infoText);
-    infoBar.append($('<div>', {'class': 'clearDiv'}));
 }
 
 function setStatusText(str) {

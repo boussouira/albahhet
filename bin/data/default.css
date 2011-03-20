@@ -107,13 +107,12 @@ body
     background-color:#ffebeb;
     border: 1px solid #ffc5c5;
     color:black;
-    margin-top:15px;
+    margin-top:30px;
     padding:10px;
 }
 
 .pageNav {
     color:#8C8A8C;
-    display:inline-block;
     float:left;
     margin:0;
     padding:2px 10px;
@@ -127,20 +126,16 @@ padding:0 5px;
 }
 
 .bookNameDiv {
-    display:inline-block;
     float:right;
     padding:2px 10px;
 }
 .bName {
     float:right;
 }
+
 .bLocation {
-    -webkit-border-radius:10px;
-    border:1px solid #CCCCCC;
-    margin:15px 0;
-    padding:5px;
-    text-align:center;
 }
+
 .clearDiv{
     clear:both;
 }
@@ -154,7 +149,12 @@ padding:0 5px;
 }
 .pageHead {
     -webkit-border-radius: 10px;
-    margin: 0pt;
-    border: 1px solid rgb(204, 204, 204);
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    left: 0;
+    margin: 0 12px;
     padding: 3px 5px;
+    position: fixed;
+    right: 0;
+    top: 0;
 }
