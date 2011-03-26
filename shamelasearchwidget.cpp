@@ -55,8 +55,11 @@ void ShamelaSearchWidget::closeEvent(QCloseEvent *e)
 void ShamelaSearchWidget::loadSettings()
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    m_resultParPage = settings.value("resultPeerPage", m_resultParPage).toInt();
+    m_resultParPage = settings.value("resultPeerPage", 10).toInt();
     m_useMultiTab = settings.value("useTabs", true).toBool();
+
+    if(m_resultParPage <= 0)
+        m_resultParPage = 10;
 
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
