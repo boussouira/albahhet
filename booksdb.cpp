@@ -9,9 +9,6 @@
 
 BooksDB::BooksDB()
 {
-    m_indexDbIsOpen = false;
-    m_shamelaDbIsOpen = false;
-    m_shamelaSpecialDbIsOpen = false;
 }
 
 BooksDB::~BooksDB()
@@ -68,25 +65,19 @@ void BooksDB::clear()
 
 void BooksDB::close()
 {
-    if(m_indexDbIsOpen) {
+    if(m_indexDB.isOpen()) {
         delete m_indexQuery;
-
         m_indexDB.close();
-        m_indexDbIsOpen = false;
     }
 
-    if(m_shamelaDbIsOpen) {
+    if(m_shamelaDB.isOpen()) {
         delete m_shamelaQuery;
-
         m_shamelaDB.close();
-        m_shamelaDbIsOpen = false;
     }
 
-    if(m_shamelaSpecialDbIsOpen) {
+    if(m_shamelaSpecialDB.isOpen()) {
         delete m_shamelaSpecialQuery;
-
         m_shamelaSpecialDB.close();
-        m_shamelaSpecialDbIsOpen = false;
     }
 
     if(!m_bookInfoHash.isEmpty()) {
@@ -130,77 +121,66 @@ void BooksDB::getAuthorFromShamela(int id)
 void BooksDB::setIndexInfo(IndexInfo *info)
 {
     close();
-
     m_indexInfo = info;
-    QString hash = m_indexInfo->indexHash();
-    m_indexConnName = "indexDb_" + hash;
-    m_shaConnName = "shamelaBookDb_" + hash;
-    m_shaSpeConnName = "shamelaSpecialDb_" + hash;
 }
 
 void BooksDB::openIndexDB()
 {
-    if(m_indexDbIsOpen)
-        return;
+    if(!m_indexDB.isOpen()) {
+        QString book = m_indexInfo->indexDbPath();
 
-    QString book = m_indexInfo->indexDbPath();
+        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", QString("indexDb_%1").arg(m_indexInfo->indexHash()));
+        m_indexDB.setDatabaseName(book);
 
-    m_indexDB = QSqlDatabase::addDatabase("QSQLITE", m_indexConnName);
-    m_indexDB.setDatabaseName(book);
+        if (!m_indexDB.open()) {
+            DB_OPEN_ERROR(book);
 
-    if (!m_indexDB.open()) {
-        DB_OPEN_ERROR(book);
+            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                         "\n" "%1").arg(book);
+        }
 
-        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
-                     "\n" "%1").arg(book);
+        m_indexQuery = new QSqlQuery(m_indexDB);
     }
-
-    m_indexQuery = new QSqlQuery(m_indexDB);
-    m_indexDbIsOpen = true;
 }
 
 void BooksDB::openShamelaDB()
 {
-    if(m_shamelaDbIsOpen)
-        return;
+    if(!m_shamelaDB.isOpen()) {
+        QString book = m_indexInfo->shamelaMainDbPath();
 
-    QString book = m_indexInfo->shamelaMainDbPath();
+        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaBookDb_%1").arg(m_indexInfo->indexHash()));
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
+        m_shamelaDB.setDatabaseName(mdbpath);
 
-    m_shamelaDB = QSqlDatabase::addDatabase("QODBC", m_shaConnName);
-    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
-    m_shamelaDB.setDatabaseName(mdbpath);
+        if (!m_shamelaDB.open()) {
+            DB_OPEN_ERROR(book);
 
-    if (!m_shamelaDB.open()) {
-        DB_OPEN_ERROR(book);
+            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                         "\n" "%1").arg(book);
+        }
 
-        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
-                     "\n" "%1").arg(book);
+        m_shamelaQuery = new QSqlQuery(m_shamelaDB);
     }
-
-    m_shamelaQuery = new QSqlQuery(m_shamelaDB);
-    m_shamelaDbIsOpen = true;
 }
 
 void BooksDB::openShamelaSpecialDB()
 {
-    if(m_shamelaSpecialDbIsOpen)
-        return;
+    if(!m_shamelaSpecialDB.isOpen()) {
+        QString book = m_indexInfo->shamelaSpecialDbPath();
 
-    QString book = m_indexInfo->shamelaSpecialDbPath();
+        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaSpecialDb_%1").arg(m_indexInfo->indexHash()));
+        QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
+        m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
-    m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", m_shaSpeConnName);
-    QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
-    m_shamelaSpecialDB.setDatabaseName(mdbpath);
+        if (!m_shamelaSpecialDB.open()) {
+            DB_OPEN_ERROR(book);
 
-    if (!m_shamelaSpecialDB.open()) {
-        DB_OPEN_ERROR(book);
+            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+                         "\n" "%1").arg(book);
+        }
 
-        throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
-                     "\n" "%1").arg(book);
+        m_shamelaSpecialQuery = new QSqlQuery(m_shamelaDB);
     }
-
-    m_shamelaSpecialQuery = new QSqlQuery(m_shamelaDB);
-    m_shamelaSpecialDbIsOpen = true;
 }
 
 void BooksDB::queryBooksToIndex()
@@ -380,14 +360,14 @@ QStringList BooksDB::connections()
 {
     QStringList list;
 
-    if(m_shamelaDbIsOpen)
-        list << m_shaConnName;
+    if(m_shamelaDB.isOpen())
+        list << m_shamelaDB.connectionName();
 
-    if(m_indexDbIsOpen)
-        list << m_indexConnName ;
+    if(m_indexDB.isOpen())
+        list << m_indexDB.connectionName();
 
-    if(m_shamelaSpecialDbIsOpen)
-        list << m_shaSpeConnName;
+    if(m_shamelaSpecialDB.isOpen())
+        list << m_shamelaSpecialDB.connectionName();
 
     return list;
 }

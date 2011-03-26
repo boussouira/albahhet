@@ -27,12 +27,6 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_stopFeteching = false;
     m_resultParPage = 10;
     m_timeSearch = 0;
-
-    m_colors.append("#FFFF63");
-    m_colors.append("#A5FFFF");
-    m_colors.append("#FF9A9C");
-    m_colors.append("#9CFF9C");
-    m_colors.append("#EF86FB");
 }
 
 ShamelaSearcher::~ShamelaSearcher()

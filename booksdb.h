@@ -49,17 +49,11 @@ public:
 protected:
     IndexInfo* m_indexInfo;
     QSqlDatabase m_indexDB;
-    QSqlQuery *m_indexQuery;
     QSqlDatabase m_shamelaDB;
-    QSqlQuery *m_shamelaQuery;
     QSqlDatabase m_shamelaSpecialDB;
+    QSqlQuery *m_indexQuery;
+    QSqlQuery *m_shamelaQuery;
     QSqlQuery *m_shamelaSpecialQuery;
-    bool m_indexDbIsOpen;
-    bool m_shamelaDbIsOpen;
-    bool m_shamelaSpecialDbIsOpen;
-    QString m_shaConnName;
-    QString m_indexConnName;
-    QString m_shaSpeConnName;
     QMutex m_mutex;
     QHash<int, BookInfo*> m_bookInfoHash;
     QList<int> m_savedAuthors;

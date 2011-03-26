@@ -81,7 +81,6 @@ private:
     int m_resultParPage;
     bool m_defautOpIsAnd;
     bool m_stopFeteching;
-    QList<QString> m_colors;
     QHash<int, ShamelaResult*> m_resultsHash;
 };
 
