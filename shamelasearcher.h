@@ -51,6 +51,7 @@ protected:
     void fetech();
 
 public slots:
+    void stopFeteching();
     void nextPage();
     void prevPage();
     void firstPage();
@@ -76,9 +77,10 @@ private:
     IndexSearcher *m_searcher;
     int m_currentPage;
     int m_pageCount;
-    bool m_defautOpIsAnd;
     int m_timeSearch;
     int m_resultParPage;
+    bool m_defautOpIsAnd;
+    bool m_stopFeteching;
     QList<QString> m_colors;
     QHash<int, ShamelaResult*> m_resultsHash;
 };

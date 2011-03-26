@@ -24,6 +24,7 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_pageCount = 0;
     m_action = SEARCH;
     m_defautOpIsAnd = false;
+    m_stopFeteching = false;
     m_resultParPage = 10;
     m_timeSearch = 0;
 
@@ -195,6 +196,11 @@ void ShamelaSearcher::fetech()
         }
         if(!bookInfo->archive())
             QSqlDatabase::removeDatabase(connName);
+
+        if(m_stopFeteching) {
+            m_stopFeteching = false;
+            break;
+        }
     }
 
     emit doneFeteching();
@@ -355,4 +361,9 @@ void ShamelaSearcher::fetechResults(int page)
 ShamelaResult * ShamelaSearcher::getSavedResult(int resultID)
 {
     return m_resultsHash.value(resultID, 0);
+}
+
+void ShamelaSearcher::stopFeteching()
+{
+    m_stopFeteching = true;
 }

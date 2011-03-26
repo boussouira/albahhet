@@ -28,7 +28,7 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
-    ui->progressBar->hide();
+    ui->progressWidget->hide();
     connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
 }
@@ -53,6 +53,7 @@ void ShamelaResultWidget::setShamelaSearch(ShamelaSearcher *s)
     connect(m_searcher, SIGNAL(startFeteching()), SLOT(fetechStarted()));
     connect(m_searcher, SIGNAL(doneFeteching()), SLOT(fetechFinnished()));
     connect(m_searcher, SIGNAL(gotException(QString, int)), SLOT(gotException(QString, int)));
+    connect(ui->buttonStopFetech, SIGNAL(clicked()), m_searcher, SLOT(stopFeteching()));
 }
 
 void ShamelaResultWidget::doSearch()
@@ -84,7 +85,7 @@ void ShamelaResultWidget::searchStarted()
     showNavigationButton(false);
 
     ui->progressBar->setMaximum(0);
-    ui->progressBar->show();
+    ui->progressWidget->show();
 
     m_webView->execJS("searchStarted();");
 }
@@ -102,7 +103,7 @@ void ShamelaResultWidget::searchFinnished()
         showNavigationButton(false);
     }
 
-    ui->progressBar->hide();
+    ui->progressWidget->hide();
 }
 
 void ShamelaResultWidget::fetechStarted()
@@ -111,7 +112,7 @@ void ShamelaResultWidget::fetechStarted()
     showNavigationButton(false);
     ui->progressBar->setMaximum(m_searcher->resultsPeerPage());
     ui->progressBar->setValue(0);
-    ui->progressBar->show();
+    ui->progressWidget->show();
 }
 
 void ShamelaResultWidget::fetechFinnished()
@@ -123,7 +124,7 @@ void ShamelaResultWidget::fetechFinnished()
 
     m_webView->execJS("handleEvents();");
     ui->progressBar->setValue(ui->progressBar->maximum());
-    ui->progressBar->hide();
+    ui->progressWidget->hide();
     showNavigationButton(true);
 //    writeHtmlResult();
 }
@@ -149,7 +150,7 @@ void ShamelaResultWidget::gotException(QString what, int id)
     m_webView->execJS(QString("searchException('%1', '%2');")
                                                          .arg(str)
                                                          .arg(desc));
-    ui->progressBar->hide();
+    ui->progressWidget->hide();
 }
 
 void ShamelaResultWidget::populateJavaScriptWindowObject()
