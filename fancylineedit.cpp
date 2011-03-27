@@ -127,8 +127,6 @@ FancyLineEdit::FancyLineEdit(QWidget *parent) :
     m_d->m_menuLabel = new QLabel(this);
     m_d->m_menuLabel->installEventFilter(m_d);
     updateMenuLabel();
-
-    connect(this, SIGNAL(buttonClicked()), this, SLOT(clear()));
 }
 
 FancyLineEdit::~FancyLineEdit()
@@ -244,12 +242,9 @@ QPixmap FancyLineEdit::pixmap() const
     return m_d->m_pixmap;
 }
 
-void FancyLineEdit::setMenu(QMenu *menu, bool delConnection)
+void FancyLineEdit::setMenu(QMenu *menu)
 {
      m_d->m_menu = menu;
-
-     if(delConnection)
-         disconnect(this, SIGNAL(buttonClicked()), this, SLOT(clear()));
 }
 
 QMenu *FancyLineEdit::menu() const

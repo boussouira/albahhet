@@ -26,6 +26,10 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     forceRTL(ui->lineQueryShouldNot);
     forceRTL(ui->lineFilter);
 
+    connect(ui->lineQueryMust, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
+    connect(ui->lineQueryShould, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
+    connect(ui->lineQueryShouldNot, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
+
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
     m_filterHandler->setShamelaModels(m_shaModel);
@@ -181,7 +185,7 @@ void ShamelaSearchWidget::search()
                                  trUtf8("خطأ في استعلام البحث"),
                                  trUtf8("هنالك خطأ في احدى حقول البحث"
                                         "\n"
-                                        "تأكد من حذف الأقواس و المعقوفات وغيرها..."
+                                        "تأكد من حذف الأقواس و المعقوفات وغيرها، ويمكنك فعل ذلك من خلال زر التنظيف الموجود يسار حقل البحث، بعد الضغط على هذا الزر اعد البحث"
                                         "\n"
                                         "او تأكد من أنك تستخدمها بشكل صحيح"));
         else
@@ -343,4 +347,16 @@ void ShamelaSearchWidget::on_tabWidgetFilter_currentChanged(int index)
     chooseProxy(index);
 
     ui->lineFilter->setText(m_filterText.at(index));
+}
+
+void ShamelaSearchWidget::clearSpecialChar()
+{
+    FancyLineEdit *edit = qobject_cast<FancyLineEdit*>(sender());
+
+    if(edit) {
+        TCHAR *lineText = QueryParser::escape(QSTRING_TO_TCHAR(edit->text()));
+        edit->setText(QString::fromWCharArray(lineText));
+
+        free(lineText);
+    }
 }

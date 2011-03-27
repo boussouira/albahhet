@@ -63,7 +63,7 @@ public:
 
     QPixmap pixmap() const;
 
-    void setMenu(QMenu *menu, bool delConnection=true);
+    void setMenu(QMenu *menu);
     QMenu *menu() const;
 
     void setSide(Side side);
@@ -92,6 +92,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *e);
     void focusInEvent(QFocusEvent *e);
     void focusOutEvent(QFocusEvent *e);
+
 private:
     friend class FancyLineEditPrivate;
     bool isSideStored() const;

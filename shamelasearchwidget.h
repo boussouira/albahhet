@@ -37,6 +37,7 @@ public slots:
     void search();
     void loadSettings();
     void saveSettings();
+    void clearSpecialChar();
 
 protected slots:
     void on_tabWidgetFilter_currentChanged(int index);
