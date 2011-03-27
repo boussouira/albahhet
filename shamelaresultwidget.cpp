@@ -28,6 +28,9 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    settings.value("highlightOnlyFirst", true).toBool();
+
     ui->progressWidget->hide();
     connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
@@ -96,7 +99,7 @@ void ShamelaResultWidget::searchFinnished()
 
     if(m_searcher->resultsCount() > 0) {
         m_webView->execJS(QString("setSearchTime(%1);")
-                                                             .arg(m_searcher->searchTime()));
+                          .arg(m_searcher->searchTime()));
     } else {
         m_webView->execJS("noResultFound();");
 

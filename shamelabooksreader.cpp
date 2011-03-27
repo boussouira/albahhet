@@ -47,7 +47,7 @@ bool ShamelaBooksReader::open()
 
 QString ShamelaBooksReader::homePage()
 {
-    return page(m_shamelaResult->pageID(), true);
+    return page(m_shamelaResult->pageID());
 }
 
 QString ShamelaBooksReader::nextPage()
@@ -60,7 +60,7 @@ QString ShamelaBooksReader::prevPage()
     return page(--m_currentID);
 }
 
-QString ShamelaBooksReader::page(int id, bool hihgLight)
+QString ShamelaBooksReader::page(int id)
 {
     QString text;
     m_query->exec(QString("SELECT TOP 1 id, nass, page, part FROM %1 "
@@ -82,7 +82,7 @@ QString ShamelaBooksReader::page(int id, bool hihgLight)
 
     clearShorts(text);
 
-    if(hihgLight || m_shamelaResult->pageID() == m_currentID)
+    if(m_highLightAll || m_shamelaResult->pageID() == m_currentID)
         text = m_textHighlighter.hiText(text);
 
     return text;
@@ -124,4 +124,9 @@ void ShamelaBooksReader::setStringTohighlight(QString str)
 QStringList ShamelaBooksReader::connections()
 {
     return m_connections;
+}
+
+void ShamelaBooksReader::setHighLightAll(bool hl)
+{
+    m_highLightAll = hl;
 }

@@ -20,6 +20,7 @@ public:
     void setResult(ShamelaResult *result);
     void setBookInfo(BookInfo *bookInfo);
     void setStringTohighlight(QString str);
+    void setHighLightAll(bool hl);
     bool open();
     void close();
     QStringList connections();
@@ -28,7 +29,7 @@ public slots:
     QString homePage();
     QString nextPage();
     QString prevPage();
-    QString page(int id, bool hihgLight=false);
+    QString page(int id);
     QString bookName();
     int currentPage();
     int currentPart();
@@ -43,6 +44,7 @@ protected:
     int m_currentPage;
     int m_currentPart;
     int m_currentID;
+    bool m_highLightAll;
 };
 
 #endif // SHAMELABOOKSREADER_H

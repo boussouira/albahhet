@@ -35,6 +35,11 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
 
     loadSettings();
 
+    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
+    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
+    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
+
     connect(ui->lineQueryMust, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->lineQueryShould, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->lineQueryShouldNot, SIGNAL(returnPressed()), SLOT(search()));
@@ -60,11 +65,6 @@ void ShamelaSearchWidget::loadSettings()
 
     if(m_resultParPage <= 0)
         m_resultParPage = 10;
-
-    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
-    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
-    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
-
 }
 
 void ShamelaSearchWidget::saveSettings()

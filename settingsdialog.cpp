@@ -12,10 +12,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    ui->spinBox->setValue(settings.value("resultPeerPage", 10).toInt());
-    ui->checkBox->setChecked(settings.value("useTabs", true).toBool());
+    ui->spinResultPeerPage->setValue(settings.value("resultPeerPage", 10).toInt());
+    ui->checkOpenNewTab->setChecked(settings.value("useTabs", true).toBool());
     ui->checkScanIndexes->setChecked(settings.value("checkIndexes", true).toBool());
     ui->checkShowNewIndex->setChecked(settings.value("showNewIndexMsg", true).toBool());
+    ui->checkHLFirstPage->setChecked(settings.value("highlightOnlyFirst", true).toBool());
 }
 
 SettingsDialog::~SettingsDialog()
@@ -27,10 +28,11 @@ void SettingsDialog::saveSettings()
 {
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
 
-    settings.setValue("resultPeerPage", ui->spinBox->value());
-    settings.setValue("useTabs", ui->checkBox->isChecked());
+    settings.setValue("resultPeerPage", ui->spinResultPeerPage->value());
+    settings.setValue("useTabs", ui->checkOpenNewTab->isChecked());
     settings.setValue("checkIndexes", ui->checkScanIndexes->isChecked());
     settings.setValue("showNewIndexMsg", ui->checkShowNewIndex->isChecked());
+    settings.setValue("highlightOnlyFirst", ui->checkHLFirstPage->isChecked());
 
     emit settingsUpdated();
 }
