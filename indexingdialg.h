@@ -7,6 +7,7 @@
 #include "booksdb.h"
 #include "shamelaindexer.h"
 #include "indexinfo.h"
+#include "bookprogresswidget.h"
 
 namespace Ui {
     class IndexingDialg;
@@ -41,7 +42,6 @@ protected:
     int m_booksCount;
     int m_indexedBooks;
     int m_threadCount;
-    bool m_stopIndexing;
     Ui::IndexingDialg *ui;
 
 private slots:

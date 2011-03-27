@@ -9,7 +9,7 @@
 
 ShamelaIndexer::ShamelaIndexer()
 {
-    m_stopIndexing = false;
+    m_skipCurrent = false;
 }
 
 void ShamelaIndexer::run()
@@ -22,7 +22,7 @@ void ShamelaIndexer::startIndexing()
     try {
         BookInfo *book = m_bookDB->next();
         while(book != NULL) {
-            emit fileIndexed(book->name());
+            emit currentBookName(book->name());
             indexBook(book);
             _CLDELETE(book);
 
@@ -51,7 +51,6 @@ void ShamelaIndexer::startIndexing()
 
 void ShamelaIndexer::indexBook(BookInfo *book)
 {
-//    qDebug() << " *" << book->name();
     {
         QSqlDatabase mdbDB = QSqlDatabase::addDatabase("QODBC", QString("INDEX_%1").arg(book->id()));
         mdbDB.setDatabaseName(QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
@@ -61,12 +60,19 @@ void ShamelaIndexer::indexBook(BookInfo *book)
             DB_OPEN_ERROR(book->path());
             return;
         }
+
+        book->genInfo();
+
         QSqlQuery shaQuery(mdbDB);
+        shaQuery.exec(QString("SELECT MAX(id) FROM %1").arg(book->mainTable()));
 
-        shaQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ")
-                         .arg((!book->archive()) ? "book" : QString("b%1").arg(book->id())));
+        if(shaQuery.next())
+            emit currentBookMax(shaQuery.value(0).toInt());
+
+        shaQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ").arg(book->mainTable()));
+
         Document doc;
-
+        int indexedPages = 0;
         int tokenAndNoStore = Field::STORE_NO | Field::INDEX_TOKENIZED;
         int storeAndNoToken = Field::STORE_YES | Field::INDEX_UNTOKENIZED;
 
@@ -83,6 +89,18 @@ void ShamelaIndexer::indexBook(BookInfo *book)
             m_writer->addDocument(&doc);
 
             doc.clear();
+
+            if(indexedPages > 500) {
+                emit currentBookProgress(shaQuery.value(0).toInt());
+                indexedPages = 0;
+            } else {
+                indexedPages++;
+            }
+
+            if(m_skipCurrent) {
+                m_skipCurrent = false;
+                break;
+            }
         }
 
         mdbDB.close();
@@ -92,4 +110,9 @@ void ShamelaIndexer::indexBook(BookInfo *book)
     m_bookDB->getAuthorFromShamela(book->authorID());
 
     QSqlDatabase::removeDatabase(QString("INDEX_%1").arg(book->id()));
+}
+
+void ShamelaIndexer::skipCurrentBook()
+{
+    m_skipCurrent = true;
 }

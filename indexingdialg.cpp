@@ -15,8 +15,6 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
 
-    m_stopIndexing = false;
-
     ui->spinThreadCount->setValue(QThread::idealThreadCount());
 
     setRamSize();
@@ -85,13 +83,21 @@ void IndexingDialg::startIndexing()
 
     for(int i=0;i<m_threadCount;i++) {
         ShamelaIndexer *indexThread = new ShamelaIndexer();
-        connect(indexThread, SIGNAL(fileIndexed(QString)), SLOT(addBook(QString)));
+        connect(indexThread, SIGNAL(currentBookName(QString)), SLOT(addBook(QString)));
         connect(indexThread, SIGNAL(finished()), SLOT(doneIndexing()));
         connect(indexThread, SIGNAL(indexingError()), SLOT(indexingError()));
 
         indexThread->setIndexInfo(m_indexInfo);
         indexThread->setBookDB(m_bookDB);
         indexThread->setWirter(m_writer);
+
+        BookProgressWidget *progress = new BookProgressWidget(this);
+        ui->widgetBooksProgress->layout()->addWidget(progress);
+
+        connect(indexThread, SIGNAL(currentBookName(QString)), progress, SLOT(setName(QString)));
+        connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setMax(int)));
+        connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setCurrentValue(int)));
+        connect(progress, SIGNAL(skipCurrent()), indexThread, SLOT(skipCurrentBook()));
 
         indexThread->start();
     }
@@ -146,16 +152,13 @@ void IndexingDialg::nextStep()
     } else if(i == 3) { // Stop indexing
         stopIndexing();
     } else if(i == 4) { // Done
-        saveIndexInfo();
         done(Accepted);
     }
 }
 
-void IndexingDialg::addBook(const QString &name)
+void IndexingDialg::addBook(const QString &/*name*/)
 {
     ui->progressBar->setValue(++m_indexedBooks);
-    ui->labelIndexedBook->setText(name);
-
 }
 
 void IndexingDialg::doneIndexing()
@@ -198,6 +201,8 @@ void IndexingDialg::doneIndexing()
         ui->labelIndexingInfo->setText(msg);
         ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
         _CLLDELETE(m_writer);
+
+        saveIndexInfo();
     }
 }
 
@@ -240,9 +245,8 @@ void IndexingDialg::stopIndexing()
                                     QMessageBox::No);
     if(rep==QMessageBox::Yes){
         ui->progressBar->setMaximum(0);
-        m_stopIndexing = true;
-        m_bookDB->clear();
         ui->pushNext->setEnabled(false);
+        m_bookDB->clear();
     }
 }
 
@@ -344,6 +348,7 @@ void IndexingDialg::checkIndex()
             ui->stackedWidget->setCurrentIndex(4);
 
             m_indexInfo->setRamSize(100);
+            saveIndexInfo();
         }
 
         r->close();

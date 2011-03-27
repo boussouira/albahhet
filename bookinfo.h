@@ -37,7 +37,6 @@ public:
     void setAuthorID(int id);
     void setName(const QString &name);
     void setPath(const QString &path);
-
     void debug();
 
 protected:

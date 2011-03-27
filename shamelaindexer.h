@@ -17,21 +17,25 @@ public:
     void setWirter(IndexWriter* writer) { m_writer = writer;}
     void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
     void run();
-    void stop() { m_stopIndexing = true; }
+
+public slots:
+    void skipCurrentBook();
 
 protected:
     void indexBook(BookInfo *book);
     void startIndexing();
 
 signals:
-    void fileIndexed(const QString &bookName);
+    void currentBookName(const QString &bookName);
+    void currentBookMax(int max);
+    void currentBookProgress(int value);
     void indexingError();
 
 protected:
     BooksDB *m_bookDB;
     IndexWriter* m_writer;
     IndexInfo* m_indexInfo;
-    bool m_stopIndexing;
+    bool m_skipCurrent;
 };
 
 #endif // SHAMELAINDEXER_H

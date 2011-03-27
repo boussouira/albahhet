@@ -22,6 +22,9 @@
   <layout class="QVBoxLayout" name="verticalLayout_6">
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="page">
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <property name="spacing">
@@ -361,20 +364,8 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="labelIndexedBook">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QProgressBar" name="progressBar">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="format">
-          <string>%v/%m (%p%)</string>
-         </property>
+        <widget class="QWidget" name="widgetBooksProgress" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_10"/>
         </widget>
        </item>
        <item>
@@ -389,6 +380,16 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="format">
+          <string>%v/%m (%p%)</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
