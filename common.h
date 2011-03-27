@@ -27,7 +27,6 @@ QString TCharToQString(const TCHAR *string);
 QString arPlural(int count, PULRAL word, bool html=false);
 
 void normaliseSearchString(QString &text);
-void deleteBooksDb(BooksDB *db);
 
 void hideHelpButton(QWidget *w);
 void clearShorts(QString &str);
@@ -53,6 +52,9 @@ void forceRTL(QWidget *widget);
                                           __LINE__, \
                                           qPrintable(error));
 
+#define DELETE_DB(p) { QStringList connList = p->connections(); \
+                        delete p; \
+                        foreach(QString conn, connList){QSqlDatabase::removeDatabase(conn);}}
 
 
 #endif // COMMON_H

@@ -35,13 +35,13 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
 ShamelaResultWidget::~ShamelaResultWidget()
 {
-    delete ui;
 
     if(m_searcher->isRunning())
         m_searcher->wait();
 
-    delete m_bookReader;
+    delete ui;
     delete m_searcher;
+    DELETE_DB(m_bookReader);
 }
 
 void ShamelaResultWidget::setShamelaSearch(ShamelaSearcher *s)

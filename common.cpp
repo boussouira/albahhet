@@ -67,15 +67,6 @@ void normaliseSearchString(QString &text)
     text.replace(QObject::trUtf8("؟"), "?");
 }
 
-void deleteBooksDb(BooksDB *db)
-{
-    QStringList connList = db->connections();
-    delete db;
-
-    foreach(QString conn, connList)
-        QSqlDatabase::removeDatabase(conn);
-}
-
 void hideHelpButton(QWidget *w)
 {
     Qt::WindowFlags flags = w->windowFlags();

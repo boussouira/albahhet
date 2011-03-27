@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    deleteBooksDb(m_booksDB);
+    DELETE_DB(m_booksDB);
     delete m_logDialog;
     delete m_tabWidget;
     delete ui;
@@ -186,7 +186,7 @@ void MainWindow::indexChanged()
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 
-    deleteBooksDb(m_booksDB);
+    DELETE_DB(m_booksDB);
 
     m_booksDB = new BooksDB();
     m_booksDB->setIndexInfo(m_currentIndex);

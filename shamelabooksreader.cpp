@@ -40,6 +40,7 @@ bool ShamelaBooksReader::open()
     }
 
     m_query = new QSqlQuery(m_bookDB);
+    m_connections.append(connName);
 
     return true;
 }
@@ -118,4 +119,9 @@ void ShamelaBooksReader::close()
 void ShamelaBooksReader::setStringTohighlight(QString str)
 {
     m_textHighlighter.setStringToHighlight(str);
+}
+
+QStringList ShamelaBooksReader::connections()
+{
+    return m_connections;
 }

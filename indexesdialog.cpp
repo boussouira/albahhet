@@ -207,7 +207,7 @@ void IndexesDialog::on_pushUpDate_clicked()
 
         updater.exec();
 
-        deleteBooksDb(bookDb);
+        DELETE_DB(bookDb);
 
     } else {
         QMessageBox::warning(this,

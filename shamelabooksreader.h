@@ -22,6 +22,7 @@ public:
     void setStringTohighlight(QString str);
     bool open();
     void close();
+    QStringList connections();
 
 public slots:
     QString homePage();
@@ -38,6 +39,7 @@ protected:
     QSqlQuery *m_query;
     BookInfo *m_bookInfo;
     ShamelaResult *m_shamelaResult;
+    QStringList m_connections;
     int m_currentPage;
     int m_currentPart;
     int m_currentID;

@@ -28,7 +28,7 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 IndexingDialg::~IndexingDialg()
 {
     delete ui;
-    deleteBooksDb(m_bookDB);
+    DELETE_DB(m_bookDB);
 }
 
 void IndexingDialg::showBooks()
@@ -319,7 +319,7 @@ void IndexingDialg::saveIndexInfo()
     settings.setValue("optimizeIndex", m_indexInfo->optimize());
     settings.endGroup();
 
-    deleteBooksDb(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
+    DELETE_DB(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
     m_bookDB = new BooksDB();
 
     emit indexCreated();
