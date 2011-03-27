@@ -38,6 +38,7 @@ public slots:
     void loadSettings();
     void saveSettings();
     void clearSpecialChar();
+    void enableFilterWidget();
 
 protected slots:
     void on_tabWidgetFilter_currentChanged(int index);

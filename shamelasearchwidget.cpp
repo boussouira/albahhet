@@ -38,6 +38,7 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
 
     loadSettings();
+    enableFilterWidget();
 
     QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
@@ -48,6 +49,7 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     connect(ui->lineQueryShould, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->lineQueryShouldNot, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(search()));
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(enableFilterWidget()));
 }
 
 ShamelaSearchWidget::~ShamelaSearchWidget()
@@ -150,7 +152,7 @@ void ShamelaSearchWidget::search()
         }
 
         // Filtering
-        if(ui->groupBoxFilter->isChecked()) {
+        if(ui->comboBox->currentIndex() == 1) {
             Query * filterQuery;
             bool required = ui->radioRequired->isChecked();
             bool prohibited = ui->radioProhibited->isChecked();
@@ -358,5 +360,14 @@ void ShamelaSearchWidget::clearSpecialChar()
         edit->setText(QString::fromWCharArray(lineText));
 
         free(lineText);
+    }
+}
+
+void ShamelaSearchWidget::enableFilterWidget()
+{
+    if(ui->comboBox->currentIndex() == 1) {
+        ui->groupBoxFilter->setEnabled(true);
+    } else {
+        ui->groupBoxFilter->setEnabled(false);
     }
 }
