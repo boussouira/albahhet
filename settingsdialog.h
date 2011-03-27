@@ -24,8 +24,6 @@ protected:
 
 protected slots:
     void on_pushSave_clicked();
-
-private slots:
     void on_pushCancel_clicked();
 };
 
