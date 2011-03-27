@@ -92,6 +92,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *e);
     void focusInEvent(QFocusEvent *e);
     void focusOutEvent(QFocusEvent *e);
+    void changeEvent(QEvent *e);
 
 private:
     friend class FancyLineEditPrivate;

@@ -231,6 +231,14 @@ void FancyLineEdit::focusOutEvent(QFocusEvent *e)
     QLineEdit::focusOutEvent(e);
 }
 
+void FancyLineEdit::changeEvent(QEvent *e)
+{
+    if(e->type() == QEvent::LayoutDirectionChange)
+        positionMenuLabel();
+
+    QLineEdit::changeEvent(e);
+}
+
 void FancyLineEdit::setPixmap(const QPixmap &pixmap)
 {
     m_d->m_pixmap = pixmap;
