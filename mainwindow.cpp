@@ -60,7 +60,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::saveSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
@@ -75,7 +75,7 @@ void MainWindow::saveSettings()
 
 void MainWindow::loadSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     m_showNewIndexMsg = settings.value("showNewIndexMsg", true).toBool();
 
     settings.beginGroup("MainWindow");
@@ -86,7 +86,7 @@ void MainWindow::loadSettings()
 
 void MainWindow::loadIndexesList()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     QStringList list =  settings.value("indexes_list").toStringList();
     QString current;
     bool haveIndexes = !list.isEmpty();
@@ -179,7 +179,7 @@ void MainWindow::changeIndex()
 
 void MainWindow::indexChanged()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     if(!m_currentIndex->name().isEmpty())
         settings.setValue("current_index", m_currentIndex->indexHash());

@@ -12,7 +12,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->setupUi(this);
     hideHelpButton(this);
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     ui->spinResultPeerPage->setValue(settings.value("resultPeerPage", 10).toInt());
     ui->checkOpenNewTab->setChecked(settings.value("useTabs", true).toBool());
@@ -42,7 +42,7 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::saveSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     settings.setValue("resultPeerPage", ui->spinResultPeerPage->value());
     settings.setValue("useTabs", ui->checkOpenNewTab->isChecked());

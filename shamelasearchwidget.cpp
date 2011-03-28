@@ -40,7 +40,7 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     loadSettings();
     enableFilterWidget();
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
     ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
     ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
@@ -65,9 +65,10 @@ void ShamelaSearchWidget::closeEvent(QCloseEvent *e)
 
 void ShamelaSearchWidget::loadSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     m_resultParPage = settings.value("resultPeerPage", 10).toInt();
     m_useMultiTab = settings.value("useTabs", true).toBool();
+    ui->comboBox->setCurrentIndex(settings.value("comboIndex", 0).toInt());
 
     if(m_resultParPage <= 0)
         m_resultParPage = 10;
@@ -77,7 +78,7 @@ void ShamelaSearchWidget::saveSettings()
 {
     qDebug("Save settings");
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     settings.setValue("lastQueryMust", ui->lineQueryMust->text());
     settings.setValue("lastQueryShould", ui->lineQueryShould->text());
@@ -85,6 +86,7 @@ void ShamelaSearchWidget::saveSettings()
 
     settings.setValue("resultPeerPage", m_resultParPage);
     settings.setValue("useTabs", m_useMultiTab);
+    settings.setValue("comboIndex", ui->comboBox->currentIndex());
 }
 
 void ShamelaSearchWidget::search()

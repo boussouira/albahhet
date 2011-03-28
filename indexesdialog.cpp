@@ -32,7 +32,7 @@ IndexesDialog::~IndexesDialog()
 
 bool IndexesDialog::changeIndexName(IndexInfo *index, QString newName)
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     QStringList list =  settings.value("indexes_list").toStringList();
 
     QString oldHash = index->indexHash();
@@ -65,7 +65,7 @@ bool IndexesDialog::changeIndexName(IndexInfo *index, QString newName)
 
 bool IndexesDialog::deleteIndex(IndexInfo *index)
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     QStringList list =  settings.value("indexes_list").toStringList();
     QString indexHash = index->indexHash();
 
@@ -96,7 +96,7 @@ void IndexesDialog::loadIndexesList()
 {
     ui->treeWidget->clear();
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     QStringList list =  settings.value("indexes_list").toStringList();
     QList<QTreeWidgetItem*> itemList;
     bool haveIndexes = !list.isEmpty();

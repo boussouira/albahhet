@@ -120,7 +120,7 @@ void IndexingDialg::nextStep()
             if(ui->lineIndexPath->text().isEmpty())
                 throw trUtf8("لم تقم باختيار مسار وضع الفهرس");
 
-            QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+            QSettings settings;
             QString hash = IndexInfo::indexHash(ui->lineIndexName->text());
 
             if(settings.childGroups().contains(hash))
@@ -311,7 +311,7 @@ void IndexingDialg::on_buttonSelectIndexPath_clicked()
 
 void IndexingDialg::saveIndexInfo()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     QString indexName = m_indexInfo->indexHash();
 

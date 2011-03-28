@@ -10,6 +10,7 @@ public:
     SettingsChecker();
     void checkIndexes();
     bool checkIndex(QString index);
+    void update();
 };
 
 #endif // SETTINGSCHECKER_H

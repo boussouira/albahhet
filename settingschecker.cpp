@@ -12,7 +12,7 @@ SettingsChecker::SettingsChecker()
 
 void SettingsChecker::checkIndexes()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     QStringList indexesList =  settings.value("indexes_list").toStringList();
     QString currentIndex =  settings.value("current_index").toString();
 
@@ -48,7 +48,7 @@ void SettingsChecker::checkIndexes()
 
 bool SettingsChecker::checkIndex(QString index)
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     settings.beginGroup(index);
     QString indexPath = settings.value("index_path").toString();
     QString shaPath = settings.value("shamela_path").toString();
@@ -72,4 +72,32 @@ bool SettingsChecker::checkIndex(QString index)
     settings.endGroup();
 
     return true;
+}
+
+void SettingsChecker::update()
+{
+    QSettings settings;
+
+    int currentVersion = settings.value("currentVersion", 0).toInt();
+
+    if(currentVersion == 0) {
+        if(QFile::exists(LOCAL_SETTINGS_FILE)) {
+            qDebug("Try to upgard...");
+
+            QSettings oldSettings(LOCAL_SETTINGS_FILE, QSettings::IniFormat);
+            QStringList allKeys;
+            allKeys = oldSettings.allKeys();
+
+            foreach(QString key, allKeys) {
+                settings.setValue(key, oldSettings.value(key));
+            }
+
+            if(!QFile::remove(LOCAL_SETTINGS_FILE))
+                qWarning("Can't delete old settings file: \"%s\"", qPrintable(LOCAL_SETTINGS_FILE));
+            else
+                qDebug("Delete old settings file...");
+        }
+    }
+
+    settings.setValue("currentVersion", APP_VERSION);
 }

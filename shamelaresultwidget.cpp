@@ -28,7 +28,7 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     settings.value("highlightOnlyFirst", true).toBool();
 
     ui->progressWidget->hide();
