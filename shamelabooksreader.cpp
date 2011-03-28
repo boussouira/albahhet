@@ -5,6 +5,7 @@
 ShamelaBooksReader::ShamelaBooksReader(QObject *parent) : QObject(parent)
 {
     m_query = NULL;
+    m_highLightAll = false;
 }
 
 ShamelaBooksReader::~ShamelaBooksReader()
@@ -88,7 +89,7 @@ QString ShamelaBooksReader::page(int id)
 
     clearShorts(text);
 
-    if(m_highLightAll || m_shamelaResult->pageID() == m_currentID)
+    if(m_highLightAll || (m_shamelaResult->pageID() == m_currentID))
         text = m_textHighlighter.hiText(text);
 
     return text;
