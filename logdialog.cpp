@@ -68,6 +68,7 @@ void LogDialog::stopWatching()
 void LogDialog::startWatching()
 {
     m_watcher->addPath(m_logPath);
+    fileChanged(m_logPath);
 }
 
 void LogDialog::hideDialog()
