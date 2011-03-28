@@ -112,7 +112,7 @@ void ShamelaSearchWidget::search()
 
     m_searchQuery = mustQureyStr + " " + shouldQureyStr;
 
-    ArabicAnalyzer analyzer;
+    ArabicAnalyzer analyzer("C:\\Documents and Settings\\Administrateur\\Bureau\\stopwords.txt", "UTF-8");
     BooleanQuery *q = new BooleanQuery;
     BooleanQuery *allFilterQuery = new BooleanQuery;
     QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);

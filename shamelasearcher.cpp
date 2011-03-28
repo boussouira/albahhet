@@ -98,7 +98,7 @@ void ShamelaSearcher::fetech()
 {
     emit startFeteching();
 
-    ArabicAnalyzer hl_analyzer;
+    ArabicAnalyzer hl_analyzer("C:\\Documents and Settings\\Administrateur\\Bureau\\stopwords.txt", "UTF-8");
     QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->path()))));
     SimpleCssFormatter hl_formatter;
     int maxNumFragmentsRequired = 30;

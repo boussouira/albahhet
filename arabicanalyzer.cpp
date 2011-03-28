@@ -16,6 +16,19 @@ ArabicAnalyzer::ArabicAnalyzer()
 {
 }
 
+ArabicAnalyzer::ArabicAnalyzer(const TCHAR **stopWord): stopSet(_CLNEW CLTCSetList(true))
+{
+    StopFilter::fillStopTable(stopSet, stopWord);
+}
+
+ArabicAnalyzer::ArabicAnalyzer(const char* stopwordsFile, const char* enc): stopSet(_CLNEW CLTCSetList(true))
+{
+    if(enc == NULL)
+        enc = "UTF-8";
+
+    WordlistLoader::getWordSet(stopwordsFile, enc, stopSet);
+}
+
 ArabicAnalyzer::~ArabicAnalyzer()
 {
 }
@@ -24,6 +37,7 @@ TokenStream* ArabicAnalyzer::tokenStream(const TCHAR* /*fieldName*/, Reader* rea
 {
     TokenStream* ret;
     ret = _CLNEW ArabicTokenizer(reader);
+    ret = _CLNEW StopFilter(ret,true, stopSet);
     ret = _CLNEW ArabicFilter( ret, true );
 
     return ret;
@@ -36,8 +50,14 @@ TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* /*fieldName*/, CL_
         streams = _CLNEW SavedStreams();
         setPreviousTokenStream(streams);
 
-        streams->tokenStream = _CLNEW ArabicTokenizer(reader);
-        streams->filteredTokenStream = _CLNEW ArabicFilter(streams->tokenStream, true);
+        BufferedReader* bufferedReader = reader->__asBufferedReader();
+        if ( bufferedReader == NULL )
+            streams->tokenStream = _CLNEW ArabicTokenizer(_CLNEW FilteredBufferedReader(reader, false));
+        else
+            streams->tokenStream = _CLNEW ArabicTokenizer(bufferedReader);
+
+        streams->filteredTokenStream = _CLNEW StopFilter(streams->tokenStream ,true, stopSet, true);
+        streams->filteredTokenStream = _CLNEW ArabicFilter(streams->filteredTokenStream, true);
     } else {
         streams->tokenStream->reset(reader);
     }

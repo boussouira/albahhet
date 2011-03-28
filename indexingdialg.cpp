@@ -63,7 +63,8 @@ void IndexingDialg::startIndexing()
 // Writer
     m_writer = NULL;
     QDir dir;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    ArabicAnalyzer *analyzer = new ArabicAnalyzer("C:\\Documents and Settings\\Administrateur\\Bureau\\stopwords.txt",
+                                                  "UTF-8");
     if(!dir.exists(m_indexInfo->path()))
         dir.mkdir(m_indexInfo->path());
     if ( IndexReader::indexExists(qPrintable(m_indexInfo->path())) ){
