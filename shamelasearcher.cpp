@@ -151,6 +151,13 @@ void ShamelaSearcher::fetech()
             if(bookQuery.first()){
                 ShamelaResult *result = new ShamelaResult;
                 QString pageText(bookQuery.value(0).toString());
+
+                QList<QPair<QString, QString> > shoorts;
+                shoorts = m_booksDb->getBookShoorts(bookInfo->id());
+
+                for(int j=0; j < shoorts.count(); j++)
+                    pageText.replace(shoorts.at(j).first, j ? ' ' + shoorts.at(j).second : shoorts.at(j).second);
+
                 result->setId(i);
                 result->setBookId(bookID);
                 result->setArchive(bookInfo->archive());

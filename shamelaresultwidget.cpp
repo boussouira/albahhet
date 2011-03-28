@@ -193,6 +193,7 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
     BookInfo *info = m_booksDb->getBookInfo(bookID);
     ShamelaResult *result = m_searcher->getSavedResult(resultID);
 
+    m_bookReader->setBooksDB(m_booksDb);
     m_bookReader->setBookInfo(info);
     m_bookReader->setResult(result);
     m_bookReader->setStringTohighlight(m_searcher->queryString());

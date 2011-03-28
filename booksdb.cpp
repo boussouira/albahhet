@@ -431,3 +431,23 @@ QStandardItemModel *BooksDB::getAuthorsListModel()
     return model;
 }
 
+QList<QPair<QString, QString> > BooksDB::getBookShoorts(int bid)
+{
+    openShamelaSpecialDB();
+
+    QList<QPair<QString, QString> > shoorts;
+    QSqlQuery specialQuery(m_shamelaSpecialDB);
+
+    if(!specialQuery.exec(QString("SELECT Ramz, Nass FROM shorts WHERE Bk = '%1'").arg(bid)))
+        SQL_ERROR(specialQuery.lastError().text());
+
+    while(specialQuery.next()) {
+        QPair<QString, QString> pair;
+        pair.first = specialQuery.value(0).toString();
+        pair.second = specialQuery.value(1).toString();
+
+        shoorts.append(pair);
+    }
+
+    return shoorts;
+}

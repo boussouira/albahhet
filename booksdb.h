@@ -44,6 +44,8 @@ public:
     QStandardItemModel *getCatsListModel();
     QStandardItemModel *getAuthorsListModel();
 
+    QList<QPair<QString, QString> > getBookShoorts(int bid);
+
     QStringList connections();
 
 protected:
@@ -56,6 +58,7 @@ protected:
     QSqlQuery *m_shamelaSpecialQuery;
     QMutex m_mutex;
     QHash<int, BookInfo*> m_bookInfoHash;
+    QHash<int, QList<QPair<QString, QString> > > m_savedShoorts;
     QList<int> m_savedAuthors;
 };
 

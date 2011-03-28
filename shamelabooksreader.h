@@ -6,6 +6,7 @@
 #include <qsqlquery.h>
 #include <qsqlerror.h>
 
+#include "booksdb.h"
 #include "bookinfo.h"
 #include "shamelaresult.h"
 #include "qthighlighter.h"
@@ -18,6 +19,7 @@ public:
     ShamelaBooksReader(QObject *parent=0);
     ~ShamelaBooksReader();
     void setResult(ShamelaResult *result);
+    void setBooksDB(BooksDB *booksdb);
     void setBookInfo(BookInfo *bookInfo);
     void setStringTohighlight(QString str);
     void setHighLightAll(bool hl);
@@ -38,9 +40,11 @@ protected:
     QSqlDatabase m_bookDB;
     QtHighLighter m_textHighlighter;
     QSqlQuery *m_query;
+    BooksDB *m_booksDb;
     BookInfo *m_bookInfo;
     ShamelaResult *m_shamelaResult;
     QStringList m_connections;
+    QList<QPair<QString, QString> > m_shoorts;
     int m_currentPage;
     int m_currentPart;
     int m_currentID;
