@@ -13,6 +13,8 @@ namespace Ui {
     class IndexingDialg;
 }
 
+class QMessageBox;
+
 class IndexingDialg : public QDialog {
     Q_OBJECT
 public:
@@ -23,6 +25,7 @@ public:
 
 protected:
     void showBooks();
+    void shutDown();
     QString formatTime(int milsec);
 
 public slots:
@@ -30,6 +33,10 @@ public slots:
     void doneIndexing();
     void indexingError();
     void setRamSize();
+    void shutDownUpdateTime(qreal);
+    void nextStep();
+    void stopIndexing();
+    void startIndexing();
 
 signals:
     void indexCreated();
@@ -39,18 +46,19 @@ protected:
     BooksDB *m_bookDB;
     IndexInfo *m_indexInfo;
     QTime indexingTime;
+    QMessageBox *m_shutDownMsgBox;
     int m_booksCount;
     int m_indexedBooks;
     int m_threadCount;
+    int m_shutDownTime;
+    bool m_shutDown;
     Ui::IndexingDialg *ui;
 
 private slots:
     void on_buttonSelectIndexPath_clicked();
     void on_buttonSelectShamela_clicked();
-    void nextStep();
     void on_pushCancel_clicked();
-    void stopIndexing();
-    void startIndexing();
+    void on_checkOptimizeIndexLast_stateChanged(int );
 };
 
 #endif // INDEXINGDIALG_H

@@ -4,6 +4,7 @@
 #include "bookinfo.h"
 #include <qfiledialog.h>
 #include <qmessagebox.h>
+#include <qtimeline.h>
 
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
@@ -142,6 +143,7 @@ void IndexingDialg::nextStep()
 
         showBooks();
         ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
+        ui->checkOptimizeIndexLast->setChecked(ui->checkOptimizeIndex->isChecked());
         ui->stackedWidget->setCurrentIndex(i+1);
     } else if(i == 2) { // Start indexing
         ui->pushCancel->hide();
@@ -203,6 +205,9 @@ void IndexingDialg::doneIndexing()
         _CLLDELETE(m_writer);
 
         saveIndexInfo();
+
+        if(ui->checkShutDown->isChecked())
+            shutDown();
     }
 }
 
@@ -357,4 +362,45 @@ void IndexingDialg::checkIndex()
     catch(...) {}
 
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
+}
+
+void IndexingDialg::on_checkOptimizeIndexLast_stateChanged(int )
+{
+    m_indexInfo->setOptimizeIndex(ui->checkOptimizeIndexLast->isChecked());
+}
+
+void IndexingDialg::shutDown()
+{
+    QMessageBox msgBox(this);
+    msgBox.setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
+                          "سيتم اطفاء الجهاز بعد %1")
+                   .arg(arPlural(10,  SECOND, true)));
+    msgBox.setStandardButtons(QMessageBox::Cancel);
+
+    QTimeLine timeLine(10000, this);
+    timeLine.setUpdateInterval(1000);
+    timeLine.setDirection(QTimeLine::Backward);
+
+    connect(&msgBox, SIGNAL(buttonClicked(QAbstractButton*)), &msgBox, SLOT(reject()));
+    connect(&timeLine, SIGNAL(finished()), &msgBox, SLOT(accept()));
+    connect(&timeLine, SIGNAL(valueChanged(qreal)), this, SLOT(shutDownUpdateTime(qreal)));
+
+    m_shutDownTime = 10;
+    m_shutDownMsgBox = &msgBox;
+
+    timeLine.start();
+    int ret = msgBox.exec();
+
+    if(ret) {
+#ifdef Q_OS_WIN
+        system("shutdown -s -t 00");
+#endif
+    }
+}
+
+void IndexingDialg::shutDownUpdateTime(qreal)
+{
+    m_shutDownMsgBox->setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
+                                     "سيتم اطفاء الجهاز بعد %1")
+                              .arg(arPlural(m_shutDownTime--,  SECOND, true)));
 }

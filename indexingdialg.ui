@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>365</width>
-    <height>260</height>
+    <width>623</width>
+    <height>346</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -353,9 +353,6 @@
      </widget>
      <widget class="QWidget" name="page_4">
       <layout class="QVBoxLayout" name="verticalLayout_5">
-       <property name="margin">
-        <number>0</number>
-       </property>
        <item>
         <widget class="QLabel" name="label_7">
          <property name="text">
@@ -388,6 +385,23 @@
          </property>
          <property name="format">
           <string>%v/%m (%p%)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkOptimizeIndexLast">
+         <property name="text">
+          <string>ضغط الفهرس عند انتهاء الفهرسة</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkShutDown">
+         <property name="text">
+          <string>اطفاء الجهاز عند الانتهاء</string>
          </property>
         </widget>
        </item>
