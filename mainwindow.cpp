@@ -65,6 +65,7 @@ void MainWindow::saveSettings()
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
     settings.setValue("pos", pos());
+    settings.setValue("maximized", isMaximized());
     settings.endGroup();
 
     if(!m_currentIndex->name().isEmpty())
@@ -81,6 +82,10 @@ void MainWindow::loadSettings()
     settings.beginGroup("MainWindow");
     resize(settings.value("size", size()).toSize());
     move(settings.value("pos", pos()).toPoint());
+
+    if(settings.value("maximized", true).toBool())
+        showMaximized();
+
     settings.endGroup();
 }
 
@@ -395,7 +400,6 @@ qint64 MainWindow::getDirSize(const QString &path)
 void MainWindow::showSettingsDialog()
 {
     SettingsDialog dialog(this);
-    connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
     connect(&dialog, SIGNAL(settingsUpdated()), m_searchWidget, SLOT(loadSettings()));
 
     dialog.exec();
