@@ -32,12 +32,14 @@ protected:
     Query *getCatsListQuery();
     Query *getAuthorsListQuery();
     void chooseProxy(int index);
+    void setupCleanMenu();
 
 public slots:
     void search();
     void loadSettings();
     void saveSettings();
     void clearSpecialChar();
+    void clearLineText();
     void enableFilterWidget();
 
 protected slots:

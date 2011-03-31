@@ -14,6 +14,7 @@
 #include <qevent.h>
 #include <qabstractitemmodel.h>
 #include <qsortfilterproxymodel.h>
+#include <qmenu.h>
 
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     QWidget(parent),
@@ -26,10 +27,6 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     forceRTL(ui->lineQueryShouldNot);
     forceRTL(ui->lineFilter);
 
-    connect(ui->lineQueryMust, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
-    connect(ui->lineQueryShould, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
-    connect(ui->lineQueryShouldNot, SIGNAL(buttonClicked()), SLOT(clearSpecialChar()));
-
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
     m_filterHandler->setShamelaModels(m_shaModel);
@@ -39,6 +36,7 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
 
     loadSettings();
     enableFilterWidget();
+    setupCleanMenu();
 
     QSettings settings;
     ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
@@ -353,9 +351,27 @@ void ShamelaSearchWidget::on_tabWidgetFilter_currentChanged(int index)
     ui->lineFilter->setText(m_filterText.at(index));
 }
 
+void ShamelaSearchWidget::enableFilterWidget()
+{
+    if(ui->comboBox->currentIndex() == 1) {
+        ui->groupBoxFilter->setEnabled(true);
+    } else {
+        ui->groupBoxFilter->setEnabled(false);
+    }
+}
+
+void ShamelaSearchWidget::clearLineText()
+{
+    FancyLineEdit *edit = qobject_cast<FancyLineEdit*>(sender()->parent());
+
+    if(edit) {
+        edit->clear();
+    }
+}
+
 void ShamelaSearchWidget::clearSpecialChar()
 {
-    FancyLineEdit *edit = qobject_cast<FancyLineEdit*>(sender());
+    FancyLineEdit *edit = qobject_cast<FancyLineEdit*>(sender()->parent());
 
     if(edit) {
         TCHAR *lineText = QueryParser::escape(QSTRING_TO_TCHAR(edit->text()));
@@ -365,11 +381,24 @@ void ShamelaSearchWidget::clearSpecialChar()
     }
 }
 
-void ShamelaSearchWidget::enableFilterWidget()
+void ShamelaSearchWidget::setupCleanMenu()
 {
-    if(ui->comboBox->currentIndex() == 1) {
-        ui->groupBoxFilter->setEnabled(true);
-    } else {
-        ui->groupBoxFilter->setEnabled(false);
+    QList<FancyLineEdit*> lines;
+    lines << ui->lineQueryMust;
+    lines << ui->lineQueryShould;
+    lines << ui->lineQueryShouldNot;
+
+    foreach(FancyLineEdit *line, lines) {
+        QMenu *menu = new QMenu(line);
+        QAction *clearTextAct = new QAction(trUtf8("مسح النص"), line);
+        QAction *clearSpecialCharAct = new QAction(trUtf8("ابطال مفعول الاقواس وغيرها"), line);
+
+        menu->addAction(clearTextAct);
+        menu->addAction(clearSpecialCharAct);
+
+        connect(clearTextAct, SIGNAL(triggered()), SLOT(clearLineText()));
+        connect(clearSpecialCharAct, SIGNAL(triggered()), SLOT(clearSpecialChar()));
+
+        line->setMenu(menu);
     }
 }
