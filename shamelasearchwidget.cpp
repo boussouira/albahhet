@@ -199,8 +199,8 @@ void ShamelaSearchWidget::search()
                                         "او تأكد من أنك تستخدمها بشكل صحيح"));
         else
             QMessageBox::warning(0,
-                                 "CLucene Error when Indexing",
-                                 tr("Error code: %1\n%2").arg(e.number()).arg(e.what()));
+                                 "CLucene Query error",
+                                 tr("Error: %2\ncode: %1").arg(e.number()).arg(e.what()));
 
         _CLDELETE(q);
         _CLDELETE(queryPareser);
@@ -209,7 +209,7 @@ void ShamelaSearchWidget::search()
     }
     catch(...) {
         QMessageBox::warning(0,
-                             "Unkonw error when Indexing",
+                             "CLucene Query error",
                              tr("Unknow error"));
         _CLDELETE(q);
         _CLDELETE(queryPareser);
@@ -444,14 +444,13 @@ void ShamelaSearchWidget::on_pushSelectAll_clicked()
 
 void ShamelaSearchWidget::on_pushUnSelectAll_clicked()
 {
-    QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
-    int rowCount = model->rowCount();
-
-    QModelIndex topLeft =  model->index(0, 0);
-    QModelIndex bottomRight =  model->index(rowCount-1, 0);
+    int rowCount =  m_filterHandler->getFilterModel()->rowCount();
+    QModelIndex topLeft =  m_filterHandler->getFilterModel()->index(0, 0);
+    QModelIndex bottomRight =  m_filterHandler->getFilterModel()->index(rowCount-1, 0);
     QItemSelection selection(topLeft, bottomRight);
+    QItemSelection modelSelection =  m_filterHandler->getFilterModel()->mapSelectionToSource(selection);
 
-    foreach (QModelIndex index, selection.indexes()) {
+    foreach (QModelIndex index, modelSelection.indexes()) {
         QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
         model->setData(index, Qt::Unchecked, Qt::CheckStateRole);
     }
