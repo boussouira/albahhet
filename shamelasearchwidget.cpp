@@ -7,13 +7,14 @@
 #include "shamelamodels.h"
 #include "tabwidget.h"
 #include "searchfilterhandler.h"
+#include "ShamelaFilterProxyModel.h"
+#include "selectedfilterwidget.h"
 
 #include <qmessagebox.h>
 #include <qsettings.h>
 #include <qprogressdialog.h>
 #include <qevent.h>
 #include <qabstractitemmodel.h>
-#include <qsortfilterproxymodel.h>
 #include <qmenu.h>
 
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
@@ -30,6 +31,12 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
     m_filterHandler->setShamelaModels(m_shaModel);
+
+    SelectedFilterWidget *selected = new SelectedFilterWidget(this);
+    selected->hide();
+    ui->widgetSelectedFilter->layout()->addWidget(selected);
+    m_filterHandler->setSelectedFilterWidget(selected);
+
     m_filterText << "" << "" << "";
 
     ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
@@ -288,6 +295,7 @@ void ShamelaSearchWidget::setIndexInfo(IndexInfo *info)
 void ShamelaSearchWidget::setBooksDb(BooksDB *db)
 {
     m_booksDB = db;
+    m_filterHandler->getFilterModel()->setBooksDb(db);
 }
 
 void ShamelaSearchWidget::setTabWidget(TabWidget *tabWidget)
@@ -348,7 +356,11 @@ void ShamelaSearchWidget::on_tabWidgetFilter_currentChanged(int index)
 {
     chooseProxy(index);
 
+    if(m_filterHandler->clearFilterOnChange() && !m_filterHandler->getFilterModel()->filterByAuthor())
+        m_filterHandler->clearFilter();
+
     ui->lineFilter->setText(m_filterText.at(index));
+    m_filterHandler->getFilterModel()->setFilterByAuthor(false);
 }
 
 void ShamelaSearchWidget::enableFilterWidget()
@@ -400,5 +412,47 @@ void ShamelaSearchWidget::setupCleanMenu()
         connect(clearSpecialCharAct, SIGNAL(triggered()), SLOT(clearSpecialChar()));
 
         line->setMenu(menu);
+    }
+}
+
+void ShamelaSearchWidget::on_treeViewAuthors_doubleClicked(QModelIndex index)
+{
+    if(index.isValid() && (ui->tabWidgetFilter->currentIndex() == 2)) {
+        SelectedFilterWidget *selected = m_filterHandler->selectedFilterWidget();
+        selected->setText(trUtf8("عرض كتب %1").arg(index.data().toString()));
+        selected->show();
+        m_filterHandler->getFilterModel()->setFilterByAuthor(true);
+        m_filterHandler->getFilterModel()->setAuthor(index.data(Qt::UserRole).toInt());
+        m_filterHandler->setClearFilterOnChange(true);
+        ui->tabWidgetFilter->setCurrentIndex(0);
+    }
+}
+
+void ShamelaSearchWidget::on_pushSelectAll_clicked()
+{
+    int rowCount =  m_filterHandler->getFilterModel()->rowCount();
+    QModelIndex topLeft =  m_filterHandler->getFilterModel()->index(0, 0);
+    QModelIndex bottomRight =  m_filterHandler->getFilterModel()->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+    QItemSelection modelSelection =  m_filterHandler->getFilterModel()->mapSelectionToSource(selection);
+
+    foreach (QModelIndex index, modelSelection.indexes()) {
+        QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
+        model->setData(index, Qt::Checked, Qt::CheckStateRole);
+    }
+}
+
+void ShamelaSearchWidget::on_pushUnSelectAll_clicked()
+{
+    QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
+    int rowCount = model->rowCount();
+
+    QModelIndex topLeft =  model->index(0, 0);
+    QModelIndex bottomRight =  model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
+        model->setData(index, Qt::Unchecked, Qt::CheckStateRole);
     }
 }

@@ -36,6 +36,7 @@ public:
 
     QList<int> getShamelaIds();
     QList<int> getSavedIds();
+    QList<int> getAuthorBooks(int auth);
 
     QStringList addBooks(QList<int> shaIds);
     QStringList removeBooks(QList<int> savedIds);

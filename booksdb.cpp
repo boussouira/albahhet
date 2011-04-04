@@ -451,3 +451,17 @@ QList<QPair<QString, QString> > BooksDB::getBookShoorts(int bid)
 
     return shoorts;
 }
+
+QList<int> BooksDB::getAuthorBooks(int auth)
+{
+    openIndexDB();
+    QList<int> list;
+
+    if(!m_indexQuery->exec(QString("SELECT shamelaID FROM books WHERE indexFLags = 1 and authorId = %1").arg(auth)))
+        SQL_ERROR(m_indexQuery->lastError().text());
+
+    while(m_indexQuery->next())
+        list.append(m_indexQuery->value(0).toInt());
+
+    return list;
+}

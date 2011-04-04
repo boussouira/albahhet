@@ -224,6 +224,46 @@ p, li { white-space: pre-wrap; }
        </widget>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QWidget" name="widgetSelectedFilter" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="margin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushSelectAll">
+          <property name="text">
+           <string>اختيار الكل</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushUnSelectAll">
+          <property name="text">
+           <string>الغاء الكل</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="label_4">

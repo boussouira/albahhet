@@ -2,6 +2,7 @@
 #define SHAMELASEARCHWIDGET_H
 
 #include <QWidget>
+#include <QModelIndex>
 #include "arabicanalyzer.h"
 
 namespace Ui {
@@ -45,6 +46,9 @@ public slots:
 protected slots:
     void on_tabWidgetFilter_currentChanged(int index);
     void on_lineFilter_textChanged(QString text);
+    void on_treeViewAuthors_doubleClicked(QModelIndex index);
+    void on_pushSelectAll_clicked();
+    void on_pushUnSelectAll_clicked();
 
 protected:
     IndexInfo *m_currentIndex;

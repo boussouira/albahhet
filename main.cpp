@@ -18,7 +18,6 @@ void myMessageOutput(QtMsgType type, const char *msg)
 {
     QFile debugFile(LOG_FILE);
     if (!debugFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-        qDebug("CANT OPEN IT");
         return;
     }
 

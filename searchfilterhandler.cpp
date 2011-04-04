@@ -1,13 +1,14 @@
 #include "searchfilterhandler.h"
 #include "shamelamodels.h"
-#include <qsortfilterproxymodel.h>
+#include "shamelafilterproxymodel.h"
+#include "selectedfilterwidget.h"
 #include <qmenu.h>
 #include <qdebug.h>
 
 SearchFilterHandler::SearchFilterHandler(QObject *parent) :
     QObject(parent)
 {
-    m_filterProxy = new QSortFilterProxyModel(this);
+    m_filterProxy = new ShamelaFilterProxyModel(this);
 //    m_filterProxy->setDynamicSortFilter(true);
 
     m_menu = new QMenu(0);
@@ -25,6 +26,7 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
     m_menu->addAction(actionUnSelected);
 
     m_ignore = true;
+    m_clearFilterOnChange = false;
 
     connect(actionIgnore, SIGNAL(toggled(bool)), SLOT(ignoreSameChars(bool)));
     connect(actionSelected, SIGNAL(triggered()), SLOT(showSelected()));
@@ -41,7 +43,7 @@ void SearchFilterHandler::setShamelaModels(ShamelaModels *shaModel)
     m_shaModel = shaModel;
 }
 
-void SearchFilterHandler::setFilterModel(QSortFilterProxyModel *filter)
+void SearchFilterHandler::setFilterModel(ShamelaFilterProxyModel *filter)
 {
     m_filterProxy = filter;
 }
@@ -59,6 +61,8 @@ void SearchFilterHandler::setFilterText(QString text)
 
     m_filterProxy->setFilterRole(Qt::DisplayRole);
     m_filterProxy->setFilterRegExp(text);
+
+    m_selectedFilterWidget->hide();
 }
 
 void SearchFilterHandler::setFilterSourceModel(int index)
@@ -83,7 +87,7 @@ void SearchFilterHandler::chooseFilterSourceModel()
     m_filterProxy->setSourceModel(model);
 }
 
-QSortFilterProxyModel *SearchFilterHandler::getFilterModel()
+ShamelaFilterProxyModel *SearchFilterHandler::getFilterModel()
 {
     return m_filterProxy;
 }
@@ -105,6 +109,10 @@ void SearchFilterHandler::showSelected()
 
     m_filterProxy->setFilterRole(Qt::CheckStateRole);
     m_filterProxy->setFilterFixedString(checked.toString());
+
+    m_selectedFilterWidget->setText(trUtf8("عرض ما تم اختياره"));
+    m_selectedFilterWidget->show();
+    m_clearFilterOnChange = false;
 }
 
 void SearchFilterHandler::showUnSelected()
@@ -113,4 +121,34 @@ void SearchFilterHandler::showUnSelected()
 
     m_filterProxy->setFilterRole(Qt::CheckStateRole);
     m_filterProxy->setFilterFixedString(unChecked.toString());
+
+    m_selectedFilterWidget->setText(trUtf8("عرض ما لم يتم اختياره"));
+    m_selectedFilterWidget->show();
+    m_clearFilterOnChange = false;
+}
+
+void SearchFilterHandler::setSelectedFilterWidget(SelectedFilterWidget *widget)
+{
+    m_selectedFilterWidget = widget;
+    connect(m_selectedFilterWidget, SIGNAL(deleteFilter()), SLOT(clearFilter()));
+}
+
+SelectedFilterWidget * SearchFilterHandler::selectedFilterWidget()
+{
+    return m_selectedFilterWidget;
+}
+
+void SearchFilterHandler::clearFilter()
+{
+    setFilterText(m_filterText);
+}
+
+void SearchFilterHandler::setClearFilterOnChange(bool clear)
+{
+    m_clearFilterOnChange = clear;
+}
+
+bool SearchFilterHandler::clearFilterOnChange()
+{
+    return m_clearFilterOnChange;
 }
