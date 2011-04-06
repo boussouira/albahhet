@@ -1,4 +1,5 @@
 #include "settingschecker.h"
+#include "indexesmanager.h"
 #include <qapplication.h>
 #include <qstringlist.h>
 #include <qfile.h>
@@ -12,6 +13,7 @@ SettingsChecker::SettingsChecker()
 
 void SettingsChecker::checkIndexes()
 {
+    /*
     QSettings settings;
     QStringList indexesList =  settings.value("indexes_list").toStringList();
     QString currentIndex =  settings.value("current_index").toString();
@@ -30,8 +32,8 @@ void SettingsChecker::checkIndexes()
                 settings.remove(index);
 
                 if(index == currentIndex) {
-                    if(!indexesList.isEmpty())
-                        settings.setValue("current_index", indexesList.first());
+//                    if(!indexesList.isEmpty())
+//                        settings.setValue("current_index", indexesList.first());
                 }
             }
         }
@@ -43,7 +45,7 @@ void SettingsChecker::checkIndexes()
     } else {
         settings.setValue("indexes_list", indexesList);
     }
-
+*/
 }
 
 bool SettingsChecker::checkIndex(QString index)
@@ -52,7 +54,6 @@ bool SettingsChecker::checkIndex(QString index)
     settings.beginGroup(index);
     QString indexPath = settings.value("index_path").toString();
     QString shaPath = settings.value("shamela_path").toString();
-    int ramSize = settings.value("ram_size").toInt();
 
     QDir indexDir(indexPath);
     if(!indexDir.exists()) {
@@ -65,9 +66,6 @@ bool SettingsChecker::checkIndex(QString index)
         qWarning() << "Directory" << shaPath << "not found";
         return false;
     }
-
-    if(ramSize <= 0)
-        settings.setValue("ram_size", 100);
 
     settings.endGroup();
 
@@ -100,4 +98,24 @@ void SettingsChecker::update()
     }
 
     settings.setValue("currentVersion", APP_VERSION);
+}
+
+void SettingsChecker::updateToXml()
+{
+    QSettings settings;
+
+    if(!settings.value("using_xml", false).toBool()) {
+        qDebug("Try to upgard to xml...");
+
+        IndexesManager manager;
+        foreach(QString key, settings.childGroups()) {
+            if(key.startsWith("i_")) {
+                manager.add(settings, key);
+                settings.remove(key);
+            }
+        }
+
+        settings.remove("indexes_list");
+        settings.setValue("using_xml", true);
+    }
 }

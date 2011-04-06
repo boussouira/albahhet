@@ -36,6 +36,11 @@ void hideHelpButton(QWidget *w);
 void clearShorts(QString &str);
 void forceRTL(QWidget *widget);
 
+quint64 getIndexSize(const QString &path);
+quint64 getBooksSize(const QString &shamelaPath);
+quint64 getDirSize(const QString &path);
+QString getSizeString(quint64 size);
+
 #define ADD_QTREEWIDGET_ITEM(name, value) { \
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \
         item->setData(0, Qt::DisplayRole, trUtf8(name)); \

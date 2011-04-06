@@ -11,6 +11,7 @@ public:
     void checkIndexes();
     bool checkIndex(QString index);
     void update();
+    void updateToXml();
 };
 
 #endif // SETTINGSCHECKER_H

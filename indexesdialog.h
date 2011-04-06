@@ -11,16 +11,16 @@ namespace Ui {
 class IndexInfo;
 class BooksDB;
 class QTreeWidgetItem;
+class IndexesManager;
 
 class IndexesDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    IndexesDialog(QWidget *parent = 0);
+    IndexesDialog(IndexesManager *manager, QWidget *parent = 0);
     ~IndexesDialog();
-    bool changeIndexName(IndexInfo *index, QString newName);
-    bool deleteIndex(IndexInfo *index);
+    void setIndexesManager(IndexesManager *manager);
     void optimizeIndex(IndexInfo *info);
 
 protected slots:
@@ -30,8 +30,8 @@ signals:
     void indexesChanged();
 
 private:
+    IndexesManager *m_indexesManager;
     Ui::IndexesDialog *ui;
-    QHash<QString, IndexInfo*> m_indexInfoMap;
 
 private slots:
     void on_treeWidget_itemActivated(QTreeWidgetItem* item, int column);

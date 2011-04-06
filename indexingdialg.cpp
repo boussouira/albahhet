@@ -80,7 +80,7 @@ void IndexingDialg::startIndexing()
 
     m_bookDB->queryBooksToIndex();
 
-    indexingTime.start();
+    m_indexingTime.start();
 
     for(int i=0;i<m_threadCount;i++) {
         ShamelaIndexer *indexThread = new ShamelaIndexer();
@@ -120,10 +120,7 @@ void IndexingDialg::nextStep()
             if(ui->lineIndexPath->text().isEmpty())
                 throw trUtf8("لم تقم باختيار مسار وضع الفهرس");
 
-            QSettings settings;
-            QString hash = IndexInfo::indexHash(ui->lineIndexName->text());
-
-            if(settings.childGroups().contains(hash))
+            if(m_indexesManager->nameExists(ui->lineIndexName->text()))
                 throw trUtf8("اسم الفهرس المدخل موجودا مسبقا");
 
         } catch(QString &e) {
@@ -167,7 +164,7 @@ void IndexingDialg::doneIndexing()
 {
     if(--m_threadCount <= 0) {
         // Indexing benchmarking
-        int elpasedMsec = indexingTime.elapsed();
+        int elpasedMsec = m_indexingTime.elapsed();
 
         // Optimize Index benchmarking
         int optimizeTime = -1;
@@ -204,7 +201,7 @@ void IndexingDialg::doneIndexing()
         ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
         _CLLDELETE(m_writer);
 
-        saveIndexInfo();
+        saveIndexInfo(elpasedMsec, optimizeTime);
 
         if(ui->checkShutDown->isChecked())
             shutDown();
@@ -309,24 +306,14 @@ void IndexingDialg::on_buttonSelectIndexPath_clicked()
     }
 }
 
-void IndexingDialg::saveIndexInfo()
+void IndexingDialg::saveIndexInfo(int indexingTime, int opimizingTime)
 {
-    QSettings settings;
+    m_indexInfo->generateIndexingInfo();
+    m_indexInfo->indexingInfo()->indexingTime = indexingTime;
+    m_indexInfo->indexingInfo()->optimizingTime = opimizingTime;
+    m_indexInfo->indexingInfo()->creatTime = QDateTime::currentDateTime().toTime_t();
 
-    QString indexName = m_indexInfo->indexHash();
-
-    QStringList indexes = settings.value("indexes_list").toStringList();
-
-    indexes.append(indexName);
-    settings.setValue("indexes_list", indexes);
-
-    settings.beginGroup(indexName);
-    settings.setValue("name", m_indexInfo->name());
-    settings.setValue("shamela_path", m_indexInfo->shamelaPath());
-    settings.setValue("index_path", m_indexInfo->path());
-    settings.setValue("ram_size", m_indexInfo->ramSize());
-    settings.setValue("optimizeIndex", m_indexInfo->optimize());
-    settings.endGroup();
+    m_indexesManager->add(m_indexInfo);
 
     DELETE_DB(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
     m_bookDB = new BooksDB();
@@ -403,4 +390,9 @@ void IndexingDialg::shutDownUpdateTime(qreal)
     m_shutDownMsgBox->setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
                                      "سيتم اطفاء الجهاز بعد %1")
                               .arg(arPlural(m_shutDownTime--,  SECOND, true)));
+}
+
+void IndexingDialg::setIndexesManager(IndexesManager *manager)
+{
+    m_indexesManager = manager;
 }

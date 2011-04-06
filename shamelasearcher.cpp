@@ -124,6 +124,11 @@ void ShamelaSearcher::fetech()
 
         BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
 
+        if(!bookInfo) {
+            qWarning("No book with id %d where found", bookID);
+            return;
+        }
+
         QString connName = (bookInfo->archive()) ? QString("bid_%1").arg(bookInfo->archive()) :
                            QString("bid_%1_%2").arg(bookInfo->archive()).arg(bookID);
 

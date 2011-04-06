@@ -69,7 +69,6 @@ void clearLogFile()
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-
     app.setOrganizationName("Al Bahhet");
     app.setOrganizationDomain("albahhet.sf.net");
     app.setApplicationName("Al Bahhet");
@@ -87,6 +86,7 @@ int main(int argc, char *argv[])
     SettingsChecker check;
 
     check.update();
+    check.updateToXml();
 
     if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();

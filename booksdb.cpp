@@ -129,7 +129,7 @@ void BooksDB::openIndexDB()
     if(!m_indexDB.isOpen()) {
         QString book = m_indexInfo->indexDbPath();
 
-        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", QString("indexDb_%1").arg(m_indexInfo->indexHash()));
+        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", QString("indexDb_%1").arg(m_indexInfo->id()));
         m_indexDB.setDatabaseName(book);
 
         if (!m_indexDB.open()) {
@@ -148,7 +148,7 @@ void BooksDB::openShamelaDB()
     if(!m_shamelaDB.isOpen()) {
         QString book = m_indexInfo->shamelaMainDbPath();
 
-        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaBookDb_%1").arg(m_indexInfo->indexHash()));
+        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaBookDb_%1").arg(m_indexInfo->id()));
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaDB.setDatabaseName(mdbpath);
 
@@ -168,7 +168,7 @@ void BooksDB::openShamelaSpecialDB()
     if(!m_shamelaSpecialDB.isOpen()) {
         QString book = m_indexInfo->shamelaSpecialDbPath();
 
-        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaSpecialDb_%1").arg(m_indexInfo->indexHash()));
+        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaSpecialDb_%1").arg(m_indexInfo->id()));
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
