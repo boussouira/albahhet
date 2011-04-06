@@ -189,11 +189,11 @@ void IndexingDialg::doneIndexing()
         QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
         msg.append("<br>");
 
-        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(formatTime(elpasedMsec)));
+        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(getSizeString(elpasedMsec)));
         msg.append("<br>");
 
         if(optimizeTime != -1) {
-            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(formatTime(optimizeTime)));
+            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(getSizeString(optimizeTime)));
             msg.append("<br>");
         }
 
@@ -213,29 +213,6 @@ void IndexingDialg::indexingError()
     QMessageBox::warning(this,
                          trUtf8("فهرسة المكتبة"),
                          trUtf8("لقد حدث خطأ أثناء فهرسة المكتبة.\nالمرجوا اعادة المحاولة"));
-}
-
-QString IndexingDialg::formatTime(int milsec)
-{
-    QString time;
-
-    int seconde = (int) ((milsec / 1000) % 60);
-    int minutes = (int) (((milsec / 1000) / 60) % 60);
-    int hours   = (int) (((milsec / 1000) / 60) / 60);
-
-    if(hours > 0){
-        time.append(arPlural(hours, HOUR, true));
-        time.append(trUtf8(" و "));
-    }
-
-    if(minutes > 0 || hours > 0) {
-        time.append(arPlural(minutes, MINUTE, true));
-        time.append(trUtf8(" و "));
-    }
-
-    time.append(arPlural(seconde, SECOND, true));
-
-    return time;
 }
 
 void IndexingDialg::stopIndexing()

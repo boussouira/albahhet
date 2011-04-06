@@ -40,6 +40,7 @@ quint64 getIndexSize(const QString &path);
 quint64 getBooksSize(const QString &shamelaPath);
 quint64 getDirSize(const QString &path);
 QString getSizeString(quint64 size);
+QString getTimeString(int milsec, bool html=true);
 
 #define ADD_QTREEWIDGET_ITEM(name, value) { \
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \

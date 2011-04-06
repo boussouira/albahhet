@@ -275,11 +275,16 @@ void MainWindow::showStatistic()
         treeWidget->setRootIsDecorated(false);
 
         QList<QTreeWidgetItem *> itemList;
+        IndexingInfo *info = m_currentIndex->indexingInfo();
 
-        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name())
-        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path())
-        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath())
-        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs())
+        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name());
+
+        if(info)
+            ADD_QTREEWIDGET_ITEM("تاريخ الانشاء", QDateTime::fromTime_t(info->creatTime).toString("dd/MM/yyyy - hh:mm"));
+
+        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path());
+        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath());
+        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs());
 
         //ADD_QTREEWIDGET_ITEM("Max Docs", r->maxDoc());
         //ADD_QTREEWIDGET_ITEM("Current Version", ver));
@@ -287,26 +292,18 @@ void MainWindow::showStatistic()
         TermEnum* te = r->terms();
         int32_t nterms = 0;
 
-        bool writeToFile = false;
+        for (nterms = 0; te->next() == true; nterms++) {}
 
-        if(writeToFile) {
-            QFile logFile("terms.txt");
-            if(logFile.open(QIODevice::WriteOnly|QIODevice::Text)) {
-                QTextStream log(&logFile);
-                for (nterms = 0; te->next() == true; nterms++) {
-                    /* if(_wcsicmp(te->term()->field(), _T("bookid")) == 0) */
-                    log << TCharToQString(te->term()->toString()) << "\n";
-                }
-            }
+        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms);
+        if(info) {
+            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(info->indexSize));
+            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(info->shamelaSize));
+            ADD_QTREEWIDGET_ITEM("مدة الفهرسة", getTimeString(info->indexingTime, false));
+            ADD_QTREEWIDGET_ITEM("مدة ضغط الفهرس", getTimeString(info->optimizingTime, false));
         } else {
-            for (nterms = 0; te->next() == true; nterms++) {
-                /* qDebug() << TCharToQString(te->term()->text()); */
-            }
+            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->path())));
+            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
         }
-
-        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms)
-        ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->path())))
-        ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())))
 
         treeWidget->addTopLevelItems(itemList);
         treeWidget->resizeColumnToContents(1);
@@ -322,7 +319,7 @@ void MainWindow::showStatistic()
 
         dialog->setWindowTitle(trUtf8("%1 %2").arg(APP_NAME).arg(APP_VERSION_STR));
         dialog->setLayout(layout);
-        dialog->resize(treeWidget->sizeHint());
+        dialog->resize(400, 300);
         dialog->show();
 
         _CLLDELETE(te);

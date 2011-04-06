@@ -28,7 +28,6 @@ public:
 protected:
     void showBooks();
     void shutDown();
-    QString formatTime(int milsec);
 
 public slots:
     void addBook(const QString &name);

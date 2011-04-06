@@ -147,3 +147,26 @@ QString getSizeString(quint64 size)
 
     return sizeStr;
 }
+
+QString getTimeString(int milsec, bool html)
+{
+    QString time;
+
+    int seconde = (int) ((milsec / 1000) % 60);
+    int minutes = (int) (((milsec / 1000) / 60) % 60);
+    int hours   = (int) (((milsec / 1000) / 60) / 60);
+
+    if(hours > 0){
+        time.append(arPlural(hours, HOUR, html));
+        time.append(QObject::trUtf8(" و "));
+    }
+
+    if(minutes > 0 || hours > 0) {
+        time.append(arPlural(minutes, MINUTE, html));
+        time.append(QObject::trUtf8(" و "));
+    }
+
+    time.append(arPlural(seconde, SECOND, html));
+
+    return time;
+}

@@ -39,12 +39,22 @@ IndexesManager::IndexesManager()
 
     /*
     QList<IndexInfo *> listx = list();
-    foreach(IndexInfo *index, listx)
+    foreach(IndexInfo *index, listx) {
         qDebug() << "*\tID:" << index->id() << "\n\t"
                  << "Type:" << index->type() << "\n\t"
                  << "Name:" << index->name() << "\n\t"
                  << "Shamela:" << index->shamelaPath() << "\n\t"
                  << "Index:" << index->path();
+        IndexingInfo *info = index->indexingInfo();
+        if(info) {
+            qDebug() << "\t\tcreatTime:" << info->creatTime << "\n\t\t"
+                     << "lastUpdate:" << info->lastUpdate << "\n\t\t"
+                     << "indexingTime:" << info->indexingTime << "\n\t\t"
+                     << "optimizingTime:" << info->optimizingTime << "\n\t\t"
+                     << "indexSize:" << info->indexSize << "\n\t\t"
+                     << "shamelaSize:" << info->shamelaSize;
+        }
+    }
     IndexInfo *info = listx.first();
     info->setName("XXx");
     info->setPath("yYy");
@@ -254,6 +264,20 @@ void IndexesManager::generateIndexesList()
         index->setName(indexElement.firstChildElement("name").text());
         index->setShamelaPath(indexElement.firstChildElement("shamel-path").text());
         index->setPath(indexElement.firstChildElement("index-path").text());
+
+        // Index info
+        QDomNodeList infoList = indexElement.elementsByTagName("info");
+        if(infoList.count() > 0) {
+            QDomElement infoElement = infoList.at(0).toElement();
+            IndexingInfo *indexingInfo = new IndexingInfo;
+            indexingInfo->creatTime = infoElement.firstChildElement("create-time").text().toUInt();
+            indexingInfo->indexingTime = infoElement.firstChildElement("indexing-toke").text().toInt();
+            indexingInfo->optimizingTime = infoElement.firstChildElement("optimizing-toke").text().toInt();
+            indexingInfo->indexSize = infoElement.firstChildElement("index-size").text().toULongLong();
+            indexingInfo->shamelaSize = infoElement.firstChildElement("shamela-size").text().toULongLong();
+
+            index->setIndexingInfo(indexingInfo);
+        }
 
         m_list.append(index);
         m_indexInfoMap.insert(index->id(), index);
