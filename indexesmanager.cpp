@@ -159,6 +159,7 @@ void IndexesManager::remove(IndexInfo *index)
         if(indexElement.attribute("id").toInt() == index->id()) {
             qDebug("Delete index: %d", index->id());
             m_rootElement.removeChild(indexElement);
+             m_rootElement.setAttribute("count", m_rootElement.elementsByTagName("index").count());
             save();
 
             break;

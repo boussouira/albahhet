@@ -13,47 +13,26 @@ SettingsChecker::SettingsChecker()
 
 void SettingsChecker::checkIndexes()
 {
-    /*
-    QSettings settings;
-    QStringList indexesList =  settings.value("indexes_list").toStringList();
-    QString currentIndex =  settings.value("current_index").toString();
-
-    foreach(QString index, indexesList) {
+    IndexesManager manager;
+    foreach (IndexInfo *index, manager.list()) {
         if(!checkIndex(index)) {
             int rep = QMessageBox::question(0,
                                             QObject::trUtf8("فحص الفهارس"),
                                             QObject::trUtf8("لم يتم العثور على بعض مجلدات او ملفات الفهرس %1"
-                                                            "\n"
-                                                            "هل تريد حذفه؟").arg(index)
-                                            , QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+                                                            "\n" "هل تريد حذفه؟").arg(index->name()),
+                                            QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
             if(rep == QMessageBox::Yes) {
-                qWarning() << "SettingsChecker:" << "Remove" << index;
-                indexesList.removeAll(index);
-                settings.remove(index);
-
-                if(index == currentIndex) {
-//                    if(!indexesList.isEmpty())
-//                        settings.setValue("current_index", indexesList.first());
-                }
+                qWarning() << "SettingsChecker:" << "Remove" << index->name() << "id:" << index->id();
+                manager.remove(index);
             }
         }
     }
-
-    if(indexesList.isEmpty()) {
-        settings.remove("indexes_list");
-        settings.remove("current_index");
-    } else {
-        settings.setValue("indexes_list", indexesList);
-    }
-*/
 }
 
-bool SettingsChecker::checkIndex(QString index)
+bool SettingsChecker::checkIndex(IndexInfo *index)
 {
-    QSettings settings;
-    settings.beginGroup(index);
-    QString indexPath = settings.value("index_path").toString();
-    QString shaPath = settings.value("shamela_path").toString();
+    QString indexPath = index->path();
+    QString shaPath = index->shamelaPath();
 
     QDir indexDir(indexPath);
     if(!indexDir.exists()) {
@@ -66,8 +45,6 @@ bool SettingsChecker::checkIndex(QString index)
         qWarning() << "Directory" << shaPath << "not found";
         return false;
     }
-
-    settings.endGroup();
 
     return true;
 }
