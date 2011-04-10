@@ -86,35 +86,48 @@ void BooksDB::close()
     }
 }
 
-void BooksDB::setBookIndexed(int shaId)
+void BooksDB::setBookIndexed(QSet<int> books)
 {
+    QMutexLocker locker(&m_mutex);
+
     openIndexDB();
     QSqlQuery query(m_indexDB);
 
-    query.exec(QString("UPDATE books SET indexFLags = 1 WHERE shamelaID = %1").arg(shaId));
+    m_indexDB.transaction();
+
+    foreach(int shaId, books) {
+        query.exec(QString("UPDATE books SET indexFLags = 1 WHERE shamelaID = %1").arg(shaId));
+    }
+
+    m_indexDB.commit();
 }
-void BooksDB::getAuthorFromShamela(int id)
+
+void BooksDB::getAuthorFromShamela(QSet<int> author)
 {
-    if(!id || m_savedAuthors.contains(id))
-        return;
+    QMutexLocker locker(&m_mutex);
 
     openIndexDB();
     openShamelaSpecialDB();
 
-    QSqlQuery query(m_indexDB);
-    QSqlQuery shamelaQuery(m_shamelaSpecialDB);
+    foreach(int id, author) {
+        QSqlQuery query(m_indexDB);
+        QSqlQuery shamelaQuery(m_shamelaSpecialDB);
 
-    query.exec(QString("SELECT COUNT(id) FROM authors WHERE shamelaAuthorID = %1").arg(id));
-    if(query.next()) {
-        if(query.value(0).toInt() == 0) {
-            shamelaQuery.exec(QString("SELECT authid, auth FROM Auth WHERE authid = %1").arg(id));
-            if(shamelaQuery.next()) {
-                query.exec(QString("INSERT INTO authors VALUES (NULL, %1, '%2')")
-                           .arg(id)
-                           .arg(shamelaQuery.value(1).toString()));
-                m_savedAuthors.append(id);
+        m_indexDB.transaction();
+
+        query.exec(QString("SELECT COUNT(id) FROM authors WHERE shamelaAuthorID = %1").arg(id));
+        if(query.next()) {
+            if(query.value(0).toInt() == 0) {
+                shamelaQuery.exec(QString("SELECT authid, auth FROM Auth WHERE authid = %1").arg(id));
+                if(shamelaQuery.next()) {
+                    query.exec(QString("INSERT INTO authors VALUES (NULL, %1, '%2')")
+                               .arg(id)
+                               .arg(shamelaQuery.value(1).toString()));
+                }
             }
         }
+
+        m_indexDB.commit();
     }
 }
 
@@ -186,7 +199,7 @@ void BooksDB::openShamelaSpecialDB()
 void BooksDB::queryBooksToIndex()
 {
     openIndexDB();
-    m_indexQuery->exec("SELECT shamelaID, bookName, filePath, archive, cat, authorId FROM books");
+    m_indexQuery->exec("SELECT shamelaID, bookName, filePath, archive, cat, authorId FROM books ORDER BY archive ASC");
 }
 
 void BooksDB::queryBooksToIndex(QList<int> ids)

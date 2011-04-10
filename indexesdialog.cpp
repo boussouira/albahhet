@@ -193,7 +193,9 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
         return;
     }
 
-    writer->optimize();
+    writer->setUseCompoundFile(false);
+
+    writer->optimize(MAX_SEGMENT);
     writer->close();
 
     _CLDELETE(writer);

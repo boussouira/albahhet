@@ -352,11 +352,11 @@
       </layout>
      </widget>
      <widget class="QWidget" name="page_4">
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <layout class="QVBoxLayout" name="verticalLayout_11">
        <item>
-        <widget class="QLabel" name="label_7">
+        <widget class="QLabel" name="labelStartIndexing">
          <property name="text">
-          <string>جاري الفهرسة...</string>
+          <string>بدأ الفهرسة</string>
          </property>
         </widget>
        </item>
@@ -379,13 +379,29 @@
         </spacer>
        </item>
        <item>
-        <widget class="QProgressBar" name="progressBar">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string/>
          </property>
-         <property name="format">
-          <string>%v/%m (%p%)</string>
-         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>تقدم الفهرسة:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QProgressBar" name="progressBar">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="format">
+             <string>%v/%m (%p%)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>

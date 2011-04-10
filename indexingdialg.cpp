@@ -16,7 +16,13 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
 
+    ui->stackedWidget->setCurrentIndex(0);
     ui->spinThreadCount->setValue(QThread::idealThreadCount());
+
+    ui->lineIndexName->setText("index_");
+    ui->lineIndexPath->setText("C:\\Users\\Naruto\\Desktop\\test1");
+    ui->lineShamelaPath->setText("D:\\shamela-r1");
+    ui->comboBox->setCurrentIndex(4);
 
     setRamSize();
     ui->spinRamSize->hide();
@@ -53,28 +59,28 @@ void IndexingDialg::showBooks()
 
 void IndexingDialg::startIndexing()
 {
+    qDebug("Start indexing...");
     ui->listWidget->clear();
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(m_booksCount);
     ui->progressBar->setValue(0);
+    ui->labelStartIndexing->setText(trUtf8("بدأ الفهرسة على الساعة %1").arg(QDateTime::currentDateTime().toString("hh:mm")));
 
     m_indexedBooks = 0;
 
-// Writer
-    m_writer = NULL;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
     if(!dir.exists(m_indexInfo->path()))
         dir.mkdir(m_indexInfo->path());
-    if ( IndexReader::indexExists(qPrintable(m_indexInfo->path())) ){
-        if ( IndexReader::isLocked(qPrintable(m_indexInfo->path())) ){
+    if(IndexReader::indexExists(qPrintable(m_indexInfo->path()))) {
+        if(IndexReader::isLocked(qPrintable(m_indexInfo->path()))) {
             IndexReader::unlock(qPrintable(m_indexInfo->path()));
         }
-
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()), analyzer, true);
-    }else{
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
     }
+
+    m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
+
+    m_writer->setUseCompoundFile(false);
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
     m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
 
@@ -96,9 +102,9 @@ void IndexingDialg::startIndexing()
         ui->widgetBooksProgress->layout()->addWidget(progress);
 
         connect(indexThread, SIGNAL(currentBookName(QString)), progress, SLOT(setName(QString)));
-        connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setMax(int)));
-        connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setCurrentValue(int)));
-        connect(progress, SIGNAL(skipCurrent()), indexThread, SLOT(skipCurrentBook()));
+//        connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setMax(int)));
+//        connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setCurrentValue(int)));
+//        connect(progress, SIGNAL(skipCurrent()), indexThread, SLOT(skipCurrentBook()));
 
         indexThread->start();
     }
@@ -170,11 +176,17 @@ void IndexingDialg::doneIndexing()
         int optimizeTime = -1;
 
         if(m_indexInfo->optimize()) {
-            ui->progressBar->setMaximum(0);
+            ui->progressBar->setMaximum(m_indexedBooks);
+            ui->progressBar->setValue(ui->progressBar->maximum());
+            ui->labelStartIndexing->setText(trUtf8("جاري ضغط الفهرس"));
+            ui->widgetBooksProgress->hide();
+            ui->checkOptimizeIndexLast->setEnabled(false);
+
+            qApp->processEvents();
 
             QTime optTime;
             optTime.start();
-            m_writer->optimize();
+            m_writer->optimize(MAX_SEGMENT);
 
             optimizeTime = optTime.elapsed();
         }
@@ -189,11 +201,11 @@ void IndexingDialg::doneIndexing()
         QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
         msg.append("<br>");
 
-        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(getSizeString(elpasedMsec)));
+        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(getTimeString(elpasedMsec)));
         msg.append("<br>");
 
         if(optimizeTime != -1) {
-            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(getSizeString(optimizeTime)));
+            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(getTimeString(optimizeTime)));
             msg.append("<br>");
         }
 
@@ -285,6 +297,7 @@ void IndexingDialg::on_buttonSelectIndexPath_clicked()
 
 void IndexingDialg::saveIndexInfo(int indexingTime, int opimizingTime)
 {
+    m_indexInfo->setType(IndexInfo::ShamelaIndex);
     m_indexInfo->generateIndexingInfo();
     m_indexInfo->indexingInfo()->indexingTime = indexingTime;
     m_indexInfo->indexingInfo()->optimizingTime = opimizingTime;

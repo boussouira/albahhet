@@ -31,8 +31,8 @@ public:
     void run();
     void clear();
     void close();
-    void setBookIndexed(int shaId);
-    void getAuthorFromShamela(int id);
+    void setBookIndexed(QSet<int> books);
+    void getAuthorFromShamela(QSet<int> author);
 
     QList<int> getShamelaIds();
     QList<int> getSavedIds();
@@ -60,7 +60,6 @@ protected:
     QMutex m_mutex;
     QHash<int, BookInfo*> m_bookInfoHash;
     QHash<int, QList<QPair<QString, QString> > > m_savedShoorts;
-    QList<int> m_savedAuthors;
 };
 
 #endif // BOOKSDB_H

@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     clearLogFile();
-    qInstallMsgHandler(myMessageOutput);
+//    qInstallMsgHandler(myMessageOutput);
     qDebug("Starting the application");
 
     QTranslator translator;

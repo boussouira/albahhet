@@ -151,6 +151,11 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
             return;
         }
 
+        if(info->ramSize() <= 0) {
+            info->setRamSize(100);
+        }
+
+        writer->setUseCompoundFile(false);
         writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
         writer->setRAMBufferSizeMB(info->ramSize());
 
@@ -204,6 +209,11 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
             return;
         }
 
+        if(info->ramSize() <= 0) {
+            info->setRamSize(100);
+        }
+
+        writer->setUseCompoundFile(false);
         writer->setRAMBufferSizeMB(info->ramSize());
 
         for(int i=0; i<ids.count(); i++) {
