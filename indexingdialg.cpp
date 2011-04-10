@@ -2,6 +2,7 @@
 #include "ui_indexingdialg.h"
 #include "common.h"
 #include "bookinfo.h"
+#include "settingsdialog.h"
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qtimeline.h>
@@ -16,17 +17,6 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
 
-    ui->stackedWidget->setCurrentIndex(0);
-    ui->spinThreadCount->setValue(QThread::idealThreadCount());
-
-    ui->lineIndexName->setText("index_");
-    ui->lineIndexPath->setText("C:\\Users\\Naruto\\Desktop\\test1");
-    ui->lineShamelaPath->setText("D:\\shamela-r1");
-    ui->comboBox->setCurrentIndex(4);
-
-    setRamSize();
-    ui->spinRamSize->hide();
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(setRamSize()));
     connect(ui->pushNext, SIGNAL(clicked()), SLOT(nextStep()));
 }
 
@@ -69,7 +59,13 @@ void IndexingDialg::startIndexing()
     m_indexedBooks = 0;
 
     QDir dir;
+    QSettings settings;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+
+    int ramSize = settings.value("ramSize", 100).toInt();
+    m_threadCount = settings.value("threadCount", QThread::idealThreadCount()).toInt();
+    ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
+
     if(!dir.exists(m_indexInfo->path()))
         dir.mkdir(m_indexInfo->path());
     if(IndexReader::indexExists(qPrintable(m_indexInfo->path()))) {
@@ -82,7 +78,7 @@ void IndexingDialg::startIndexing()
 
     m_writer->setUseCompoundFile(false);
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-    m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
+    m_writer->setRAMBufferSizeMB(ramSize);
 
     m_bookDB->queryBooksToIndex();
 
@@ -139,24 +135,15 @@ void IndexingDialg::nextStep()
         m_indexInfo->setPath(ui->lineIndexPath->text());
 
         checkIndex();
-    } else if(i == 1) {
-        m_threadCount = ui->spinThreadCount->value();
-        m_indexInfo->setRamSize(ui->spinRamSize->value());
-        m_indexInfo->setOptimizeIndex(ui->checkOptimizeIndex->isChecked());
-
-        showBooks();
-        ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
-        ui->checkOptimizeIndexLast->setChecked(ui->checkOptimizeIndex->isChecked());
-        ui->stackedWidget->setCurrentIndex(i+1);
-    } else if(i == 2) { // Start indexing
+    } else if(i == 1) { // Start indexing
         ui->pushCancel->hide();
         ui->pushNext->setText(trUtf8("ايقاف الفهرسة"));
         ui->stackedWidget->setCurrentIndex(i+1);
 
         startIndexing();
-    } else if(i == 3) { // Stop indexing
+    } else if(i == 2) { // Stop indexing
         stopIndexing();
-    } else if(i == 4) { // Done
+    } else if(i == 3) { // Done
         done(Accepted);
     }
 }
@@ -175,12 +162,12 @@ void IndexingDialg::doneIndexing()
         // Optimize Index benchmarking
         int optimizeTime = -1;
 
-        if(m_indexInfo->optimize()) {
+        if(ui->checkOptimizeIndex->isChecked()) {
             ui->progressBar->setMaximum(m_indexedBooks);
             ui->progressBar->setValue(ui->progressBar->maximum());
             ui->labelStartIndexing->setText(trUtf8("جاري ضغط الفهرس"));
             ui->widgetBooksProgress->hide();
-            ui->checkOptimizeIndexLast->setEnabled(false);
+            ui->checkOptimizeIndex->setEnabled(false);
 
             qApp->processEvents();
 
@@ -246,37 +233,6 @@ void IndexingDialg::on_pushCancel_clicked()
     done(Rejected);
 }
 
-void IndexingDialg::setRamSize()
-{
-    switch(ui->comboBox->currentIndex()) {
-    case 0:
-        ui->spinRamSize->setValue(100);
-        break;
-    case 1:
-        ui->spinRamSize->setValue(200);
-        break;
-    case 2:
-        ui->spinRamSize->setValue(300);
-        break;
-    case 3:
-        ui->spinRamSize->setValue(500);
-        break;
-    case 4:
-        ui->spinRamSize->setValue(1000);
-        break;
-    case 5:
-        ui->spinRamSize->setValue(1500);
-        break;
-    case 6:
-        ui->spinRamSize->setValue(2000);
-        break;
-    case 7:
-        ui->spinRamSize->setValue(3000);
-        break;
-
-    }
-}
-
 void IndexingDialg::on_buttonSelectShamela_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
@@ -327,23 +283,22 @@ void IndexingDialg::checkIndex()
             ui->labelIndexingInfo->setText(trUtf8("لقد تم انشاء الفهرس بنجاح"));
             ui->pushNext->setText(trUtf8("انتهى"));
             ui->pushCancel->hide();
-            ui->stackedWidget->setCurrentIndex(4);
+            ui->stackedWidget->setCurrentIndex(3);
 
-            m_indexInfo->setRamSize(100);
             saveIndexInfo();
+            return;
         }
 
         r->close();
         _CLLDELETE(r);
+
     }
     catch(...) {}
 
+    showBooks();
+    ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
-}
-
-void IndexingDialg::on_checkOptimizeIndexLast_stateChanged(int )
-{
-    m_indexInfo->setOptimizeIndex(ui->checkOptimizeIndexLast->isChecked());
+//    ui->stackedWidget->setCurrentIndex(i+1);
 }
 
 void IndexingDialg::shutDown()
@@ -385,4 +340,12 @@ void IndexingDialg::shutDownUpdateTime(qreal)
 void IndexingDialg::setIndexesManager(IndexesManager *manager)
 {
     m_indexesManager = manager;
+}
+
+void IndexingDialg::on_label_2_linkActivated(QString)
+{
+    SettingsDialog dialog(this);
+    dialog.setCurrentPage(1);
+
+    dialog.exec();
 }

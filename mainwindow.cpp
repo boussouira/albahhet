@@ -72,7 +72,7 @@ void MainWindow::saveSettings()
     settings.endGroup();
 
     if(m_currentIndex && m_currentIndex->id() != -1)
-        settings.setValue("current_index", m_currentIndex->id());
+        settings.setValue("currentIndex", m_currentIndex->id());
 
     m_searchWidget->saveSettings();
 }
@@ -101,7 +101,7 @@ void MainWindow::loadIndexesList()
     bool haveIndexes = !indexesList.isEmpty();
 
     if(haveIndexes) {
-        current = settings.value("current_index", -1).toInt();
+        current = settings.value("currentIndex", -1).toInt();
         if(current <= 0 || !m_indexesManager->idExists(current)) {
             current = indexesList.first()->id();
             qDebug("Select first id: %d", current);
@@ -191,7 +191,7 @@ void MainWindow::indexChanged()
     QSettings settings;
 
     if(m_currentIndex && m_currentIndex->id() != -1)
-        settings.setValue("current_index", m_currentIndex->id());
+        settings.setValue("currentIndex", m_currentIndex->id());
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 

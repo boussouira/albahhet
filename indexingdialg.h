@@ -33,7 +33,6 @@ public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
-    void setRamSize();
     void shutDownUpdateTime(qreal);
     void nextStep();
     void stopIndexing();
@@ -60,7 +59,7 @@ private slots:
     void on_buttonSelectIndexPath_clicked();
     void on_buttonSelectShamela_clicked();
     void on_pushCancel_clicked();
-    void on_checkOptimizeIndexLast_stateChanged(int );
+    void on_label_2_linkActivated(QString);
 };
 
 #endif // INDEXINGDIALG_H

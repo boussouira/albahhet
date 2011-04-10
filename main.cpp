@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
     clearLogFile();
-//    qInstallMsgHandler(myMessageOutput);
+    qInstallMsgHandler(myMessageOutput);
     qDebug("Starting the application");
 
     QTranslator translator;
@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
 
     check.update();
     check.updateToXml();
+    check.indexingConfig();
 
     if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();

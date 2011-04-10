@@ -1,5 +1,6 @@
 #include "settingschecker.h"
 #include "indexesmanager.h"
+#include "settingsdialog.h"
 #include <qapplication.h>
 #include <qstringlist.h>
 #include <qfile.h>
@@ -81,7 +82,7 @@ void SettingsChecker::updateToXml()
 {
     QSettings settings;
 
-    if(!settings.value("using_xml", false).toBool()) {
+    if(!settings.value("usingXml", false).toBool()) {
         qDebug("Try to upgard to xml...");
 
         IndexesManager manager;
@@ -93,6 +94,24 @@ void SettingsChecker::updateToXml()
         }
 
         settings.remove("indexes_list");
-        settings.setValue("using_xml", true);
+        settings.setValue("usingXml", true);
+    }
+}
+
+void SettingsChecker::indexingConfig()
+{
+    QSettings settings;
+
+    if(!settings.value("haveIndexingConfig", false).toBool()) {
+
+        SettingsDialog dialog;
+        dialog.setCurrentPage(1);
+
+        QMessageBox::information(0,
+                                 QObject::trUtf8("اعدادات الفهرسة"),
+                                 QObject::trUtf8("من فضلك قم بضبط اعدادات الفهرسة"));
+        if(dialog.exec() == SettingsDialog::Accepted)
+            settings.setValue("haveIndexingConfig", true);
+
     }
 }

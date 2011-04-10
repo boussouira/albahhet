@@ -15,9 +15,13 @@ public:
     SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
     void saveSettings();
+    void setCurrentPage(int index);
 
 signals:
     void settingsUpdated();
+
+protected:
+    void setRamSizes();
 
 protected:
     Ui::SettingsDialog *ui;

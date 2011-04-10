@@ -142,8 +142,6 @@ void IndexesManager::add(QSettings &settings, QString name)
     info.setName(settings.value("name").toString());
     info.setShamelaPath(settings.value("shamela_path").toString());
     info.setPath(settings.value("index_path").toString());
-    info.setRamSize(settings.value("ram_size").toInt());
-    info.setOptimizeIndex(settings.value("optimizeIndex").toBool());
     settings.endGroup();
 
     add(&info);

@@ -133,7 +133,10 @@ void ShamelaUpdaterDialog::removeSameIds(QList<int> &bigList, QList<int> &smalLi
 void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info)
 {
     try {
-        IndexWriter *writer = NULL;
+        IndexWriter *writer;
+        QSettings settings;
+        int ramSize = settings.value("ramSize", 100).toInt();
+
         QDir dir;
         ArabicAnalyzer *analyzer = new ArabicAnalyzer();
         if(!dir.exists(info->path()))
@@ -151,13 +154,9 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
             return;
         }
 
-        if(info->ramSize() <= 0) {
-            info->setRamSize(100);
-        }
-
         writer->setUseCompoundFile(false);
         writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-        writer->setRAMBufferSizeMB(info->ramSize());
+        writer->setRAMBufferSizeMB(ramSize);
 
         bookDB->queryBooksToIndex(ids);
 
@@ -190,10 +189,13 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
 {
 
     try {
-        IndexWriter *writer = NULL;
+        IndexWriter *writer;
+        ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+
+        QSettings settings;
+        int ramSize = settings.value("ramSize", 100).toInt();
 
         QDir dir;
-        ArabicAnalyzer *analyzer = new ArabicAnalyzer();
         if(!dir.exists(info->path()))
             dir.mkdir(info->path());
         if ( IndexReader::indexExists(qPrintable(info->path())) ){
@@ -209,12 +211,8 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
             return;
         }
 
-        if(info->ramSize() <= 0) {
-            info->setRamSize(100);
-        }
-
         writer->setUseCompoundFile(false);
-        writer->setRAMBufferSizeMB(info->ramSize());
+        writer->setRAMBufferSizeMB(ramSize);
 
         for(int i=0; i<ids.count(); i++) {
             TCHAR str[10];

@@ -32,8 +32,6 @@ public:
     void setName(QString name);
     void setPath(QString path);
     void setShamelaPath(QString path);
-    void setOptimizeIndex(bool optimize);
-    void setRamSize(int size);
     void setIndexingInfo(IndexingInfo *info);
 
     int id();
@@ -41,8 +39,6 @@ public:
     QString name();
     QString path();
     QString shamelaPath();
-    bool optimize();
-    int ramSize();
     IndexingInfo *indexingInfo();
 
     QString shamelaMainDbName();

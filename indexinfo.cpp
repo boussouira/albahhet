@@ -35,15 +35,6 @@ void IndexInfo::setShamelaPath(QString path)
         m_shamelaPath.resize(m_shamelaPath.size()-1);
 }
 
-void IndexInfo::setOptimizeIndex(bool optimize)
-{
-    m_optimizeIndex = optimize;
-}
-
-void IndexInfo::setRamSize(int size)
-{
-    m_ramSize = size;
-}
 
 QString IndexInfo::name()
 {
@@ -58,16 +49,6 @@ QString IndexInfo::path()
 QString IndexInfo::shamelaPath()
 {
     return m_shamelaPath;
-}
-
-bool IndexInfo::optimize()
-{
-    return m_optimizeIndex;
-}
-
-int IndexInfo::ramSize()
-{
-    return m_ramSize;
 }
 
 QString IndexInfo::shamelaMainDbName()
