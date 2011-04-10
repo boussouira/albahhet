@@ -9,7 +9,7 @@
 #include "booksdb.h"
 
 #define APP_VERSION 0x010009
-#define APP_VERSION_STR "1.0.9"
+#define APP_VERSION_STR "1.0.11"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
