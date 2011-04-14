@@ -1,7 +1,8 @@
 QT += core \
     gui \
     sql \
-    webkit
+    webkit \
+    xml
 TEMPLATE = app
 TARGET = albahhet
 
@@ -40,7 +41,10 @@ SOURCES += main.cpp \
     shamelasearchwidget.cpp \
     shamelabooksreader.cpp \
     qthighlighter.cpp \
-    bookprogresswidget.cpp
+    bookprogresswidget.cpp \
+    shamelafilterproxymodel.cpp \
+    selectedfilterwidget.cpp \
+    indexesmanager.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -69,7 +73,10 @@ HEADERS += mainwindow.h \
     shamelasearchwidget.h \
     shamelabooksreader.h \
     qthighlighter.h \
-    bookprogresswidget.h
+    bookprogresswidget.h \
+    shamelafilterproxymodel.h \
+    selectedfilterwidget.h \
+    indexesmanager.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
@@ -77,7 +84,8 @@ FORMS += mainwindow.ui \
     indexesdialog.ui \
     shamelaupdaterdialog.ui \
     logdialog.ui \
-    shamelasearchwidget.ui
+    shamelasearchwidget.ui \
+    selectedfilterwidget.ui
 
 CLUCENE_SOURCE_PATH = $$(CLUCENE_SOURCE_PATH)
 CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)

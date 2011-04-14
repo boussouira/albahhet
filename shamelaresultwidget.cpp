@@ -28,9 +28,6 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    settings.value("highlightOnlyFirst", true).toBool();
-
     ui->progressWidget->hide();
     connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
@@ -190,12 +187,15 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
 {
     m_bookReader->close();
 
+    QSettings settings;
     BookInfo *info = m_booksDb->getBookInfo(bookID);
     ShamelaResult *result = m_searcher->getSavedResult(resultID);
 
+    m_bookReader->setBooksDB(m_booksDb);
     m_bookReader->setBookInfo(info);
     m_bookReader->setResult(result);
     m_bookReader->setStringTohighlight(m_searcher->queryString());
+    m_bookReader->setHighLightAll(!settings.value("BooksViewer/highlightOnlyFirst", true).toBool());
 
     if(!m_bookReader->open())
         qFatal("Can't open book");

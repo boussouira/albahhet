@@ -9,7 +9,10 @@ class SettingsChecker
 public:
     SettingsChecker();
     void checkIndexes();
-    bool checkIndex(QString index);
+    bool checkIndex(IndexInfo *index);
+    void update();
+    void updateToXml();
+    void indexingConfig();
 };
 
 #endif // SETTINGSCHECKER_H

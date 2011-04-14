@@ -25,6 +25,7 @@ public:
     QStandardItemModel *catsModel() { return m_catsModel; }
     QStandardItemModel *authorsModel() { return m_authorsModel; }
 
+     QStandardItemModel *getModel(int index);
 public slots:
     void booksListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/);
     void catsListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/);

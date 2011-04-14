@@ -3,6 +3,7 @@
 
 #include <qmainwindow.h>
 #include <qhash.h>
+#include "indexesmanager.h"
 
 namespace Ui {
     class MainWindow;
@@ -20,7 +21,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void selectIndex(QString name);
+    void selectIndex(int id);
     void selectIndex(QAction *action);
     void indexChanged();
     void loadIndexesList();
@@ -28,9 +29,6 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *e);
-    QString getIndexSize();
-    QString getBooksSize();
-    qint64 getDirSize(const QString &path);
 
 protected slots:
     void saveSettings();
@@ -44,12 +42,12 @@ protected slots:
     void showLogDialog();
 
 protected:
+    IndexesManager *m_indexesManager;
     TabWidget *m_tabWidget;
     ShamelaSearchWidget *m_searchWidget;
     LogDialog *m_logDialog;
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
-    QHash<QString, IndexInfo*> m_indexInfoMap;
     bool m_showNewIndexMsg;
     Ui::MainWindow *ui;
 

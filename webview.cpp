@@ -7,7 +7,7 @@ WebView::WebView(QWidget *parent) : QWebView(parent)
 {
     m_frame = page()->mainFrame();
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     settings.beginGroup("BooksViewer");
     QString fontString = settings.value("fontFamily", QWebSettings::globalSettings()->fontFamily(QWebSettings::StandardFont)).toString();

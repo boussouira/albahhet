@@ -2,6 +2,7 @@
 #include "ui_indexingdialg.h"
 #include "common.h"
 #include "bookinfo.h"
+#include "settingsdialog.h"
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qtimeline.h>
@@ -16,11 +17,6 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
 
-    ui->spinThreadCount->setValue(QThread::idealThreadCount());
-
-    setRamSize();
-    ui->spinRamSize->hide();
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(setRamSize()));
     connect(ui->pushNext, SIGNAL(clicked()), SLOT(nextStep()));
 }
 
@@ -53,35 +49,41 @@ void IndexingDialg::showBooks()
 
 void IndexingDialg::startIndexing()
 {
+    qDebug("Start indexing...");
     ui->listWidget->clear();
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(m_booksCount);
     ui->progressBar->setValue(0);
+    ui->labelStartIndexing->setText(trUtf8("بدأ الفهرسة على الساعة %1").arg(QDateTime::currentDateTime().toString("hh:mm")));
 
     m_indexedBooks = 0;
 
-// Writer
-    m_writer = NULL;
     QDir dir;
+    QSettings settings;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer("C:\\Documents and Settings\\Administrateur\\Bureau\\stopwords.txt",
                                                   "UTF-8");
+
+    int ramSize = settings.value("ramSize", 100).toInt();
+    m_threadCount = settings.value("threadCount", QThread::idealThreadCount()).toInt();
+    ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
+
     if(!dir.exists(m_indexInfo->path()))
         dir.mkdir(m_indexInfo->path());
-    if ( IndexReader::indexExists(qPrintable(m_indexInfo->path())) ){
-        if ( IndexReader::isLocked(qPrintable(m_indexInfo->path())) ){
+    if(IndexReader::indexExists(qPrintable(m_indexInfo->path()))) {
+        if(IndexReader::isLocked(qPrintable(m_indexInfo->path()))) {
             IndexReader::unlock(qPrintable(m_indexInfo->path()));
         }
-
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()), analyzer, true);
-    }else{
-        m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
     }
+
+    m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
+
+    m_writer->setUseCompoundFile(false);
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);
-    m_writer->setRAMBufferSizeMB(ui->spinRamSize->value());
+    m_writer->setRAMBufferSizeMB(ramSize);
 
     m_bookDB->queryBooksToIndex();
 
-    indexingTime.start();
+    m_indexingTime.start();
 
     for(int i=0;i<m_threadCount;i++) {
         ShamelaIndexer *indexThread = new ShamelaIndexer();
@@ -97,9 +99,9 @@ void IndexingDialg::startIndexing()
         ui->widgetBooksProgress->layout()->addWidget(progress);
 
         connect(indexThread, SIGNAL(currentBookName(QString)), progress, SLOT(setName(QString)));
-        connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setMax(int)));
-        connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setCurrentValue(int)));
-        connect(progress, SIGNAL(skipCurrent()), indexThread, SLOT(skipCurrentBook()));
+//        connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setMax(int)));
+//        connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setCurrentValue(int)));
+//        connect(progress, SIGNAL(skipCurrent()), indexThread, SLOT(skipCurrentBook()));
 
         indexThread->start();
     }
@@ -121,10 +123,7 @@ void IndexingDialg::nextStep()
             if(ui->lineIndexPath->text().isEmpty())
                 throw trUtf8("لم تقم باختيار مسار وضع الفهرس");
 
-            QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-            QString hash = IndexInfo::indexHash(ui->lineIndexName->text());
-
-            if(settings.childGroups().contains(hash))
+            if(m_indexesManager->nameExists(ui->lineIndexName->text()))
                 throw trUtf8("اسم الفهرس المدخل موجودا مسبقا");
 
         } catch(QString &e) {
@@ -137,24 +136,15 @@ void IndexingDialg::nextStep()
         m_indexInfo->setPath(ui->lineIndexPath->text());
 
         checkIndex();
-    } else if(i == 1) {
-        m_threadCount = ui->spinThreadCount->value();
-        m_indexInfo->setRamSize(ui->spinRamSize->value());
-        m_indexInfo->setOptimizeIndex(ui->checkOptimizeIndex->isChecked());
-
-        showBooks();
-        ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
-        ui->checkOptimizeIndexLast->setChecked(ui->checkOptimizeIndex->isChecked());
-        ui->stackedWidget->setCurrentIndex(i+1);
-    } else if(i == 2) { // Start indexing
+    } else if(i == 1) { // Start indexing
         ui->pushCancel->hide();
         ui->pushNext->setText(trUtf8("ايقاف الفهرسة"));
         ui->stackedWidget->setCurrentIndex(i+1);
 
         startIndexing();
-    } else if(i == 3) { // Stop indexing
+    } else if(i == 2) { // Stop indexing
         stopIndexing();
-    } else if(i == 4) { // Done
+    } else if(i == 3) { // Done
         done(Accepted);
     }
 }
@@ -168,17 +158,23 @@ void IndexingDialg::doneIndexing()
 {
     if(--m_threadCount <= 0) {
         // Indexing benchmarking
-        int elpasedMsec = indexingTime.elapsed();
+        int elpasedMsec = m_indexingTime.elapsed();
 
         // Optimize Index benchmarking
         int optimizeTime = -1;
 
-        if(m_indexInfo->optimize()) {
-            ui->progressBar->setMaximum(0);
+        if(ui->checkOptimizeIndex->isChecked()) {
+            ui->progressBar->setMaximum(m_indexedBooks);
+            ui->progressBar->setValue(ui->progressBar->maximum());
+            ui->labelStartIndexing->setText(trUtf8("جاري ضغط الفهرس"));
+            ui->widgetBooksProgress->hide();
+            ui->checkOptimizeIndex->setEnabled(false);
+
+            qApp->processEvents();
 
             QTime optTime;
             optTime.start();
-            m_writer->optimize();
+            m_writer->optimize(MAX_SEGMENT);
 
             optimizeTime = optTime.elapsed();
         }
@@ -193,11 +189,11 @@ void IndexingDialg::doneIndexing()
         QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
         msg.append("<br>");
 
-        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(formatTime(elpasedMsec)));
+        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(getTimeString(elpasedMsec)));
         msg.append("<br>");
 
         if(optimizeTime != -1) {
-            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(formatTime(optimizeTime)));
+            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(getTimeString(optimizeTime)));
             msg.append("<br>");
         }
 
@@ -205,7 +201,7 @@ void IndexingDialg::doneIndexing()
         ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
         _CLLDELETE(m_writer);
 
-        saveIndexInfo();
+        saveIndexInfo(elpasedMsec, optimizeTime);
 
         if(ui->checkShutDown->isChecked())
             shutDown();
@@ -217,29 +213,6 @@ void IndexingDialg::indexingError()
     QMessageBox::warning(this,
                          trUtf8("فهرسة المكتبة"),
                          trUtf8("لقد حدث خطأ أثناء فهرسة المكتبة.\nالمرجوا اعادة المحاولة"));
-}
-
-QString IndexingDialg::formatTime(int milsec)
-{
-    QString time;
-
-    int seconde = (int) ((milsec / 1000) % 60);
-    int minutes = (int) (((milsec / 1000) / 60) % 60);
-    int hours   = (int) (((milsec / 1000) / 60) / 60);
-
-    if(hours > 0){
-        time.append(arPlural(hours, HOUR, true));
-        time.append(trUtf8(" و "));
-    }
-
-    if(minutes > 0 || hours > 0) {
-        time.append(arPlural(minutes, MINUTE, true));
-        time.append(trUtf8(" و "));
-    }
-
-    time.append(arPlural(seconde, SECOND, true));
-
-    return time;
 }
 
 void IndexingDialg::stopIndexing()
@@ -261,37 +234,6 @@ void IndexingDialg::on_pushCancel_clicked()
     done(Rejected);
 }
 
-void IndexingDialg::setRamSize()
-{
-    switch(ui->comboBox->currentIndex()) {
-    case 0:
-        ui->spinRamSize->setValue(100);
-        break;
-    case 1:
-        ui->spinRamSize->setValue(200);
-        break;
-    case 2:
-        ui->spinRamSize->setValue(300);
-        break;
-    case 3:
-        ui->spinRamSize->setValue(500);
-        break;
-    case 4:
-        ui->spinRamSize->setValue(1000);
-        break;
-    case 5:
-        ui->spinRamSize->setValue(1500);
-        break;
-    case 6:
-        ui->spinRamSize->setValue(2000);
-        break;
-    case 7:
-        ui->spinRamSize->setValue(3000);
-        break;
-
-    }
-}
-
 void IndexingDialg::on_buttonSelectShamela_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
@@ -310,24 +252,15 @@ void IndexingDialg::on_buttonSelectIndexPath_clicked()
     }
 }
 
-void IndexingDialg::saveIndexInfo()
+void IndexingDialg::saveIndexInfo(int indexingTime, int opimizingTime)
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    m_indexInfo->setType(IndexInfo::ShamelaIndex);
+    m_indexInfo->generateIndexingInfo();
+    m_indexInfo->indexingInfo()->indexingTime = indexingTime;
+    m_indexInfo->indexingInfo()->optimizingTime = opimizingTime;
+    m_indexInfo->indexingInfo()->creatTime = QDateTime::currentDateTime().toTime_t();
 
-    QString indexName = m_indexInfo->indexHash();
-
-    QStringList indexes = settings.value("indexes_list").toStringList();
-
-    indexes.append(indexName);
-    settings.setValue("indexes_list", indexes);
-
-    settings.beginGroup(indexName);
-    settings.setValue("name", m_indexInfo->name());
-    settings.setValue("shamela_path", m_indexInfo->shamelaPath());
-    settings.setValue("index_path", m_indexInfo->path());
-    settings.setValue("ram_size", m_indexInfo->ramSize());
-    settings.setValue("optimizeIndex", m_indexInfo->optimize());
-    settings.endGroup();
+    m_indexesManager->add(m_indexInfo);
 
     DELETE_DB(m_bookDB); // We don't need it any more, the mainwindow may open the same databases...
     m_bookDB = new BooksDB();
@@ -351,23 +284,22 @@ void IndexingDialg::checkIndex()
             ui->labelIndexingInfo->setText(trUtf8("لقد تم انشاء الفهرس بنجاح"));
             ui->pushNext->setText(trUtf8("انتهى"));
             ui->pushCancel->hide();
-            ui->stackedWidget->setCurrentIndex(4);
+            ui->stackedWidget->setCurrentIndex(3);
 
-            m_indexInfo->setRamSize(100);
             saveIndexInfo();
+            return;
         }
 
         r->close();
         _CLLDELETE(r);
+
     }
     catch(...) {}
 
+    showBooks();
+    ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
-}
-
-void IndexingDialg::on_checkOptimizeIndexLast_stateChanged(int )
-{
-    m_indexInfo->setOptimizeIndex(ui->checkOptimizeIndexLast->isChecked());
+//    ui->stackedWidget->setCurrentIndex(i+1);
 }
 
 void IndexingDialg::shutDown()
@@ -404,4 +336,17 @@ void IndexingDialg::shutDownUpdateTime(qreal)
     m_shutDownMsgBox->setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
                                      "سيتم اطفاء الجهاز بعد %1")
                               .arg(arPlural(m_shutDownTime--,  SECOND, true)));
+}
+
+void IndexingDialg::setIndexesManager(IndexesManager *manager)
+{
+    m_indexesManager = manager;
+}
+
+void IndexingDialg::on_label_2_linkActivated(QString)
+{
+    SettingsDialog dialog(this);
+    dialog.setCurrentPage(1);
+
+    dialog.exec();
 }

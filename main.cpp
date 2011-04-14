@@ -7,16 +7,19 @@
 #include <qtextstream.h>
 #include <qtextcodec.h>
 #include <qdatetime.h>
+#include <qsettings.h>
 
 #ifdef Q_OS_WIN
     #include <Windows.h>
 #endif
 
+
 void myMessageOutput(QtMsgType type, const char *msg)
 {
-    QFile debugFile("log.txt");
-    if (!debugFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
-             return;
+    QFile debugFile(LOG_FILE);
+    if (!debugFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+        return;
+    }
 
     QTextStream out(&debugFile);
     out.setCodec("utf-8");
@@ -37,6 +40,8 @@ void myMessageOutput(QtMsgType type, const char *msg)
         out << dateTime << "[FATAL] " << QString::fromLocal8Bit(msg) << "\n";
         abort();
     }
+
+    debugFile.close();
 }
 
 #ifdef Q_OS_WIN
@@ -53,26 +58,36 @@ void useArabicKeyboardLayout()
 
 void clearLogFile()
 {
-    QFile debugFile("log.txt");
+    QDir dir;
+    dir.mkpath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+
+    QFile debugFile(LOG_FILE);
     if(debugFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
         debugFile.close();
 }
 
 int main(int argc, char *argv[])
 {
+    QApplication app(argc, argv);
+    app.setOrganizationName("Al Bahhet");
+    app.setOrganizationDomain("albahhet.sf.net");
+    app.setApplicationName("Al Bahhet");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+
     clearLogFile();
     qInstallMsgHandler(myMessageOutput);
-
     qDebug("Starting the application");
-
-    QApplication app(argc, argv);
 
     QTranslator translator;
     translator.load("qt_ar", ":/");
     app.installTranslator(&translator);
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     SettingsChecker check;
+
+    check.update();
+    check.updateToXml();
+    check.indexingConfig();
 
     if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();

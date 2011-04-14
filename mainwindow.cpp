@@ -19,10 +19,12 @@
 #include <qmessagebox.h>
 
 MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent), ui(new Ui::MainWindow)
+    QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     setWindowTitle(APP_NAME);
+
+    m_indexesManager = new IndexesManager;
 
     m_tabWidget = new TabWidget(this);
     m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
@@ -33,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
                         trUtf8("بحث"));
     setCentralWidget(m_tabWidget);
 
-    m_currentIndex = new IndexInfo();
+    m_currentIndex = 0;
     m_booksDB = new BooksDB();
 
     m_logDialog = new LogDialog(this);
@@ -55,65 +57,67 @@ MainWindow::~MainWindow()
     DELETE_DB(m_booksDB);
     delete m_logDialog;
     delete m_tabWidget;
+    delete m_indexesManager;
     delete ui;
 }
 
 void MainWindow::saveSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
     settings.setValue("pos", pos());
+    settings.setValue("maximized", isMaximized());
     settings.endGroup();
 
-    if(!m_currentIndex->name().isEmpty())
-        settings.setValue("current_index", m_currentIndex->indexHash());
+    if(m_currentIndex && m_currentIndex->id() != -1)
+        settings.setValue("currentIndex", m_currentIndex->id());
 
     m_searchWidget->saveSettings();
 }
 
 void MainWindow::loadSettings()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
     m_showNewIndexMsg = settings.value("showNewIndexMsg", true).toBool();
 
     settings.beginGroup("MainWindow");
     resize(settings.value("size", size()).toSize());
     move(settings.value("pos", pos()).toPoint());
+
+    if(settings.value("maximized", true).toBool())
+        showMaximized();
+
     settings.endGroup();
 }
 
 void MainWindow::loadIndexesList()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    QStringList list =  settings.value("indexes_list").toStringList();
-    QString current;
-    bool haveIndexes = !list.isEmpty();
+    qDebug("Loading Indexes List...");
+    QSettings settings;
+    QList<IndexInfo *> indexesList =  m_indexesManager->list();
+    int current;
+    bool haveIndexes = !indexesList.isEmpty();
 
     if(haveIndexes) {
-        current = settings.value("current_index").toString();
-        if(current.isEmpty() || !list.contains(current))
-            current = list.first();
+        current = settings.value("currentIndex", -1).toInt();
+        if(current <= 0 || !m_indexesManager->idExists(current)) {
+            current = indexesList.first()->id();
+            qDebug("Select first id: %d", current);
+        }
 
-        for(int i=0; i<list.count(); i++) {
-            IndexInfo *info = new IndexInfo();
-            settings.beginGroup(list.at(i));
-            info->setName(settings.value("name").toString());
-            info->setShamelaPath(settings.value("shamela_path").toString());
-            info->setPath(settings.value("index_path").toString());
-            info->setRamSize(settings.value("ram_size").toInt());
-            info->setOptimizeIndex(settings.value("optimizeIndex").toBool());
-            settings.endGroup();
-
-            m_indexInfoMap.insert(list.at(i), info);
+        for(int i=0; i<indexesList.count(); i++) {
+            IndexInfo *info = indexesList.at(i);
 
             QAction *action = new QAction(info->name(), ui->menuIndexesList);
-            action->setData(list.at(i));
+            action->setData(info->id());
             connect(action, SIGNAL(triggered()), SLOT(changeIndex()));
 
             ui->menuIndexesList->addAction(action);
         }
+    } else {
+        qDebug("No index found");
     }
 
     m_tabWidget->setEnabled(haveIndexes);
@@ -125,38 +129,43 @@ void MainWindow::loadIndexesList()
         selectIndex(current);
 }
 
-void MainWindow::selectIndex(QString name)
+void MainWindow::selectIndex(int id)
 {
     foreach(QAction *action, ui->menuIndexesList->actions()) {
-        if(action->data().toString() == name) {
+        if(action->data().toInt() == id) {
             selectIndex(action);
             break;
         }
     }
-
 }
 
 void MainWindow::selectIndex(QAction *action)
 {
-    m_currentIndex = m_indexInfoMap[action->data().toString()];
-    action->setCheckable(true);
-    action->setChecked(true);
+    qDebug("Select index: %d", action->data().toInt());
+    m_currentIndex = m_indexesManager->indexInfo(action->data().toInt());
 
-    bool haveIndex;
+    if(m_currentIndex) {
+        action->setCheckable(true);
+        action->setChecked(true);
 
-    try {
-        indexChanged();
-        haveIndex = true;
-    } catch (QString &str) {
-        QMessageBox::critical(this, trUtf8("تحميل فهرس"),
-                              trUtf8("حدث خطأ عند تحميل الفهرس:"
-                                     "\n"
-                                     "%1").arg(str));
-        haveIndex = false;
+        bool haveIndex;
+
+        try {
+            indexChanged();
+            haveIndex = true;
+        } catch (QString &str) {
+            QMessageBox::critical(this, trUtf8("تحميل فهرس"),
+                                  trUtf8("حدث خطأ عند تحميل الفهرس:"
+                                         "\n"
+                                         "%1").arg(str));
+            haveIndex = false;
+        }
+
+        m_tabWidget->setEnabled(haveIndex);
+        ui->actionIndexInfo->setEnabled(haveIndex);
+    } else {
+        qFatal("No index with id %d", action->data().toInt());
     }
-
-    m_tabWidget->setEnabled(haveIndex);
-    ui->actionIndexInfo->setEnabled(haveIndex);
 }
 
 void MainWindow::changeIndex()
@@ -179,10 +188,10 @@ void MainWindow::changeIndex()
 
 void MainWindow::indexChanged()
 {
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
+    QSettings settings;
 
-    if(!m_currentIndex->name().isEmpty())
-        settings.setValue("current_index", m_currentIndex->indexHash());
+    if(m_currentIndex && m_currentIndex->id() != -1)
+        settings.setValue("currentIndex", m_currentIndex->id());
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 
@@ -220,12 +229,13 @@ void MainWindow::haveIndexesCheck()
 
 void MainWindow::updateIndexesMenu()
 {
+    qDebug("update Indexes Menu");
     QList<QAction*> list = ui->menuIndexesList->actions();
 
     if(!list.isEmpty())
         qDeleteAll(list);
 
-    m_indexInfoMap.clear();
+    m_indexesManager->clear();
 
     loadIndexesList();
 }
@@ -239,6 +249,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::newIndex()
 {
     IndexingDialg indexDialog(this);
+    indexDialog.setIndexesManager(m_indexesManager);
     connect(&indexDialog, SIGNAL(indexCreated()), SLOT(updateIndexesMenu()));
 
     indexDialog.exec();
@@ -246,7 +257,7 @@ void MainWindow::newIndex()
 
 void MainWindow::editIndexes()
 {
-    IndexesDialog dialog(this);
+    IndexesDialog dialog(m_indexesManager, this);
     connect(&dialog, SIGNAL(indexesChanged()), SLOT(updateIndexesMenu()));
 
     dialog.exec();
@@ -264,11 +275,16 @@ void MainWindow::showStatistic()
         treeWidget->setRootIsDecorated(false);
 
         QList<QTreeWidgetItem *> itemList;
+        IndexingInfo *info = m_currentIndex->indexingInfo();
 
-        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name())
-        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path())
-        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath())
-        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs())
+        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name());
+
+        if(info)
+            ADD_QTREEWIDGET_ITEM("تاريخ الانشاء", QDateTime::fromTime_t(info->creatTime).toString("dd/MM/yyyy - hh:mm"));
+
+        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path());
+        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath());
+        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs());
 
         //ADD_QTREEWIDGET_ITEM("Max Docs", r->maxDoc());
         //ADD_QTREEWIDGET_ITEM("Current Version", ver));
@@ -276,26 +292,20 @@ void MainWindow::showStatistic()
         TermEnum* te = r->terms();
         int32_t nterms = 0;
 
-        bool writeToFile = false;
+        for (nterms = 0; te->next() == true; nterms++) {}
 
-        if(writeToFile) {
-            QFile logFile("terms.txt");
-            if(logFile.open(QIODevice::WriteOnly|QIODevice::Text)) {
-                QTextStream log(&logFile);
-                for (nterms = 0; te->next() == true; nterms++) {
-                    /* if(_wcsicmp(te->term()->field(), _T("bookid")) == 0) */
-                    log << TCharToQString(te->term()->toString()) << "\n";
-                }
-            }
+        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms);
+        if(info) {
+            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(info->indexSize));
+            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(info->shamelaSize));
+            ADD_QTREEWIDGET_ITEM("مدة الفهرسة", getTimeString(info->indexingTime, false));
+
+            if(info->optimizingTime != -1)
+                ADD_QTREEWIDGET_ITEM("مدة ضغط الفهرس", getTimeString(info->optimizingTime, false));
         } else {
-            for (nterms = 0; te->next() == true; nterms++) {
-                /* qDebug() << TCharToQString(te->term()->text()); */
-            }
+            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->path())));
+            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
         }
-
-        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms)
-        ADD_QTREEWIDGET_ITEM("حجم الفهرس", getIndexSize())
-        ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getBooksSize())
 
         treeWidget->addTopLevelItems(itemList);
         treeWidget->resizeColumnToContents(1);
@@ -309,9 +319,9 @@ void MainWindow::showStatistic()
         layout->addWidget(label);
         layout->addWidget(treeWidget);
 
-        dialog->setWindowTitle(APP_NAME);
+        dialog->setWindowTitle(trUtf8("%1 %2").arg(APP_NAME).arg(APP_VERSION_STR));
         dialog->setLayout(layout);
-        dialog->resize(treeWidget->sizeHint());
+        dialog->resize(400, 300);
         dialog->show();
 
         _CLLDELETE(te);
@@ -330,72 +340,9 @@ void MainWindow::showStatistic()
 
 }
 
-QString MainWindow::getIndexSize()
-{
-    QDir dir;
-    dir.cd(m_currentIndex->path());
-    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-    dir.setSorting(QDir::Size | QDir::Reversed);
-
-    QFileInfoList list = dir.entryInfoList();
-    QString sizeStr;
-    qint64 size = 0;
-    for (int i = 0; i < list.size(); ++i) {
-        QFileInfo fileInfo = list.at(i);
-        size += fileInfo.size();
-    }
-
-    if(size < 1024)
-        sizeStr = trUtf8("%1 بيت").arg(size);
-    else if(1024 <= size && size < 1024*1024)
-        sizeStr = trUtf8("%1 كيلو").arg(size/(1024.0), 4);
-    else if( 1024*1024 <= size && size < 1024*1024*1024)
-        sizeStr = trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
-    else
-        sizeStr = trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
-
-    return sizeStr;
-}
-
-QString MainWindow::getBooksSize()
-{
-    QString sizeStr;
-    qint64 size = getDirSize(m_currentIndex->shamelaPath());
-
-    if(size < 1024)
-        sizeStr = trUtf8("%1 بيت").arg(size);
-    else if(1024 <= size && size < 1024*1024)
-        sizeStr = trUtf8("%1 كيلو").arg(size/(1024.0), 4);
-    else if( 1024*1024 <= size && size < 1024*1024*1024)
-        sizeStr = trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
-    else
-        sizeStr = trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
-
-    return sizeStr;
-}
-
-qint64 MainWindow::getDirSize(const QString &path)
-{
-    QFileInfo info(path);
-    qint64 size=0;
-
-    if(info.isDir()){
-        QDir dir(path);
-        foreach(QFileInfo fieInfo, dir.entryInfoList(QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot)) {
-            if(fieInfo.isFile() && fieInfo.suffix() == "mdb")
-                size += fieInfo.size();
-            else if(fieInfo.isDir())
-                size += getDirSize(fieInfo.absoluteFilePath());
-        }
-    }
-
-    return size;
-}
-
 void MainWindow::showSettingsDialog()
 {
     SettingsDialog dialog(this);
-    connect(&dialog, SIGNAL(settingsUpdated()), SLOT(loadSettings()));
     connect(&dialog, SIGNAL(settingsUpdated()), m_searchWidget, SLOT(loadSettings()));
 
     dialog.exec();

@@ -31,11 +31,12 @@ public:
     void run();
     void clear();
     void close();
-    void setBookIndexed(int shaId);
-    void getAuthorFromShamela(int id);
+    void setBookIndexed(QSet<int> books);
+    void getAuthorFromShamela(QSet<int> author);
 
     QList<int> getShamelaIds();
     QList<int> getSavedIds();
+    QList<int> getAuthorBooks(int auth);
 
     QStringList addBooks(QList<int> shaIds);
     QStringList removeBooks(QList<int> savedIds);
@@ -43,6 +44,8 @@ public:
     QStandardItemModel *getBooksListModel();
     QStandardItemModel *getCatsListModel();
     QStandardItemModel *getAuthorsListModel();
+
+    QList<QPair<QString, QString> > getBookShoorts(int bid);
 
     QStringList connections();
 
@@ -56,7 +59,7 @@ protected:
     QSqlQuery *m_shamelaSpecialQuery;
     QMutex m_mutex;
     QHash<int, BookInfo*> m_bookInfoHash;
-    QList<int> m_savedAuthors;
+    QHash<int, QList<QPair<QString, QString> > > m_savedShoorts;
 };
 
 #endif // BOOKSDB_H

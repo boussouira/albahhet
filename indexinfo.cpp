@@ -1,10 +1,19 @@
 #include "indexinfo.h"
+#include "common.h"
 #include <qdir.h>
 
 IndexInfo::IndexInfo()
 {
+    m_id = -1;
     m_optimizeIndex = true;
     m_ramSize = 0;
+    m_indexingInfo = 0;
+}
+
+IndexInfo::~IndexInfo()
+{
+    if(m_indexingInfo)
+        delete m_indexingInfo;
 }
 
 void IndexInfo::setName(QString name)
@@ -26,15 +35,6 @@ void IndexInfo::setShamelaPath(QString path)
         m_shamelaPath.resize(m_shamelaPath.size()-1);
 }
 
-void IndexInfo::setOptimizeIndex(bool optimize)
-{
-    m_optimizeIndex = optimize;
-}
-
-void IndexInfo::setRamSize(int size)
-{
-    m_ramSize = size;
-}
 
 QString IndexInfo::name()
 {
@@ -49,26 +49,6 @@ QString IndexInfo::path()
 QString IndexInfo::shamelaPath()
 {
     return m_shamelaPath;
-}
-
-bool IndexInfo::optimize()
-{
-    return m_optimizeIndex;
-}
-
-int IndexInfo::ramSize()
-{
-    return m_ramSize;
-}
-
-QString IndexInfo::indexHash()
-{
-    return indexHash(m_name);
-}
-
-QString IndexInfo::indexHash(QString name)
-{
-    return QString("i_%1").arg(qChecksum(qPrintable(name), name.size()+1));
 }
 
 QString IndexInfo::shamelaMainDbName()
@@ -118,4 +98,42 @@ QString IndexInfo::buildFilePath(QString bkid, int archive)
 QString IndexInfo::buildFilePath(int bkid, int archive)
 {
     return buildFilePath(QString::number(bkid), archive);
+}
+
+void IndexInfo::setType(IndexInfo::IndexType type)
+{
+    m_type = type;
+}
+
+IndexInfo::IndexType IndexInfo::type()
+{
+    return m_type;
+}
+
+void IndexInfo::setID(int id)
+{
+    m_id = id;
+}
+
+int IndexInfo::id()
+{
+    return m_id;
+}
+
+void IndexInfo::setIndexingInfo(IndexingInfo *info)
+{
+    m_indexingInfo = info;
+}
+
+IndexingInfo *IndexInfo::indexingInfo()
+{
+    return m_indexingInfo;
+}
+
+void IndexInfo::generateIndexingInfo()
+{
+    if(!m_indexingInfo)
+        m_indexingInfo = new IndexingInfo;
+    m_indexingInfo->indexSize = getIndexSize(m_path);
+    m_indexingInfo->shamelaSize = getBooksSize(m_shamelaPath);
 }

@@ -17,13 +17,7 @@ public:
     BookProgressWidget(QWidget *parent=0);
 
 public slots:
-    void setMax(int max);
     void setName(QString name);
-    void setCurrentValue(int value);
-    void reset();
-
-signals:
-    void skipCurrent();
 
 protected:
     QToolButton *m_buttonStop;

@@ -90,3 +90,83 @@ void clearShorts(QString &str)
     str.replace('D', QObject::trUtf8("عز وجل"));
     str.replace('E', QObject::trUtf8("عليه الصلاة و السلام"));
 }
+
+quint64 getIndexSize(const QString &path)
+{
+    QDir dir;
+    dir.cd(path);
+    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+    dir.setSorting(QDir::Size | QDir::Reversed);
+
+    QFileInfoList list = dir.entryInfoList();
+    quint64 size = 0;
+
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo fileInfo = list.at(i);
+        size += fileInfo.size();
+    }
+
+    return size;
+}
+
+quint64 getBooksSize(const QString &shamelaPath)
+{
+    return getDirSize(shamelaPath);
+}
+
+quint64 getDirSize(const QString &path)
+{
+    QFileInfo info(path);
+    quint64 size = 0;
+
+    if(info.isDir()){
+        QDir dir(path);
+        foreach(QFileInfo fieInfo, dir.entryInfoList(QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot)) {
+            if(fieInfo.isFile() && fieInfo.suffix() == "mdb")
+                size += fieInfo.size();
+            else if(fieInfo.isDir())
+                size += getDirSize(fieInfo.absoluteFilePath());
+        }
+    }
+
+    return size;
+}
+
+QString getSizeString(quint64 size)
+{
+    QString sizeStr;
+
+    if(size < 1024)
+        sizeStr = QObject::trUtf8("%1 بيت").arg(size);
+    else if(1024 <= size && size < 1024*1024)
+        sizeStr = QObject::trUtf8("%1 كيلو").arg(size/(1024.0), 4);
+    else if( 1024*1024 <= size && size < 1024*1024*1024)
+        sizeStr = QObject::trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
+    else
+        sizeStr = QObject::trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
+
+    return sizeStr;
+}
+
+QString getTimeString(int milsec, bool html)
+{
+    QString time;
+
+    int seconde = (int) ((milsec / 1000) % 60);
+    int minutes = (int) (((milsec / 1000) / 60) % 60);
+    int hours   = (int) (((milsec / 1000) / 60) / 60);
+
+    if(hours > 0){
+        time.append(arPlural(hours, HOUR, html));
+        time.append(QObject::trUtf8(" و "));
+    }
+
+    if(minutes > 0 || hours > 0) {
+        time.append(arPlural(minutes, MINUTE, html));
+        time.append(QObject::trUtf8(" و "));
+    }
+
+    time.append(arPlural(seconde, SECOND, html));
+
+    return time;
+}

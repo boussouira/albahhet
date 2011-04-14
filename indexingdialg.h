@@ -8,6 +8,7 @@
 #include "shamelaindexer.h"
 #include "indexinfo.h"
 #include "bookprogresswidget.h"
+#include "indexesmanager.h"
 
 namespace Ui {
     class IndexingDialg;
@@ -20,19 +21,18 @@ class IndexingDialg : public QDialog {
 public:
     IndexingDialg(QWidget *parent = 0);
     ~IndexingDialg();
-    void saveIndexInfo();
+    void setIndexesManager(IndexesManager *manager);
+    void saveIndexInfo(int indexingTime=0, int opimizingTime=0);
     void checkIndex();
 
 protected:
     void showBooks();
     void shutDown();
-    QString formatTime(int milsec);
 
 public slots:
     void addBook(const QString &name);
     void doneIndexing();
     void indexingError();
-    void setRamSize();
     void shutDownUpdateTime(qreal);
     void nextStep();
     void stopIndexing();
@@ -42,10 +42,11 @@ signals:
     void indexCreated();
 
 protected:
+    IndexesManager *m_indexesManager;
     IndexWriter* m_writer;
     BooksDB *m_bookDB;
     IndexInfo *m_indexInfo;
-    QTime indexingTime;
+    QTime m_indexingTime;
     QMessageBox *m_shutDownMsgBox;
     int m_booksCount;
     int m_indexedBooks;
@@ -58,7 +59,7 @@ private slots:
     void on_buttonSelectIndexPath_clicked();
     void on_buttonSelectShamela_clicked();
     void on_pushCancel_clicked();
-    void on_checkOptimizeIndexLast_stateChanged(int );
+    void on_label_2_linkActivated(QString);
 };
 
 #endif // INDEXINGDIALG_H

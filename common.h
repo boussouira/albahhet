@@ -2,17 +2,21 @@
 #define COMMON_H
 
 #include <qwidget.h>
+#include <qdesktopservices.h>
+#include <qdir.h>
 #include <CLucene/SharedHeader.h>
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define APP_VERSION_STR "1.0.8"
+#define APP_VERSION 0x010009
+#define APP_VERSION_STR "1.0.11"
 #define APP_NAME QObject::trUtf8("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
 #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
 
-#define SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
+#define LOCAL_SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
+#define LOG_FILE QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).filePath("session.txt")
 
 enum PULRAL{
     SECOND  = 1,
@@ -31,6 +35,12 @@ void normaliseSearchString(QString &text);
 void hideHelpButton(QWidget *w);
 void clearShorts(QString &str);
 void forceRTL(QWidget *widget);
+
+quint64 getIndexSize(const QString &path);
+quint64 getBooksSize(const QString &shamelaPath);
+quint64 getDirSize(const QString &path);
+QString getSizeString(quint64 size);
+QString getTimeString(int milsec, bool html=true);
 
 #define ADD_QTREEWIDGET_ITEM(name, value) { \
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \

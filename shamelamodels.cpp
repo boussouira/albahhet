@@ -90,3 +90,15 @@ QList<int> ShamelaModels::getSelectedAuthors()
     return m_authorIds;
 }
 
+QStandardItemModel * ShamelaModels::getModel(int index)
+{
+    if(index == 0)
+        return m_booksModel;
+    else if(index == 1)
+        return m_catsModel;
+    else if(index == 2)
+        return m_authorsModel;
+    else
+        return 0;
+}
+

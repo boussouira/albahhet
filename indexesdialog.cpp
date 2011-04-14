@@ -6,6 +6,7 @@
 #include "booksdb.h"
 #include "indexingdialg.h"
 #include "shamelaupdaterdialog.h"
+#include "indexesmanager.h"
 #include <qsettings.h>
 #include <qmessagebox.h>
 #include <qinputdialog.h>
@@ -13,7 +14,8 @@
 #include <qdir.h>
 #include <assert.h>
 
-IndexesDialog::IndexesDialog(QWidget *parent) :
+IndexesDialog::IndexesDialog(IndexesManager *manager, QWidget *parent) :
+    m_indexesManager(manager),
     QDialog(parent),
     ui(new Ui::IndexesDialog)
 {
@@ -27,107 +29,25 @@ IndexesDialog::IndexesDialog(QWidget *parent) :
 IndexesDialog::~IndexesDialog()
 {
     delete ui;
-    qDeleteAll(m_indexInfoMap);
-}
-
-bool IndexesDialog::changeIndexName(IndexInfo *index, QString newName)
-{
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    QStringList list =  settings.value("indexes_list").toStringList();
-
-    QString oldHash = index->indexHash();
-    QString newHash = IndexInfo::indexHash(newName);
-
-    int oldIndex = list.indexOf(oldHash);
-    if(oldIndex != -1) {
-
-        settings.beginGroup(newHash);
-        settings.setValue("name", newName);
-        settings.setValue("shamela_path", index->shamelaPath());
-        settings.setValue("index_path", index->path());
-        settings.setValue("ram_size", index->ramSize());
-        settings.setValue("optimizeIndex", index->optimize());
-        settings.endGroup();
-
-        list.replace(oldIndex, newHash);
-        settings.setValue("indexes_list", list);
-
-        settings.remove(oldHash);
-
-        if(oldHash == settings.value("current_index").toString())
-            settings.setValue("current_index", newHash);
-
-        return true;
-    }
-
-    return false;
-}
-
-bool IndexesDialog::deleteIndex(IndexInfo *index)
-{
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    QStringList list =  settings.value("indexes_list").toStringList();
-    QString indexHash = index->indexHash();
-
-    int indexIndex = list.indexOf(indexHash);
-
-    if(indexIndex != -1) {
-        settings.remove(indexHash);
-        list.removeAt(indexIndex);
-
-        if(list.isEmpty())
-            settings.remove("indexes_list");
-        else
-            settings.setValue("indexes_list", list);
-
-        if(indexHash == settings.value("current_index").toString()) {
-            if(list.isEmpty())
-                settings.remove("current_index");
-            else
-                settings.setValue("current_index", list.first());
-        }
-        return true;
-    }
-
-    return false;
 }
 
 void IndexesDialog::loadIndexesList()
 {
     ui->treeWidget->clear();
+    m_indexesManager->clear();
 
-    QSettings settings(SETTINGS_FILE, QSettings::IniFormat);
-    QStringList list =  settings.value("indexes_list").toStringList();
+    QList<IndexInfo *> list = m_indexesManager->list();
     QList<QTreeWidgetItem*> itemList;
     bool haveIndexes = !list.isEmpty();
 
     if(haveIndexes) {
-//        QString current = settings.value("current_index", list.first()).toString();
-
         for(int i=0; i<list.count(); i++) {
-            IndexInfo *info = new IndexInfo();
-            QString indexHash(list.at(i));
-
-            settings.beginGroup(indexHash);
-            info->setName(settings.value("name").toString());
-            info->setShamelaPath(settings.value("shamela_path").toString());
-            info->setPath(settings.value("index_path").toString());
-            info->setRamSize(settings.value("ram_size").toInt());
-            info->setOptimizeIndex(settings.value("optimizeIndex").toBool());
-            settings.endGroup();
-
-            m_indexInfoMap.insert(indexHash, info);
+            IndexInfo *info = list.at(i);
 
             QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget);
             item->setData(0, Qt::DisplayRole, info->name());
-            item->setData(0, Qt::UserRole, indexHash);
-/*
-            if(current == indexHash) {
-                item->setData(0,
-                              Qt::ForegroundRole,
-                              QBrush(Qt::green));
-            }
-*/
+            item->setData(0, Qt::UserRole, info->id());
+
             itemList.append(item);
         }
 
@@ -140,7 +60,7 @@ void IndexesDialog::on_pushEdit_clicked()
     QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
     if(items.count() > 0) {
         bool ok;
-        IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
+        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
 
         QString text = QInputDialog::getText(this,
                                              trUtf8("تغيير اسم الفهرس"),
@@ -149,11 +69,11 @@ void IndexesDialog::on_pushEdit_clicked()
                                              indexInfo->name(),
                                              &ok);
         if (ok && !text.isEmpty() && text != indexInfo->name()) {
-            if(!m_indexInfoMap.keys().contains(IndexInfo::indexHash(text))) {
-                if(changeIndexName(indexInfo, text)) {
-                    loadIndexesList();
-                    emit indexesChanged();
-                }
+            if(!m_indexesManager->nameExists(text)) {
+                m_indexesManager->setIndexName(indexInfo, text);
+                loadIndexesList();
+                emit indexesChanged();
+
             } else {
                 QMessageBox::warning(this,
                                      trUtf8("تعديل فهرس"),
@@ -172,17 +92,16 @@ void IndexesDialog::on_pushDelete_clicked()
 {
     QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
     if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
+        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
         int rep = QMessageBox::question(this,
-                             trUtf8("حذف فهرس"),
-                             trUtf8("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
-                             QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+                                        trUtf8("حذف فهرس"),
+                                        trUtf8("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
+                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes) {
-            if(deleteIndex(indexInfo)) {
-                loadIndexesList();
-                emit indexesChanged();
-            }
+            m_indexesManager->remove(indexInfo);
+            loadIndexesList();
+            emit indexesChanged();
         }
     } else {
         QMessageBox::warning(this,
@@ -196,7 +115,7 @@ void IndexesDialog::on_pushUpDate_clicked()
     QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
 
     if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
+        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
 
         BooksDB *bookDb = new BooksDB();
         bookDb->setIndexInfo(indexInfo);
@@ -220,7 +139,7 @@ void IndexesDialog::on_pushOptimize_clicked()
 {
     QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
     if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexInfoMap[items.at(0)->data(0, Qt::UserRole).toString()];
+        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
         int rep = QMessageBox::question(this,
                              trUtf8("ضغط فهرس"),
                              trUtf8("هل تريد ضغط فهرس <strong>%1</strong>؟"
@@ -274,7 +193,9 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
         return;
     }
 
-    writer->optimize();
+    writer->setUseCompoundFile(false);
+
+    writer->optimize(MAX_SEGMENT);
     writer->close();
 
     _CLDELETE(writer);
@@ -283,7 +204,7 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
 void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int column)
 {
     if(column != -1) {
-        IndexInfo *indexInfo = m_indexInfoMap[item->data(0, Qt::UserRole).toString()];
+        IndexInfo *indexInfo = m_indexesManager->indexInfo(item->data(0, Qt::UserRole).toInt());
         ui->labelIndexName->setText(indexInfo->name());
         ui->labelShaPath->setText(indexInfo->shamelaPath());
         ui->labelIndexPath->setText(indexInfo->path());
@@ -292,4 +213,9 @@ void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int colum
     } else {
         ui->widgetIndexInfo->hide();
     }
+}
+
+void IndexesDialog::setIndexesManager(IndexesManager *manager)
+{
+    m_indexesManager = manager;
 }
