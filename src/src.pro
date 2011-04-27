@@ -8,8 +8,15 @@ include(src.pri)
 
 DESTDIR = ..
 
-CLUCENE_SOURCE_PATH = $$(CLUCENE_SOURCE_PATH)
-CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)
+exists(../../clucene) {
+    CLUCENE_SOURCE_PATH = ../../clucene
+    CLUCENE_BUILD_PATH = ../../clucene
+
+    message(Using CLucene found at $$CLUCENE_BUILD_PATH)
+ } else {
+    CLUCENE_SOURCE_PATH = $$(CLUCENE_SOURCE_PATH)
+    CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)
+ }
 
 win32 {
     win32-msvc* {
