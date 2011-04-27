@@ -17,6 +17,10 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
     m_indexInfo = new IndexInfo();
     m_bookDB = new BooksDB();
 
+    ui->lineIndexName->setText("index_");
+    ui->lineIndexPath->setText("C:\\Users\\Naruto\\Desktop\\testx");
+    ui->lineShamelaPath->setText("D:\\shamela-r1");
+
     connect(ui->pushNext, SIGNAL(clicked()), SLOT(nextStep()));
 }
 
@@ -60,7 +64,7 @@ void IndexingDialg::startIndexing()
 
     QDir dir;
     QSettings settings;
-    ArabicAnalyzer *analyzer = new ArabicAnalyzer("C:\\Documents and Settings\\Administrateur\\Bureau\\stopwords.txt",
+    ArabicAnalyzer *analyzer = new ArabicAnalyzer("D:\\Programming\\stopwords.txt",
                                                   "UTF-8");
 
     int ramSize = settings.value("ramSize", 100).toInt();

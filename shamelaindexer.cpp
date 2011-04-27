@@ -24,11 +24,11 @@ void ShamelaIndexer::run()
 
     qDebug("Update indexed book in thread: %d", m_threadId);
     m_indexedBooks.squeeze();
-    m_bookDB->setBookIndexed(m_indexedBooks);
+    TIME_TOKE("Update books", m_bookDB->setBookIndexed(m_indexedBooks));
 
     qDebug("Update authors in thread: %d", m_threadId);
     m_authors.squeeze();
-    m_bookDB->getAuthorFromShamela(m_authors);
+    TIME_TOKE("Update authors", m_bookDB->getAuthorFromShamela(m_authors));
 }
 
 void ShamelaIndexer::startIndexing()

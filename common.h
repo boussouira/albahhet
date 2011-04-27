@@ -4,6 +4,7 @@
 #include <qwidget.h>
 #include <qdesktopservices.h>
 #include <qdir.h>
+#include <qdatetime.h>
 #include <CLucene/SharedHeader.h>
 #include "indexinfo.h"
 #include "booksdb.h"
@@ -65,6 +66,11 @@ QString getTimeString(int milsec, bool html=true);
 #define DELETE_DB(p) { QStringList connList = p->connections(); \
                         delete p; \
                         foreach(QString conn, connList){QSqlDatabase::removeDatabase(conn);}}
+
+#define TIME_TOKE(desc, code)  { QTime t; \
+                         t.start(); \
+                         code; \
+                         qDebug(" *** Time token for " desc ": %d ms ***", t.elapsed()); }
 
 
 #endif // COMMON_H

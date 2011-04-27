@@ -37,8 +37,8 @@ TokenStream* ArabicAnalyzer::tokenStream(const TCHAR* /*fieldName*/, Reader* rea
 {
     TokenStream* ret;
     ret = _CLNEW ArabicTokenizer(reader);
-    ret = _CLNEW StopFilter(ret,true, stopSet);
     ret = _CLNEW ArabicFilter( ret, true );
+    ret = _CLNEW StopFilter(ret,true, stopSet, true);
 
     return ret;
 }
@@ -56,8 +56,8 @@ TokenStream* ArabicAnalyzer::reusableTokenStream(const TCHAR* /*fieldName*/, CL_
         else
             streams->tokenStream = _CLNEW ArabicTokenizer(bufferedReader);
 
-        streams->filteredTokenStream = _CLNEW StopFilter(streams->tokenStream ,true, stopSet, true);
-        streams->filteredTokenStream = _CLNEW ArabicFilter(streams->filteredTokenStream, true);
+        streams->filteredTokenStream = _CLNEW ArabicFilter(streams->tokenStream, true);
+        streams->filteredTokenStream = _CLNEW StopFilter(streams->filteredTokenStream ,true, stopSet, true);
     } else {
         streams->tokenStream->reset(reader);
     }
