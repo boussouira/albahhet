@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../data/images/go-first.png</file>
+        <file>../data/images/go-last.png</file>
+        <file>../data/images/go-next.png</file>
+        <file>../data/images/go-previous.png</file>
+        <file>../data/images/find.png</file>
+        <file>qt_ar.qm</file>
+        <file>../data/images/reload.png</file>
+        <file>../data/images/delete.png</file>
+        <file>../data/images/edit.png</file>
+        <file>../data/images/checkall.png</file>
+        <file>../data/images/magnifier.png</file>
+        <file>../data/images/clear.png</file>
+        <file>../data/images/compress.png</file>
+    </qresource>
+</RCC>

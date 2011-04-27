@@ -1,92 +1,102 @@
-project(al-bahhet)
+project(alkotobiya)
 
-cmake_minimum_required(VERSION 2.6)
-set(CMAKE_BUILD_TYPE Release)
-add_definitions(-Wall)
-find_package(Qt4 REQUIRED)
-
+find_package(Qt4 4.6 COMPONENTS QtCore QtGui QtSql QtNetwork QtXmlPatterns QtWebKit REQUIRED)
 include(${QT_USE_FILE})
 
-IF (WIN32)
-    set(CLUCENE_PATH C:/clucene-2.3.2)
-    set(CLUCENE_LIBRARYS_PATH ${CLUCENE_PATH}/bin/release)
-    set(CLUCENE_LIBRARYS clucene-core clucene-shared clucene-contribs-lib)
-ELSE(WIN32)
-    set(CLUCENE_PATH /home/naruto/Bureau/clucene-2.3.2)
-ENDIF(WIN32)
-    set(CLUCENE_INLUDE_DIRS
-        ${CLUCENE_PATH}/src/ext
-        ${CLUCENE_PATH}/src/core
-        ${CLUCENE_PATH}/src/shared
-        ${CLUCENE_PATH}/src/contribs-lib)
+# Check for mdbtools
+IF(NOT WIN32)
+    FIND_PACKAGE(PkgConfig)
+    PKG_CHECK_MODULES(LIBMDB libmdb)
 
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${QT_QTCORE_INCLUDE_DIR}
-    ${QT_QTGUI_INCLUDE_DIR}
-    ${QT_QTWEBKIT_INCLUDE_DIR}
-    ${QT_QTXMLPATTERNS_INCLUDE_DIR}
-    ${QT_QTSQL_INCLUDE_DIR}
-    ${CLUCENE_INLUDE_DIRS})
+    IF(LIBMDB_FOUND) #We got mdbtools
+        ADD_DEFINITIONS(-DUSE_MDBTOOLS)
+        include_directories(${LIBMDB_INCLUDE_DIRS})
+        link_directories(${LIBMDB_LIBRARIES_DIRS})
+    ELSE(LIBMDB_FOUND)
+        MESSAGE(FATAL_ERROR "Could not find mdbtools.")
+    ENDIF(LIBMDB_FOUND)
 
-link_directories(${CLUCENE_PATH}/bin)
+ENDIF(NOT WIN32)
 
-set(bahhet_SRCS
-    arabicanalyzer.cpp
-    arabicfilter.cpp
-    arabictokenizer.cpp
+include_directories( ${alkotobiya_SOURCE_DIR} )
+include_directories( ${alkotobiya_BINARY_DIR} )
+
+set(alkotobiya_SRCS
+    abstractdbhandler.cpp
+    bookexception.cpp
+    bookindexmodel.cpp
+    bookindexnode.cpp
     bookinfo.cpp
-    booksdb.cpp
-    common.cpp
-    fancylineedit.cpp
-    indexesdialog.cpp
-    indexinfo.cpp
-    indexingdialg.cpp
-    shamelaindexer.cpp
+    bookslistbrowser.cpp
+    bookslistmodel.cpp
+    bookslistnode.cpp
+    booksviewer.cpp
+    bookwidget.cpp
+    catslistwidget.cpp
+    connectioninfo.cpp
+    convertthread.cpp
+    importdelegates.cpp
+    importdialog.cpp
+    importmodel.cpp
+    importthread.cpp
+    indexdb.cpp
+    indexwidget.cpp
     main.cpp
     mainwindow.cpp
-    searchfilterhandler.cpp
-    settingsdialog.cpp
+    pageinfo.cpp
+    qurandbhandler.cpp
+    quranquery.cpp
+    qurantextformat.cpp
     settingschecker.cpp
-    shamelamodels.cpp
-    shamelaresult.cpp
-    shamelaresultwidget.cpp
-    shamelasearcher.cpp)
+    settingsdialog.cpp
+    simpledbhandler.cpp
+    simplequery.cpp
+    simpletextformat.cpp
+    sqliteconnection.cpp
+    sqliteindexdb.cpp
+    sqlitequranquery.cpp
+    sqlitesimplequery.cpp
+    tabwidget.cpp
+    textformatter.cpp
+    webview.cpp
+)
 
-set(bahhet_UIS
-    indexesdialog.ui
-    indexingdialg.ui
-    mainwindow.ui
-    settingsdialog.ui
-    shamelaresultwidget.ui)
+IF(LIBMDB_FOUND)
+    list(APPEND alkotobiya_SRCS mdbconverter_unix.cpp)
+ELSE(LIBMDB_FOUND)
+    list(APPEND alkotobiya_SRCS mdbconverter_win.cpp)
+ENDIF(LIBMDB_FOUND)
 
-QT4_WRAP_UI(UIS ${bahhet_UIS})
+file (GLOB alkotobiya_UIS *.ui)
 
-set(bahhet_MOCS
-    fancylineedit.h
-    indexesdialog.h
-    indexingdialg.h
-    shamelaindexer.h
-    mainwindow.h
-    searchfilterhandler.h
+set(alkotobiya_MOCS_SRCS
+    catslistwidget.h
+    convertthread.h
+    importdelegates.h
+    importdialog.h
+    importthread.h
+    booksviewer.h
+    bookslistbrowser.h
+    indexwidget.h
+    bookwidget.h
     settingsdialog.h
-    shamelamodels.h
-    shamelaresultwidget.h
-    shamelasearcher.h)
+    tabwidget.h
+    webview.h
+    mainwindow.h
+    textformatter.h
+)
+set(alkotobiya_RCCS data/qt_rc.qrc)
 
-QT4_WRAP_CPP(MOCS ${bahhet_MOCS})
-QT4_ADD_RESOURCES(RSCS resources.qrc)
+qt4_wrap_cpp(alkotobiya_MOCS ${alkotobiya_MOCS_SRCS})
+qt4_wrap_ui(alkotobiya_UIS_H ${alkotobiya_UIS})
+qt4_add_resources(alkotobiya_RCC_SRCS ${alkotobiya_RCCS})
 
-add_executable(al-bahhet
-    ${bahhet_SRCS}
-    ${UIS} ${RSCS} ${TRS} ${MOCS})
+add_executable(alkotobiya
+    ${alkotobiya_SRCS}
+    ${alkotobiya_MOCS}
+    ${alkotobiya_UIS}
+    ${alkotobiya_RCC_SRCS})
 
-target_link_libraries(al-bahhet
-    ${QT_QTCORE_LIBRARY}
-    ${QT_QTGUI_LIBRARY}
-    ${QT_QTCORE_LIBRARY}
-    ${QT_QTSQL_LIBRARY}
-    ${QT_QTWEBKIT_LIBRARY}
-    ${QT_QTXMLPATTERNS_LIBRARY}
-    ${CLUCENE_LIBRARYS})
+target_link_libraries(alkotobiya
+    ${QT_LIBRARIES}
+    ${LIBMDB_LIBRARIES})
