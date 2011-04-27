@@ -42,7 +42,7 @@ void IndexingDialg::showBooks()
         book = m_bookDB->next();
     }
 
-    ui->label->setText(trUtf8("الكتب التي ستتم فهرستها،"
+    ui->label->setText(tr("الكتب التي ستتم فهرستها،"
                               "\n"
                               "عدد الكتب %1:").arg(m_booksCount));
 }
@@ -54,7 +54,7 @@ void IndexingDialg::startIndexing()
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(m_booksCount);
     ui->progressBar->setValue(0);
-    ui->labelStartIndexing->setText(trUtf8("بدأ الفهرسة على الساعة %1").arg(QDateTime::currentDateTime().toString("hh:mm")));
+    ui->labelStartIndexing->setText(tr("بدأ الفهرسة على الساعة %1").arg(QDateTime::currentDateTime().toString("hh:mm")));
 
     m_indexedBooks = 0;
 
@@ -112,21 +112,21 @@ void IndexingDialg::nextStep()
     if(i == 0) {
         try {
             if(ui->lineIndexName->text().isEmpty())
-                throw trUtf8("لم تقم باختيار اسم الفهرس");
+                throw tr("لم تقم باختيار اسم الفهرس");
 
             if(ui->lineShamelaPath->text().isEmpty())
-                throw trUtf8("لم تقم باختيار مسار المكتبة الشاملة");
+                throw tr("لم تقم باختيار مسار المكتبة الشاملة");
             else if(!m_indexInfo->isShamelaPath(ui->lineShamelaPath->text()))
-                throw trUtf8("لم تقم باختيار مسار الشاملة بشكل صحيح");
+                throw tr("لم تقم باختيار مسار الشاملة بشكل صحيح");
 
             if(ui->lineIndexPath->text().isEmpty())
-                throw trUtf8("لم تقم باختيار مسار وضع الفهرس");
+                throw tr("لم تقم باختيار مسار وضع الفهرس");
 
             if(m_indexesManager->nameExists(ui->lineIndexName->text()))
-                throw trUtf8("اسم الفهرس المدخل موجودا مسبقا");
+                throw tr("اسم الفهرس المدخل موجودا مسبقا");
 
         } catch(QString &e) {
-            QMessageBox::warning(this, trUtf8("انشاء فهرس"), e);
+            QMessageBox::warning(this, tr("انشاء فهرس"), e);
             return;
         }
 
@@ -137,7 +137,7 @@ void IndexingDialg::nextStep()
         checkIndex();
     } else if(i == 1) { // Start indexing
         ui->pushCancel->hide();
-        ui->pushNext->setText(trUtf8("ايقاف الفهرسة"));
+        ui->pushNext->setText(tr("ايقاف الفهرسة"));
         ui->stackedWidget->setCurrentIndex(i+1);
 
         startIndexing();
@@ -165,7 +165,7 @@ void IndexingDialg::doneIndexing()
         if(ui->checkOptimizeIndex->isChecked()) {
             ui->progressBar->setMaximum(m_indexedBooks);
             ui->progressBar->setValue(ui->progressBar->maximum());
-            ui->labelStartIndexing->setText(trUtf8("جاري ضغط الفهرس"));
+            ui->labelStartIndexing->setText(tr("جاري ضغط الفهرس"));
             ui->widgetBooksProgress->hide();
             ui->checkOptimizeIndex->setEnabled(false);
 
@@ -180,19 +180,19 @@ void IndexingDialg::doneIndexing()
 
         m_writer->close();
 
-        ui->pushNext->setText(trUtf8("انتهى"));
+        ui->pushNext->setText(tr("انتهى"));
 
         ui->pushNext->setEnabled(true);
         ui->pushCancel->setEnabled(false);
 
-        QString msg = trUtf8("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
+        QString msg = tr("تمت فهرسة %1").arg(arPlural(m_indexedBooks, BOOK, true));
         msg.append("<br>");
 
-        msg.append(trUtf8("تمت الفهرسة خلال %1").arg(getTimeString(elpasedMsec)));
+        msg.append(tr("تمت الفهرسة خلال %1").arg(getTimeString(elpasedMsec)));
         msg.append("<br>");
 
         if(optimizeTime != -1) {
-            msg.append(trUtf8("تم ضغط الفهرس خلال %1").arg(getTimeString(optimizeTime)));
+            msg.append(tr("تم ضغط الفهرس خلال %1").arg(getTimeString(optimizeTime)));
             msg.append("<br>");
         }
 
@@ -210,15 +210,15 @@ void IndexingDialg::doneIndexing()
 void IndexingDialg::indexingError()
 {
     QMessageBox::warning(this,
-                         trUtf8("فهرسة المكتبة"),
-                         trUtf8("لقد حدث خطأ أثناء فهرسة المكتبة.\nالمرجوا اعادة المحاولة"));
+                         tr("فهرسة المكتبة"),
+                         tr("لقد حدث خطأ أثناء فهرسة المكتبة.\nالمرجوا اعادة المحاولة"));
 }
 
 void IndexingDialg::stopIndexing()
 {
     int rep = QMessageBox::question(this,
-                                    trUtf8("فهرسة المكتبة"),
-                                    trUtf8("هل تريد ايقاف فهرسة المكتبة؟"),
+                                    tr("فهرسة المكتبة"),
+                                    tr("هل تريد ايقاف فهرسة المكتبة؟"),
                                     QMessageBox::Yes|QMessageBox::No,
                                     QMessageBox::No);
     if(rep==QMessageBox::Yes){
@@ -236,7 +236,7 @@ void IndexingDialg::on_pushCancel_clicked()
 void IndexingDialg::on_buttonSelectShamela_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
-                                 trUtf8("اختر مجلد المكتبة الشاملة"));
+                                 tr("اختر مجلد المكتبة الشاملة"));
     if(!path.isEmpty()) {
         ui->lineShamelaPath->setText(path);
     }
@@ -245,7 +245,7 @@ void IndexingDialg::on_buttonSelectShamela_clicked()
 void IndexingDialg::on_buttonSelectIndexPath_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this,
-                                 trUtf8("اختر مجلد وضع الفهرس"));
+                                 tr("اختر مجلد وضع الفهرس"));
     if(!path.isEmpty()) {
         ui->lineIndexPath->setText(path);
     }
@@ -274,14 +274,14 @@ void IndexingDialg::checkIndex()
 //        int64_t ver = r->gtCurrentVersion(qPrintable(m_indexInfo->path()));
 
         int rep = QMessageBox::question(this,
-                                        trUtf8("انشاء فهرس"),
-                                        trUtf8("لقد تم العثور على فهرس جاهز في المسار المحدد"
+                                        tr("انشاء فهرس"),
+                                        tr("لقد تم العثور على فهرس جاهز في المسار المحدد"
                                                "<br>"
                                                "هل تريد استخدامه؟"),
                                         QMessageBox::Yes|QMessageBox::No);
         if(rep == QMessageBox::Yes) {
-            ui->labelIndexingInfo->setText(trUtf8("لقد تم انشاء الفهرس بنجاح"));
-            ui->pushNext->setText(trUtf8("انتهى"));
+            ui->labelIndexingInfo->setText(tr("لقد تم انشاء الفهرس بنجاح"));
+            ui->pushNext->setText(tr("انتهى"));
             ui->pushCancel->hide();
             ui->stackedWidget->setCurrentIndex(3);
 
@@ -296,7 +296,7 @@ void IndexingDialg::checkIndex()
     catch(...) {}
 
     showBooks();
-    ui->pushNext->setText(trUtf8("بدأ الفهرسة"));
+    ui->pushNext->setText(tr("بدأ الفهرسة"));
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
 //    ui->stackedWidget->setCurrentIndex(i+1);
 }
@@ -304,7 +304,7 @@ void IndexingDialg::checkIndex()
 void IndexingDialg::shutDown()
 {
     QMessageBox msgBox(this);
-    msgBox.setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
+    msgBox.setText(tr("انتهت عملية الفهرسة بنجاح" "<br>"
                           "سيتم اطفاء الجهاز بعد %1")
                    .arg(arPlural(10,  SECOND, true)));
     msgBox.setStandardButtons(QMessageBox::Cancel);
@@ -332,7 +332,7 @@ void IndexingDialg::shutDown()
 
 void IndexingDialg::shutDownUpdateTime(qreal)
 {
-    m_shutDownMsgBox->setText(trUtf8("انتهت عملية الفهرسة بنجاح" "<br>"
+    m_shutDownMsgBox->setText(tr("انتهت عملية الفهرسة بنجاح" "<br>"
                                      "سيتم اطفاء الجهاز بعد %1")
                               .arg(arPlural(m_shutDownTime--,  SECOND, true)));
 }

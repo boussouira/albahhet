@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_tabWidget->addTab(m_searchWidget,
                         QIcon(":/bin/data/images/find.png"),
-                        trUtf8("بحث"));
+                        tr("بحث"));
     setCentralWidget(m_tabWidget);
 
     m_currentIndex = 0;
@@ -154,8 +154,8 @@ void MainWindow::selectIndex(QAction *action)
             indexChanged();
             haveIndex = true;
         } catch (QString &str) {
-            QMessageBox::critical(this, trUtf8("تحميل فهرس"),
-                                  trUtf8("حدث خطأ عند تحميل الفهرس:"
+            QMessageBox::critical(this, tr("تحميل فهرس"),
+                                  tr("حدث خطأ عند تحميل الفهرس:"
                                          "\n"
                                          "%1").arg(str));
             haveIndex = false;
@@ -210,16 +210,16 @@ void MainWindow::haveIndexesCheck()
     // Check if we have any index
     if(ui->menuIndexesList->actions().isEmpty() && m_showNewIndexMsg) {
         int rep = QMessageBox::question(this,
-                                        trUtf8("انشاء فهرس"),
-                                        trUtf8("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
+                                        tr("انشاء فهرس"),
+                                        tr("لم يتم العثور على اي فهرس." "\n" "هل تريد انشاء فهرس جديد؟"),
                                         QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
 
         if(rep == QMessageBox::Yes)
             newIndex();
         else
             QMessageBox::information(this,
-                                     trUtf8("انشاء فهرس"),
-                                     trUtf8("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
+                                     tr("انشاء فهرس"),
+                                     tr("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
                                             "<strong>" "فهرس" "</strong>"
                                             " ثم "
                                             "<strong>" "انشاء فهرس جديد..." "</strong>"));
@@ -315,11 +315,11 @@ void MainWindow::showStatistic()
         hideHelpButton(dialog);
 
         QVBoxLayout *layout = new QVBoxLayout();
-        QLabel *label = new QLabel(trUtf8("معلومات حول الفهرس:"), dialog);
+        QLabel *label = new QLabel(tr("معلومات حول الفهرس:"), dialog);
         layout->addWidget(label);
         layout->addWidget(treeWidget);
 
-        dialog->setWindowTitle(trUtf8("%1 %2").arg(APP_NAME).arg(APP_VERSION_STR));
+        dialog->setWindowTitle(tr("%1 %2").arg(APP_NAME).arg(APP_VERSION_STR));
         dialog->setLayout(layout);
         dialog->resize(400, 300);
         dialog->show();
@@ -350,8 +350,8 @@ void MainWindow::showSettingsDialog()
 
 void MainWindow::aboutApp()
 {
-    QString aTitle(trUtf8(" حول البرنامج"));
-    QString aText(trUtf8("برنامج %1 للبحث في كتب المكتبة الشاملة"
+    QString aTitle(tr(" حول البرنامج"));
+    QString aText(tr("برنامج %1 للبحث في كتب المكتبة الشاملة"
                          "<br>"
                          "اصدار البرنامج: %2").arg(APP_NAME).arg(APP_VERSION_STR));
 

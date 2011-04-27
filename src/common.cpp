@@ -23,25 +23,25 @@ QString arPlural(int count, PULRAL word, bool html)
     QString str;
 
     if(word == SECOND)
-        list <<  QObject::trUtf8("ثانية")
-        << QObject::trUtf8("ثانيتين")
-        << QObject::trUtf8("ثوان")
-        << QObject::trUtf8("ثانية");
+        list <<  QObject::tr("ثانية")
+        << QObject::tr("ثانيتين")
+        << QObject::tr("ثوان")
+        << QObject::tr("ثانية");
     else if(word == MINUTE)
-        list <<  QObject::trUtf8("دقيقة")
-        << QObject::trUtf8("دقيقتين")
-        << QObject::trUtf8("دقائق")
-        << QObject::trUtf8("دقيقة");
+        list <<  QObject::tr("دقيقة")
+        << QObject::tr("دقيقتين")
+        << QObject::tr("دقائق")
+        << QObject::tr("دقيقة");
     else if(word == HOUR)
-        list <<  QObject::trUtf8("ساعة")
-        << QObject::trUtf8("ساعتين")
-        << QObject::trUtf8("ساعات")
-        << QObject::trUtf8("ساعة");
+        list <<  QObject::tr("ساعة")
+        << QObject::tr("ساعتين")
+        << QObject::tr("ساعات")
+        << QObject::tr("ساعة");
     else if(word == BOOK)
-        list <<  QObject::trUtf8("كتاب واحد")
-        << QObject::trUtf8("كتابين")
-        << QObject::trUtf8("كتب")
-        << QObject::trUtf8("كتابا");
+        list <<  QObject::tr("كتاب واحد")
+        << QObject::tr("كتابين")
+        << QObject::tr("كتب")
+        << QObject::tr("كتابا");
 
     if(count <= 1)
         str = list.at(0);
@@ -59,12 +59,12 @@ QString arPlural(int count, PULRAL word, bool html)
 
 void normaliseSearchString(QString &text)
 {
-    text.replace(QRegExp(QObject::trUtf8("ـفق")), "(");
-    text.replace(QRegExp(QObject::trUtf8("ـغق")), ")");
-    text.replace(QRegExp(QObject::trUtf8("ـ[أا]و")), "OR");
-    text.replace(QRegExp(QObject::trUtf8("ـو")), "AND");
-    text.replace(QRegExp(QObject::trUtf8("ـبدون")), "NOT");
-    text.replace(QObject::trUtf8("؟"), "?");
+    text.replace(QRegExp(QObject::tr("ـفق")), "(");
+    text.replace(QRegExp(QObject::tr("ـغق")), ")");
+    text.replace(QRegExp(QObject::tr("ـ[أا]و")), "OR");
+    text.replace(QRegExp(QObject::tr("ـو")), "AND");
+    text.replace(QRegExp(QObject::tr("ـبدون")), "NOT");
+    text.replace(QObject::tr("؟"), "?");
 }
 
 void hideHelpButton(QWidget *w)
@@ -84,11 +84,11 @@ void forceRTL(QWidget *widget)
 
 void clearShorts(QString &str)
 {
-    str.replace('A', QObject::trUtf8("صلى الله عليه وسلم"));
-    str.replace('B', QObject::trUtf8("رضي الله عن"));
-    str.replace('C', QObject::trUtf8("رحمه الله"));
-    str.replace('D', QObject::trUtf8("عز وجل"));
-    str.replace('E', QObject::trUtf8("عليه الصلاة و السلام"));
+    str.replace('A', QObject::tr("صلى الله عليه وسلم"));
+    str.replace('B', QObject::tr("رضي الله عن"));
+    str.replace('C', QObject::tr("رحمه الله"));
+    str.replace('D', QObject::tr("عز وجل"));
+    str.replace('E', QObject::tr("عليه الصلاة و السلام"));
 }
 
 quint64 getIndexSize(const QString &path)
@@ -137,13 +137,13 @@ QString getSizeString(quint64 size)
     QString sizeStr;
 
     if(size < 1024)
-        sizeStr = QObject::trUtf8("%1 بيت").arg(size);
+        sizeStr = QObject::tr("%1 بيت").arg(size);
     else if(1024 <= size && size < 1024*1024)
-        sizeStr = QObject::trUtf8("%1 كيلو").arg(size/(1024.0), 4);
+        sizeStr = QObject::tr("%1 كيلو").arg(size/(1024.0), 4);
     else if( 1024*1024 <= size && size < 1024*1024*1024)
-        sizeStr = QObject::trUtf8("%1 ميغا").arg(size/(1024.0*1024.0), 4);
+        sizeStr = QObject::tr("%1 ميغا").arg(size/(1024.0*1024.0), 4);
     else
-        sizeStr = QObject::trUtf8("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
+        sizeStr = QObject::tr("%1 جيجا").arg(size/(1024.0*1024.0*1024.0), 4);
 
     return sizeStr;
 }
@@ -158,12 +158,12 @@ QString getTimeString(int milsec, bool html)
 
     if(hours > 0){
         time.append(arPlural(hours, HOUR, html));
-        time.append(QObject::trUtf8(" و "));
+        time.append(QObject::tr(" و "));
     }
 
     if(minutes > 0 || hours > 0) {
         time.append(arPlural(minutes, MINUTE, html));
-        time.append(QObject::trUtf8(" و "));
+        time.append(QObject::tr(" و "));
     }
 
     time.append(arPlural(seconde, SECOND, html));

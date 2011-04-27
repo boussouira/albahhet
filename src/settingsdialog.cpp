@@ -88,14 +88,14 @@ void SettingsDialog::on_pushCancel_clicked()
 
 void SettingsDialog::setRamSizes()
 {
-    ui->comboBox->addItem(trUtf8("%1 ميغا").arg(100), 100);
-    ui->comboBox->addItem(trUtf8("%1 ميغا").arg(200), 200);
-    ui->comboBox->addItem(trUtf8("%1 ميغا").arg(300), 300);
-    ui->comboBox->addItem(trUtf8("%1 ميغا").arg(500), 500);
-    ui->comboBox->addItem(trUtf8("%1 جيغا").arg(1), 1000);
-    ui->comboBox->addItem(trUtf8("%1 جيغا").arg(1.5), 1500);
-    ui->comboBox->addItem(trUtf8("%1 جيغا").arg(2), 2000);
-    ui->comboBox->addItem(trUtf8("%1 جيغا").arg(3), 3000);
+    ui->comboBox->addItem(tr("%1 ميغا").arg(100), 100);
+    ui->comboBox->addItem(tr("%1 ميغا").arg(200), 200);
+    ui->comboBox->addItem(tr("%1 ميغا").arg(300), 300);
+    ui->comboBox->addItem(tr("%1 ميغا").arg(500), 500);
+    ui->comboBox->addItem(tr("%1 جيغا").arg(1), 1000);
+    ui->comboBox->addItem(tr("%1 جيغا").arg(1.5), 1500);
+    ui->comboBox->addItem(tr("%1 جيغا").arg(2), 2000);
+    ui->comboBox->addItem(tr("%1 جيغا").arg(3), 3000);
 }
 
 void SettingsDialog::setCurrentPage(int index)

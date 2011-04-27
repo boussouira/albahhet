@@ -1,8 +1,8 @@
 TEMPLATE = app
 TARGET = albahhet
 
-#CODECFORSRC = UTF-8
-#CODECFORTR  = UTF-8
+CODECFORSRC = UTF-8
+CODECFORTR  = UTF-8
 
 include(src.pri)
 

@@ -30,7 +30,7 @@ void ShamelaUpdaterDialog::on_pushNext_clicked()
     case 0:
         startUpdate();
         ui->stackedWidget->setCurrentIndex(1);
-        ui->pushNext->setText(trUtf8("انتهى"));
+        ui->pushNext->setText(tr("انتهى"));
         ui->pushCancel->hide();
         break;
 
@@ -50,7 +50,7 @@ void ShamelaUpdaterDialog::startUpdate()
     int progressMax = 7;
 
     // Progress dialog
-    QProgressDialog progress(trUtf8("جاري تحديث فهرس %1...").arg(m_bookDb->indexInfo()->name()),
+    QProgressDialog progress(tr("جاري تحديث فهرس %1...").arg(m_bookDb->indexInfo()->name()),
                              QString(),
                              0,
                              progressMax,
@@ -77,7 +77,7 @@ void ShamelaUpdaterDialog::startUpdate()
         PROGRESS_DIALOG_STEP("فهرسة الكتب الجديدة");
         indexBooks(shaIds, m_bookDb, m_bookDb->indexInfo());
 
-        ui->labelAddedBooks->setText(trUtf8("تم اضافة %1:")
+        ui->labelAddedBooks->setText(tr("تم اضافة %1:")
                                      .arg(arPlural(addedBooksName.count(), BOOK, true)));
         ui->listAddedBooks->addItems(addedBooksName);
 
@@ -94,7 +94,7 @@ void ShamelaUpdaterDialog::startUpdate()
         PROGRESS_DIALOG_STEP("حذف الكتب من الفهرس");
         deletBooksFromIndex(savedIds, m_bookDb->indexInfo());
 
-        ui->labelDeletedBooks->setText(trUtf8("تم حذف %1:")
+        ui->labelDeletedBooks->setText(tr("تم حذف %1:")
                                        .arg(arPlural(deletedBooksName.count(), BOOK, true)));
         ui->listDeletedBooks->addItems(deletedBooksName);
         ui->widgetDeletedBooks->show();
@@ -149,8 +149,8 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
             writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
         } else {
             QMessageBox::critical(this,
-                                  trUtf8("خطأ عند التحديث"),
-                                  trUtf8("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
+                                  tr("خطأ عند التحديث"),
+                                  tr("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
             return;
         }
 
@@ -206,8 +206,8 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
             writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
         } else {
             QMessageBox::critical(this,
-                                  trUtf8("خطأ عند التحديث"),
-                                  trUtf8("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
+                                  tr("خطأ عند التحديث"),
+                                  tr("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
             return;
         }
 

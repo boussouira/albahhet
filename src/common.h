@@ -10,7 +10,7 @@
 
 #define APP_VERSION 0x010009
 #define APP_VERSION_STR "1.0.11"
-#define APP_NAME QObject::trUtf8("الباحث الشامل")
+#define APP_NAME QObject::tr("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
 #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
@@ -44,13 +44,13 @@ QString getTimeString(int milsec, bool html=true);
 
 #define ADD_QTREEWIDGET_ITEM(name, value) { \
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \
-        item->setData(0, Qt::DisplayRole, trUtf8(name)); \
+        item->setData(0, Qt::DisplayRole, tr(name)); \
         item->setData(1, Qt::DisplayRole, value); \
         itemList.append(item); \
         }
 
 #define PROGRESS_DIALOG_STEP(text)     progress.setValue(progress.value()+1); \
-                                progress.setLabelText(trUtf8("جاري " text "..."));
+                                progress.setLabelText(tr("جاري " text "..."));
 
 #define DB_OPEN_ERROR(path) qCritical("[%s:%d] Cannot open database at \"%s\".", \
                                 __FILE__, \

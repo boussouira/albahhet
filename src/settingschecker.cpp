@@ -18,8 +18,8 @@ void SettingsChecker::checkIndexes()
     foreach (IndexInfo *index, manager.list()) {
         if(!checkIndex(index)) {
             int rep = QMessageBox::question(0,
-                                            QObject::trUtf8("فحص الفهارس"),
-                                            QObject::trUtf8("لم يتم العثور على بعض مجلدات او ملفات الفهرس %1"
+                                            QObject::tr("فحص الفهارس"),
+                                            QObject::tr("لم يتم العثور على بعض مجلدات او ملفات الفهرس %1"
                                                             "\n" "هل تريد حذفه؟").arg(index->name()),
                                             QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
             if(rep == QMessageBox::Yes) {
@@ -108,8 +108,8 @@ void SettingsChecker::indexingConfig()
         dialog.setCurrentPage(1);
 
         QMessageBox::information(0,
-                                 QObject::trUtf8("اعدادات الفهرسة"),
-                                 QObject::trUtf8("من فضلك قم بضبط اعدادات الفهرسة"));
+                                 QObject::tr("اعدادات الفهرسة"),
+                                 QObject::tr("من فضلك قم بضبط اعدادات الفهرسة"));
         if(dialog.exec() == SettingsDialog::Accepted)
             settings.setValue("haveIndexingConfig", true);
 

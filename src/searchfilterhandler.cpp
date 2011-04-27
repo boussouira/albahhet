@@ -12,17 +12,17 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
 //    m_filterProxy->setDynamicSortFilter(true);
 
     m_menu = new QMenu(0);
-    QAction *actionIgnore = new QAction(trUtf8("تجاهل الفروق في الهمزات ونحوها"), this);
+    QAction *actionIgnore = new QAction(tr("تجاهل الفروق في الهمزات ونحوها"), this);
     actionIgnore->setCheckable(true);
     actionIgnore->setChecked(true);
 
     m_menu->addAction(actionIgnore);
     m_menu->addSeparator();
 
-    QAction *actionSelected = new QAction(trUtf8("عرض ما تم اختياره"), this);
+    QAction *actionSelected = new QAction(tr("عرض ما تم اختياره"), this);
     m_menu->addAction(actionSelected);
 
-    QAction *actionUnSelected = new QAction(trUtf8("عرض ما لم يتم اختياره"), this);
+    QAction *actionUnSelected = new QAction(tr("عرض ما لم يتم اختياره"), this);
     m_menu->addAction(actionUnSelected);
 
     m_ignore = true;
@@ -110,7 +110,7 @@ void SearchFilterHandler::showSelected()
     m_filterProxy->setFilterRole(Qt::CheckStateRole);
     m_filterProxy->setFilterFixedString(checked.toString());
 
-    m_selectedFilterWidget->setText(trUtf8("عرض ما تم اختياره"));
+    m_selectedFilterWidget->setText(tr("عرض ما تم اختياره"));
     m_selectedFilterWidget->show();
     m_clearFilterOnChange = false;
 }
@@ -122,7 +122,7 @@ void SearchFilterHandler::showUnSelected()
     m_filterProxy->setFilterRole(Qt::CheckStateRole);
     m_filterProxy->setFilterFixedString(unChecked.toString());
 
-    m_selectedFilterWidget->setText(trUtf8("عرض ما لم يتم اختياره"));
+    m_selectedFilterWidget->setText(tr("عرض ما لم يتم اختياره"));
     m_selectedFilterWidget->show();
     m_clearFilterOnChange = false;
 }

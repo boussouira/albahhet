@@ -141,9 +141,9 @@ void ShamelaResultWidget::gotException(QString what, int id)
     QString desc;
 
     if(id == CL_ERR_TooManyClauses)
-        str = trUtf8("احتمالات البحث كثيرة جدا");
+        str = tr("احتمالات البحث كثيرة جدا");
     else if(id == CL_ERR_CorruptIndex || id == CL_ERR_IO){
-        str = trUtf8("الفهرس غير سليم");
+        str = tr("الفهرس غير سليم");
         desc = what;
     }
 
@@ -164,7 +164,7 @@ void ShamelaResultWidget::setPageCount(int current, int count)
     int start = (current * m_searcher->resultsPeerPage()) + 1 ;
     int end = qMax(1, (current * m_searcher->resultsPeerPage()) + m_searcher->resultsPeerPage());
     end = (count >= end) ? end : count;
-    ui->labelNav->setText(trUtf8("%1 - %2 من %3 نتيجة")
+    ui->labelNav->setText(tr("%1 - %2 من %3 نتيجة")
                        .arg(start)
                        .arg(end)
                        .arg(count));

@@ -103,8 +103,8 @@ void ShamelaSearchWidget::search()
             ui->lineQueryShould->clear();
         } else {
             QMessageBox::warning(this,
-                                 trUtf8("البحث"),
-                                 trUtf8("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
+                                 tr("البحث"),
+                                 tr("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
             return;
         }
     }
@@ -191,8 +191,8 @@ void ShamelaSearchWidget::search()
     } catch(CLuceneError &e) {
         if(e.number() == CL_ERR_Parse)
             QMessageBox::warning(this,
-                                 trUtf8("خطأ في استعلام البحث"),
-                                 trUtf8("هنالك خطأ في احدى حقول البحث"
+                                 tr("خطأ في استعلام البحث"),
+                                 tr("هنالك خطأ في احدى حقول البحث"
                                         "\n"
                                         "تأكد من حذف الأقواس و المعقوفات وغيرها، ويمكنك فعل ذلك من خلال زر التنظيف الموجود يسار حقل البحث، بعد الضغط على هذا الزر اعد البحث"
                                         "\n"
@@ -225,7 +225,7 @@ void ShamelaSearchWidget::search()
 
     ShamelaResultWidget *widget;
     int index=1;
-    QString title = trUtf8("%1 (%2)")
+    QString title = tr("%1 (%2)")
                     .arg(m_currentIndex->name())
                     .arg(++m_searchCount);
 
@@ -305,7 +305,7 @@ void ShamelaSearchWidget::setTabWidget(TabWidget *tabWidget)
 
 void ShamelaSearchWidget::indexChanged()
 {
-    QProgressDialog progress(trUtf8("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
+    QProgressDialog progress(tr("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
     progress.setModal(Qt::WindowModal);
 
     QStandardItemModel *catsModel = m_booksDB->getCatsListModel();
@@ -402,8 +402,8 @@ void ShamelaSearchWidget::setupCleanMenu()
 
     foreach(FancyLineEdit *line, lines) {
         QMenu *menu = new QMenu(line);
-        QAction *clearTextAct = new QAction(trUtf8("مسح النص"), line);
-        QAction *clearSpecialCharAct = new QAction(trUtf8("ابطال مفعول الاقواس وغيرها"), line);
+        QAction *clearTextAct = new QAction(tr("مسح النص"), line);
+        QAction *clearSpecialCharAct = new QAction(tr("ابطال مفعول الاقواس وغيرها"), line);
 
         menu->addAction(clearTextAct);
         menu->addAction(clearSpecialCharAct);
@@ -419,7 +419,7 @@ void ShamelaSearchWidget::on_treeViewAuthors_doubleClicked(QModelIndex index)
 {
     if(index.isValid() && (ui->tabWidgetFilter->currentIndex() == 2)) {
         SelectedFilterWidget *selected = m_filterHandler->selectedFilterWidget();
-        selected->setText(trUtf8("عرض كتب %1").arg(index.data().toString()));
+        selected->setText(tr("عرض كتب %1").arg(index.data().toString()));
         selected->show();
         m_filterHandler->getFilterModel()->setFilterByAuthor(true);
         m_filterHandler->getFilterModel()->setAuthor(index.data(Qt::UserRole).toInt());

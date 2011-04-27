@@ -148,7 +148,7 @@ void BooksDB::openIndexDB()
         if (!m_indexDB.open()) {
             DB_OPEN_ERROR(book);
 
-            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+            throw tr("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
                          "\n" "%1").arg(book);
         }
 
@@ -168,7 +168,7 @@ void BooksDB::openShamelaDB()
         if (!m_shamelaDB.open()) {
             DB_OPEN_ERROR(book);
 
-            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+            throw tr("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
                          "\n" "%1").arg(book);
         }
 
@@ -188,7 +188,7 @@ void BooksDB::openShamelaSpecialDB()
         if (!m_shamelaSpecialDB.open()) {
             DB_OPEN_ERROR(book);
 
-            throw trUtf8("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
+            throw tr("لا يمكن فتح قاعدة البيانات الموجودة في المسار:"
                          "\n" "%1").arg(book);
         }
 
@@ -427,7 +427,7 @@ QStandardItemModel *BooksDB::getAuthorsListModel()
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
-    item = new QStandardItem(trUtf8("-- غير محدد --"));
+    item = new QStandardItem(tr("-- غير محدد --"));
     item->setData(0);
     item->setCheckable(true);
     model->appendRow(item);

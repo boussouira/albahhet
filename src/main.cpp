@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("albahhet.sf.net");
     app.setApplicationName("Al Bahhet");
     QSettings::setDefaultFormat(QSettings::IniFormat);
+    QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
 
     clearLogFile();
     qInstallMsgHandler(myMessageOutput);

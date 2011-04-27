@@ -33,7 +33,7 @@ QString ShamelaResult::bgColor()
 QString ShamelaResult::toHtml()
 {
     if(m_edited) {
-        m_html = QObject::trUtf8("<div class=\"result %1\">"
+        m_html = QObject::tr("<div class=\"result %1\">"
                                  "<div class=\"result_head\">"
                                  "<h3>%2</h3>"
                                  "<span class=\"progSpan\" style=\"width: %3px;\">"

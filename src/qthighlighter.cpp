@@ -70,9 +70,9 @@ QString QtHighLighter::hiText(const QString &text)
 QStringList QtHighLighter::buildRegExp(const QString &str)
 {
     QString text = str;
-    text.remove(QRegExp(QObject::trUtf8("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
+    text.remove(QRegExp(QObject::tr("[\\x064B-\\x0652\\x0600\\x061B-\\x0620،]")));
 
-    QStringList strWords = text.split(QRegExp(QObject::trUtf8("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
+    QStringList strWords = text.split(QRegExp(QObject::tr("[\\s;,.()\"'{}\\[\\]]")), QString::SkipEmptyParts);
     QStringList regExpList;
     QChar opPar('(');
     QChar clPar(')');
@@ -93,7 +93,7 @@ QStringList QtHighLighter::buildRegExp(const QString &str)
                 continue;
             else {
                 regExpStr.append(word.at(i));
-                regExpStr.append(QObject::trUtf8("[\\x064B\\x064C\\x064D\\x064E\\x064F\\x0650\\x0651\\x0652\\x0653]*"));
+                regExpStr.append(QObject::tr("[\\x064B\\x064C\\x064D\\x064E\\x064F\\x0650\\x0651\\x0652\\x0653]*"));
             }
         }
 

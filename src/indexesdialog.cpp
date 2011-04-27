@@ -63,8 +63,8 @@ void IndexesDialog::on_pushEdit_clicked()
         IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
 
         QString text = QInputDialog::getText(this,
-                                             trUtf8("تغيير اسم الفهرس"),
-                                             trUtf8("الاسم الجديد:"),
+                                             tr("تغيير اسم الفهرس"),
+                                             tr("الاسم الجديد:"),
                                              QLineEdit::Normal,
                                              indexInfo->name(),
                                              &ok);
@@ -76,15 +76,15 @@ void IndexesDialog::on_pushEdit_clicked()
 
             } else {
                 QMessageBox::warning(this,
-                                     trUtf8("تعديل فهرس"),
-                                     trUtf8("الاسم المدخل موجود مسبقا"));
+                                     tr("تعديل فهرس"),
+                                     tr("الاسم المدخل موجود مسبقا"));
             }
         }
 
     } else {
         QMessageBox::warning(this,
-                             trUtf8("تعديل فهرس"),
-                             trUtf8("لم تقم باختيار اي فهرس!"));
+                             tr("تعديل فهرس"),
+                             tr("لم تقم باختيار اي فهرس!"));
     }
 }
 
@@ -94,8 +94,8 @@ void IndexesDialog::on_pushDelete_clicked()
     if(items.count() > 0) {
         IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
         int rep = QMessageBox::question(this,
-                                        trUtf8("حذف فهرس"),
-                                        trUtf8("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
+                                        tr("حذف فهرس"),
+                                        tr("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
                                         QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes) {
@@ -105,8 +105,8 @@ void IndexesDialog::on_pushDelete_clicked()
         }
     } else {
         QMessageBox::warning(this,
-                             trUtf8("حذف فهرس"),
-                             trUtf8("لم تقم باختيار اي فهرس!"));
+                             tr("حذف فهرس"),
+                             tr("لم تقم باختيار اي فهرس!"));
     }
 }
 
@@ -130,8 +130,8 @@ void IndexesDialog::on_pushUpDate_clicked()
 
     } else {
         QMessageBox::warning(this,
-                             trUtf8("تحديث فهرس"),
-                             trUtf8("لم تقم باختيار اي فهرس!"));
+                             tr("تحديث فهرس"),
+                             tr("لم تقم باختيار اي فهرس!"));
     }
 }
 
@@ -141,15 +141,15 @@ void IndexesDialog::on_pushOptimize_clicked()
     if(items.count() > 0) {
         IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
         int rep = QMessageBox::question(this,
-                             trUtf8("ضغط فهرس"),
-                             trUtf8("هل تريد ضغط فهرس <strong>%1</strong>؟"
+                             tr("ضغط فهرس"),
+                             tr("هل تريد ضغط فهرس <strong>%1</strong>؟"
                                     "<br>"
                                     "هذه العملية قد تأخذ بعض الوقت وقد يتجمد البرنامج قليلا.")
                              .arg(indexInfo->name()),
                              QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes){
-            QProgressDialog progress(trUtf8("جاري ضغط فهرس %1...").arg(indexInfo->name()),
+            QProgressDialog progress(tr("جاري ضغط فهرس %1...").arg(indexInfo->name()),
                                      QString(),
                                      0,
                                      1,
@@ -162,14 +162,14 @@ void IndexesDialog::on_pushOptimize_clicked()
             progress.setValue(1);
 
             QMessageBox::information(this,
-                                     trUtf8("ضغط فهرس"),
-                                     trUtf8("ثم ضغط الفهرس بنجاح"));
+                                     tr("ضغط فهرس"),
+                                     tr("ثم ضغط الفهرس بنجاح"));
         }
 
     } else {
         QMessageBox::warning(this,
-                             trUtf8("ضغط فهرس"),
-                             trUtf8("لم تقم باختيار اي فهرس!"));
+                             tr("ضغط فهرس"),
+                             tr("لم تقم باختيار اي فهرس!"));
     }
 }
 
@@ -188,8 +188,8 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
         writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
     } else {
         QMessageBox::critical(this,
-                              trUtf8("خطأ عند التحديث"),
-                              trUtf8("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
+                              tr("خطأ عند التحديث"),
+                              tr("لم يتم العثور على اي فهرس في المسار" "\n" "%1").arg(info->path()));
         return;
     }
 
