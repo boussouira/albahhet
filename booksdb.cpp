@@ -109,11 +109,11 @@ void BooksDB::getAuthorFromShamela(QSet<int> author)
     openIndexDB();
     openShamelaSpecialDB();
 
+    m_indexDB.transaction();
+
     foreach(int id, author) {
         QSqlQuery query(m_indexDB);
         QSqlQuery shamelaQuery(m_shamelaSpecialDB);
-
-        m_indexDB.transaction();
 
         query.exec(QString("SELECT COUNT(id) FROM authors WHERE shamelaAuthorID = %1").arg(id));
         if(query.next()) {
@@ -126,9 +126,9 @@ void BooksDB::getAuthorFromShamela(QSet<int> author)
                 }
             }
         }
-
-        m_indexDB.commit();
     }
+
+    m_indexDB.commit();
 }
 
 void BooksDB::setIndexInfo(IndexInfo *info)
