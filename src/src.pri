@@ -42,7 +42,9 @@ SOURCES += main.cpp \
     bookprogresswidget.cpp \
     shamelafilterproxymodel.cpp \
     selectedfilterwidget.cpp \
-    indexesmanager.cpp
+    indexesmanager.cpp \
+    shamelaindexerwidget.cpp \
+    abstractindexingwidget.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -74,7 +76,9 @@ HEADERS += mainwindow.h \
     bookprogresswidget.h \
     shamelafilterproxymodel.h \
     selectedfilterwidget.h \
-    indexesmanager.h
+    indexesmanager.h \
+    shamelaindexerwidget.h \
+    abstractindexingwidget.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
@@ -83,6 +87,7 @@ FORMS += mainwindow.ui \
     shamelaupdaterdialog.ui \
     logdialog.ui \
     shamelasearchwidget.ui \
-    selectedfilterwidget.ui
+    selectedfilterwidget.ui \
+    shamelaindexerwidget.ui
 
 RESOURCES += resources.qrc

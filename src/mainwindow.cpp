@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_searchWidget->setTabWidget(m_tabWidget);
 
     m_tabWidget->addTab(m_searchWidget,
-                        QIcon(":/bin/data/images/find.png"),
+                        QIcon(":/data/images/find.png"),
                         tr("بحث"));
     setCentralWidget(m_tabWidget);
 
@@ -359,7 +359,7 @@ void MainWindow::aboutApp()
 }
 
 void MainWindow::showLogDialog()
-{    
+{
     m_logDialog->startWatching();
     m_logDialog->show();
 }

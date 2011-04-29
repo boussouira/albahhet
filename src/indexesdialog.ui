@@ -55,7 +55,7 @@
          </property>
          <property name="icon">
           <iconset resource="resources.qrc">
-           <normaloff>:/bin/data/images/edit.png</normaloff>:/bin/data/images/edit.png</iconset>
+           <normaloff>:/data/images/edit.png</normaloff>:/data/images/edit.png</iconset>
          </property>
          <property name="autoRaise">
           <bool>true</bool>
@@ -78,7 +78,7 @@
          </property>
          <property name="icon">
           <iconset resource="resources.qrc">
-           <normaloff>:/bin/data/images/reload.png</normaloff>:/bin/data/images/reload.png</iconset>
+           <normaloff>:/data/images/reload.png</normaloff>:/data/images/reload.png</iconset>
          </property>
          <property name="autoRaise">
           <bool>true</bool>
@@ -97,7 +97,7 @@
           <string>ضغط الفهرس</string>
          </property>
          <property name="icon">
-          <iconset resource="resources.qrc">
+          <iconset>
            <normaloff>:/bin/data/images/compress.png</normaloff>:/bin/data/images/compress.png</iconset>
          </property>
          <property name="iconSize">
@@ -126,7 +126,7 @@
           <string>حذف</string>
          </property>
          <property name="icon">
-          <iconset resource="resources.qrc">
+          <iconset>
            <normaloff>:/bin/data/images/delete.png</normaloff>:/bin/data/images/delete.png</iconset>
          </property>
          <property name="autoRaise">
