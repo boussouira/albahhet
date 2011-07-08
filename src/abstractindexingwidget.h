@@ -18,6 +18,7 @@ class AbstractIndexingWidget : public QWidget
 
 public:
     AbstractIndexingWidget(QWidget *parent = 0);
+    virtual QString indexTypeName()=0;
     void setIndexManager(IndexesManager *manager);
     void setButtons(QPushButton *nextButton, QPushButton *cancelButton);
     void shutDown();
@@ -39,9 +40,6 @@ protected:
     QMessageBox *m_shutDownMsgBox;
     QPushButton *m_nextButton;
     QPushButton *m_cancelButton;
-    int m_booksCount;
-    int m_indexedBooks;
-    int m_threadCount;
     int m_shutDownTime;
     bool m_shutDown;
 };

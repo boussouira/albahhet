@@ -18,7 +18,7 @@
 #include <qmenu.h>
 
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
-    QWidget(parent),
+    AbstractSearchWidget(parent),
     ui(new Ui::ShamelaSearchWidget)
 {
     ui->setupUi(this);
@@ -38,8 +38,8 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     m_filterHandler->setSelectedFilterWidget(selected);
 
     m_filterText << "" << "" << "";
-
     ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
+    m_searchCount = 0;
 
     loadSettings();
     enableFilterWidget();

@@ -97,8 +97,8 @@
           <string>ضغط الفهرس</string>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/bin/data/images/compress.png</normaloff>:/bin/data/images/compress.png</iconset>
+          <iconset resource="resources.qrc">
+           <normaloff>:/data/images/compress.png</normaloff>:/data/images/compress.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -126,8 +126,8 @@
           <string>حذف</string>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/bin/data/images/delete.png</normaloff>:/bin/data/images/delete.png</iconset>
+          <iconset resource="resources.qrc">
+           <normaloff>:/data/images/delete.png</normaloff>:/data/images/delete.png</iconset>
          </property>
          <property name="autoRaise">
           <bool>true</bool>

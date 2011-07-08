@@ -22,7 +22,8 @@ class IndexInfo
 public:
 
     enum IndexType {
-        ShamelaIndex = 1
+        ShamelaIndex = 1,
+        QuranIndex
     };
 
     IndexInfo();

@@ -1,20 +1,20 @@
-#ifndef SHAMELAINDEXERWIDGET_H
-#define SHAMELAINDEXERWIDGET_H
+#ifndef QURANINDEXERWIDGET_H
+#define QURANINDEXERWIDGET_H
 
 #include "abstractindexingwidget.h"
 
 namespace Ui {
-    class ShamelaIndexerWidget;
+    class QuranIndexerWidget;
 }
 class IndexInfo;
 
-class ShamelaIndexerWidget : public AbstractIndexingWidget
+class QuranIndexerWidget : public AbstractIndexingWidget
 {
     Q_OBJECT
 
 public:
-    ShamelaIndexerWidget(QWidget *parent = 0);
-    ~ShamelaIndexerWidget();
+    QuranIndexerWidget(QWidget *parent = 0);
+    ~QuranIndexerWidget();
     QString indexTypeName();
 
 protected:
@@ -38,10 +38,7 @@ private slots:
 
 private:
     IndexInfo *m_indexInfo;
-    Ui::ShamelaIndexerWidget *ui;
-    int m_booksCount;
-    int m_indexedBooks;
-    int m_threadCount;
+    Ui::QuranIndexerWidget *ui;
 };
 
-#endif // SHAMELAINDEXERWIDGET_H
+#endif // QURANINDEXERWIDGET_H

@@ -8,6 +8,7 @@
 #include <qmessagebox.h>
 #include <qtimeline.h>
 #include "shamelaindexerwidget.h"
+#include "quranindexerwidget.h"
 
 IndexingDialg::IndexingDialg(QWidget *parent) :
     QDialog(parent),
@@ -33,6 +34,8 @@ void IndexingDialg::showIndexingWidget()
 {
     if(ui->radioShamela->isChecked())
         m_indexWidget = new ShamelaIndexerWidget(this);
+    else if(ui->radioQuran->isChecked())
+        m_indexWidget = new QuranIndexerWidget(this);
     else
         qFatal("Unknow index type");
 
@@ -41,6 +44,7 @@ void IndexingDialg::showIndexingWidget()
 
     ui->verticalLayout->insertWidget(0, m_indexWidget);
     ui->widgetSelectIndexType->hide();
+    setWindowTitle(tr("انشاء فهرس - %1").arg(m_indexWidget->indexTypeName()));
 
     disconnect(ui->pushNext, SIGNAL(clicked()), this, SLOT(showIndexingWidget()));
     connect(ui->pushNext, SIGNAL(clicked()), m_indexWidget, SLOT(nextStep()));

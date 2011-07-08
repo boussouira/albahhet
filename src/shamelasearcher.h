@@ -15,12 +15,13 @@ class ShamelaSearcher : public QThread
     Q_OBJECT
 
 public:
-    ShamelaSearcher(QObject *parent = 0);
-    ~ShamelaSearcher();
     enum Action {
         SEARCH,
         FETECH
     };
+
+    ShamelaSearcher(QObject *parent = 0);
+    ~ShamelaSearcher();
 
     void run();
     void clear();

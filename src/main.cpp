@@ -8,6 +8,7 @@
 #include <qtextcodec.h>
 #include <qdatetime.h>
 #include <qsettings.h>
+#include <qmessagebox.h>
 
 #ifdef Q_OS_WIN
     #include <Windows.h>
@@ -38,7 +39,8 @@ void myMessageOutput(QtMsgType type, const char *msg)
         break;
     case QtFatalMsg:
         out << dateTime << "[FATAL] " << QString::fromLocal8Bit(msg) << "\n";
-        abort();
+        QMessageBox::critical(0, QObject::tr("Fatal error"), msg);
+        exit(-1);
     }
 
     debugFile.close();

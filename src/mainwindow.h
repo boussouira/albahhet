@@ -12,7 +12,7 @@ namespace Ui {
 class IndexInfo;
 class BooksDB;
 class TabWidget;
-class ShamelaSearchWidget;
+class AbstractSearchWidget;
 class LogDialog;
 
 class MainWindow : public QMainWindow
@@ -44,7 +44,7 @@ protected slots:
 protected:
     IndexesManager *m_indexesManager;
     TabWidget *m_tabWidget;
-    ShamelaSearchWidget *m_searchWidget;
+    AbstractSearchWidget *m_searchWidget;
     LogDialog *m_logDialog;
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;

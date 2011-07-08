@@ -478,3 +478,32 @@ QList<int> BooksDB::getAuthorBooks(int auth)
 
     return list;
 }
+
+void BooksDB::loadSowarNames()
+{
+    if(m_sowarNames.isEmpty()) {
+        openShamelaSpecialDB();
+        m_sowarNames.clear();
+
+        QSqlQuery specialQuery(m_shamelaSpecialDB);
+
+        if(!specialQuery.exec(QString("SELECT sora FROM Sora")))
+            SQL_ERROR(specialQuery.lastError().text());
+
+        while(specialQuery.next()) {
+            m_sowarNames.append(specialQuery.value(0).toString());
+        }
+    }
+}
+
+QString BooksDB::getSoraName(int soraNumber)
+{
+    loadSowarNames();
+
+    int num = soraNumber - 1;
+
+    if(0 <= num && num < m_sowarNames.count())
+        return m_sowarNames.at(num);
+    else
+        return "Out of range!";
+}

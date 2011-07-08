@@ -3,11 +3,13 @@
 
 #include "common.h"
 #include "indexingdialg.h"
-#include "shamelasearchwidget.h"
 #include "settingsdialog.h"
 #include "indexesdialog.h"
 #include "logdialog.h"
 #include "tabwidget.h"
+#include "abstractsearchwidget.h"
+#include "shamelasearchwidget.h"
+#include "quransearchwidget.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -27,14 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_indexesManager = new IndexesManager;
 
     m_tabWidget = new TabWidget(this);
-    m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
-    m_searchWidget->setTabWidget(m_tabWidget);
-
-    m_tabWidget->addTab(m_searchWidget,
-                        QIcon(":/data/images/find.png"),
-                        tr("بحث"));
     setCentralWidget(m_tabWidget);
 
+    m_searchWidget = 0;
     m_currentIndex = 0;
     m_booksDB = new BooksDB();
 
@@ -188,12 +185,15 @@ void MainWindow::changeIndex()
 
 void MainWindow::indexChanged()
 {
-    QSettings settings;
+    if(m_searchWidget)
+        delete m_searchWidget;
 
-    if(m_currentIndex && m_currentIndex->id() != -1)
-        settings.setValue("currentIndex", m_currentIndex->id());
-
-    setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
+    if(m_currentIndex->type() == IndexInfo::ShamelaIndex)
+        m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
+    else if(m_currentIndex->type() == IndexInfo::QuranIndex)
+        m_searchWidget = new QuranSearchWidget(m_tabWidget);
+    else
+        qFatal("Unknow index type");
 
     DELETE_DB(m_booksDB);
 
@@ -202,7 +202,19 @@ void MainWindow::indexChanged()
 
     m_searchWidget->setIndexInfo(m_currentIndex);
     m_searchWidget->setBooksDb(m_booksDB);
+    m_searchWidget->setTabWidget(m_tabWidget);
     m_searchWidget->indexChanged();
+
+    m_tabWidget->addTab(m_searchWidget,
+                        QIcon(":/data/images/find.png"),
+                        tr("بحث"));
+
+    QSettings settings;
+
+    if(m_currentIndex && m_currentIndex->id() != -1)
+        settings.setValue("currentIndex", m_currentIndex->id());
+
+    setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
 }
 
 void MainWindow::haveIndexesCheck()

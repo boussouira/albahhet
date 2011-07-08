@@ -44,7 +44,12 @@ SOURCES += main.cpp \
     selectedfilterwidget.cpp \
     indexesmanager.cpp \
     shamelaindexerwidget.cpp \
-    abstractindexingwidget.cpp
+    abstractindexingwidget.cpp \
+    quranindexer.cpp \
+    abstractsearchwidget.cpp \
+    quransearchwidget.cpp \
+    quransearcher.cpp \
+    quranresult.cpp
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     indexingdialg.h \
@@ -78,7 +83,12 @@ HEADERS += mainwindow.h \
     selectedfilterwidget.h \
     indexesmanager.h \
     shamelaindexerwidget.h \
-    abstractindexingwidget.h
+    abstractindexingwidget.h \
+    quranindexer.h \
+    abstractsearchwidget.h \
+    quransearchwidget.h \
+    quransearcher.h \
+    quranresult.h
 FORMS += mainwindow.ui \
     indexingdialg.ui \
     shamelaresultwidget.ui \
@@ -88,6 +98,7 @@ FORMS += mainwindow.ui \
     logdialog.ui \
     shamelasearchwidget.ui \
     selectedfilterwidget.ui \
-    shamelaindexerwidget.ui
+    shamelaindexerwidget.ui \
+    quransearchwidget.ui
 
 RESOURCES += resources.qrc

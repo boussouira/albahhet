@@ -24,7 +24,7 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
     m_searcher = new ShamelaSearcher;
     m_bookReader = new ShamelaBooksReader(this);
-    m_webView = new WebView(this);
+    m_webView = new WebView(IndexInfo::ShamelaIndex, this);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->mainVerticalLayout->insertWidget(0, m_webView);
 
@@ -70,17 +70,7 @@ void ShamelaResultWidget::clearResults()
 
 void ShamelaResultWidget::searchStarted()
 {
-    QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
-
-    m_webView->setHtml(QString("<html><head><title></title>"
-                                 "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>"
-                                 "<link href=\"%1/data/default.css\" rel=\"stylesheet\" type=\"text/css\"/>"
-                                 "</head>"
-                                 "<body></body>"
-                                 "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\" />"
-                                 "<script type=\"text/javascript\" src=\"%1/data/shamela.js\" />"
-                                 "</html>")
-                         .arg(appPath));
+    m_webView->init();
 
     showNavigationButton(false);
 
@@ -148,8 +138,8 @@ void ShamelaResultWidget::gotException(QString what, int id)
     }
 
     m_webView->execJS(QString("searchException('%1', '%2');")
-                                                         .arg(str)
-                                                         .arg(desc));
+                                                         .arg(str.replace('\'', "\\'"))
+                                                         .arg(desc.replace('\'', "\\'")));
     ui->progressWidget->hide();
 }
 

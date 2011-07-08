@@ -55,3 +55,12 @@ LIBS += -lclucene-core$$CLUCENE_LIB_SUFFIX \
         -lclucene-shared$$CLUCENE_LIB_SUFFIX \
         -lclucene-contribs-lib$$CLUCENE_LIB_SUFFIX \
         -L$$CLUCENE_LIBS_PATH
+
+HEADERS += \
+    quranindexerwidget.h
+
+SOURCES += \
+    quranindexerwidget.cpp
+
+FORMS += \
+    quranindexerwidget.ui

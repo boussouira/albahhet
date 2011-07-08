@@ -1,9 +1,9 @@
 #ifndef SHAMELASEARCHWIDGET_H
 #define SHAMELASEARCHWIDGET_H
 
-#include <QWidget>
-#include <QModelIndex>
+#include "abstractsearchwidget.h"
 #include "arabicanalyzer.h"
+#include <QModelIndex>
 
 namespace Ui {
     class ShamelaSearchWidget;
@@ -15,7 +15,7 @@ class ShamelaModels;
 class SearchFilterHandler;
 class TabWidget;
 
-class ShamelaSearchWidget : public QWidget
+class ShamelaSearchWidget : public AbstractSearchWidget
 {
     Q_OBJECT
 
@@ -25,6 +25,7 @@ public:
     void setIndexInfo(IndexInfo *info);
     void setBooksDb(BooksDB *db);
     void setTabWidget(TabWidget *tabWidget);
+    void saveSettings();
     void indexChanged();
 
 protected:
@@ -38,7 +39,6 @@ protected:
 public slots:
     void search();
     void loadSettings();
-    void saveSettings();
     void clearSpecialChar();
     void clearLineText();
     void enableFilterWidget();
@@ -53,9 +53,9 @@ protected slots:
 protected:
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
+    TabWidget *m_tabWidget;
     ShamelaModels *m_shaModel;
     SearchFilterHandler *m_filterHandler;
-    TabWidget *m_tabWidget;
     QString m_searchQuery;
     QStringList m_filterText;
     int m_resultParPage;

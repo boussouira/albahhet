@@ -37,6 +37,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QRadioButton" name="radioQuran">
+        <property name="text">
+         <string>فهرسة القرآن الكريم</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="radioShamela">
         <property name="text">
          <string>فهرسة المكتبة الشاملة</string>
