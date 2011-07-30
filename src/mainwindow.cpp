@@ -232,9 +232,9 @@ void MainWindow::haveIndexesCheck()
             QMessageBox::information(this,
                                      tr("انشاء فهرس"),
                                      tr("يمكن انشاء فهرس جديد في اي وقت من خلال قائمة "
-                                            "<strong>" "فهرس" "</strong>"
-                                            " ثم "
-                                            "<strong>" "انشاء فهرس جديد..." "</strong>"));
+                                        "<strong>" "فهرس" "</strong>"
+                                        " ثم "
+                                        "<strong>" "انشاء فهرس جديد..." "</strong>"));
 
     }
 }

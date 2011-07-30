@@ -117,6 +117,13 @@ void IndexesDialog::on_pushUpDate_clicked()
     if(items.count() > 0) {
         IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
 
+        if(indexInfo->type() == IndexInfo::QuranIndex) {
+            QMessageBox::warning(this,
+                                 tr("تحديث الفهرس"),
+                                 tr("هذا الفهرس لا يقبل التحديث"));
+            return;
+        }
+
         BooksDB *bookDb = new BooksDB();
         bookDb->setIndexInfo(indexInfo);
 

@@ -57,6 +57,7 @@ void QuranSearcher::run()
 void QuranSearcher::setSearchText(QString text)
 {
     m_queryText = text;
+    m_action = SEARCH;
 }
 
 void QuranSearcher::setBooksDb(BooksDB *db)

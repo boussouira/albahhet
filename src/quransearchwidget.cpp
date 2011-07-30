@@ -3,6 +3,7 @@
 #include "webview.h"
 #include <qtextstream.h>
 #include <qsettings.h>
+#include <qmessagebox.h>
 
 QuranSearchWidget::QuranSearchWidget(QWidget *parent) :
     AbstractSearchWidget(parent),
@@ -62,27 +63,21 @@ void QuranSearchWidget::saveSettings()
 
 void QuranSearchWidget::on_pushButton_clicked()
 {
+    if(ui->lineEdit->text().simplified().isEmpty()){
+        QMessageBox::warning(this,
+                             tr("البحث"),
+                             tr("يجب ان تدخل نصا للبحث"));
+        return;
+    }
+
     m_searcher->setSearchText(ui->lineEdit->text());
     m_searcher->setResultsPeerPage(m_resultParPage);
     m_searcher->start();
 }
 
-void QuranSearchWidget::on_lineEdit_textChanged(const QString &arg1)
+void QuranSearchWidget::on_lineEdit_returnPressed()
 {
-    /*
-    m_searcher->setIndexInfo(m_indexInfo);
-    m_searcher->setBooksDb(m_booksDB);
-    m_searcher->setSearchText(arg1);
-    m_searcher->run();
-    m_view->setHtml(tr("%1 -> %2").arg(arg1).arg(m_searcher->resultCount()));
-
-    QFile file("test.html");
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
-    QTextStream out(&file);
-    out.setCodec("UTF-8");
-    out << m_view->html();
-    */
+    on_pushButton_clicked();
 }
 
 void QuranSearchWidget::gotResult(QuranResult *result)
@@ -129,6 +124,7 @@ void QuranSearchWidget::fetechFinnished()
 {
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressWidget->hide();
+    updateNavigation(m_searcher->currentPage(), m_searcher->resultCount());
     showNavigationButton(true);
 }
 
@@ -185,4 +181,28 @@ void QuranSearchWidget::on_buttonGoLast_clicked()
 void QuranSearchWidget::on_buttonGoFirst_clicked()
 {
     m_searcher->firstPage();
+}
+
+void QuranSearchWidget::updateNavigation(int current, int count)
+{
+    int start = (current * m_searcher->resultsPeerPage()) + 1 ;
+    int end = qMax(1, (current * m_searcher->resultsPeerPage()) + m_searcher->resultsPeerPage());
+    end = (count >= end) ? end : count;
+    ui->labelNav->setText(tr("%1 - %2 من %3 نتيجة")
+                       .arg(start)
+                       .arg(end)
+                       .arg(count));
+    buttonStat(current, m_searcher->pagesCount());
+}
+
+void QuranSearchWidget::buttonStat(int currentPage, int pageCount)
+{
+    bool back = (currentPage > 0);
+    bool next = (currentPage < pageCount-1);
+
+    ui->buttonGoPrev->setEnabled(back);
+    ui->buttonGoFirst->setEnabled(back);
+
+    ui->buttonGoNext->setEnabled(next);
+    ui->buttonGoLast->setEnabled(next);
 }

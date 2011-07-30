@@ -35,6 +35,8 @@ protected slots:
     void fetechFinnished();
     void gotException(QString what, int id);
     void populateJavaScriptWindowObject();
+    void updateNavigation(int currentPage, int pageCount);
+    void buttonStat(int currentPage, int pageCount);
 
 protected:
     IndexInfo *m_indexInfo;
@@ -47,7 +49,7 @@ protected:
 
 private slots:
     void on_pushButton_clicked();
-    void on_lineEdit_textChanged(const QString &arg1);
+    void on_lineEdit_returnPressed();
     void on_buttonGoFirst_clicked();
     void on_buttonGoLast_clicked();
     void on_buttonGoPrev_clicked();
