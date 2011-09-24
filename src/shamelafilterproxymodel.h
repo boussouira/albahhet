@@ -12,12 +12,11 @@ public:
     void setFilterByAuthor(bool authorFilter);
     void setAuthor(int id);
     void setBooksDb(BooksDB *db) { m_booksDB = db;}
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
-    bool filterByAuthor() { return m_filterByAuthor; }
 
 protected:
-    bool m_filterByAuthor;
-    int m_ahuthorId;
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+    bool filterAcceptsRowItself(int source_row, const QModelIndex &source_parent) const;
+    bool hasAcceptedChildren(int source_row, const QModelIndex &source_parent) const;
     BooksDB *m_booksDB;
     QList<int> m_list;
 };

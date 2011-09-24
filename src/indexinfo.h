@@ -65,6 +65,7 @@ protected:
     bool m_optimizeIndex;
     int m_ramSize;
     IndexingInfo *m_indexingInfo;
+    QString m_indexDirName;
 };
 
 #endif // INDEXINFO_H

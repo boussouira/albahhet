@@ -4,7 +4,7 @@
 
 ShamelaBooksReader::ShamelaBooksReader(QObject *parent) : QObject(parent)
 {
-    m_query = NULL;
+    m_query = 0;
     m_highLightAll = false;
 }
 
@@ -112,9 +112,9 @@ int ShamelaBooksReader::currentPart()
 
 void ShamelaBooksReader::close()
 {
-    if(m_query != NULL) {
+    if(m_query != 0) {
         delete m_query;
-        m_query = NULL;
+        m_query = 0;
     }
 
     if(m_bookDB.isOpen())

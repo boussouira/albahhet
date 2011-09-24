@@ -4,6 +4,7 @@
 #include "abstractsearchwidget.h"
 #include "arabicanalyzer.h"
 #include <QModelIndex>
+#include <QStandardItem>
 
 namespace Ui {
     class ShamelaSearchWidget;
@@ -31,9 +32,6 @@ public:
 protected:
     void closeEvent(QCloseEvent *e);
     Query *getBooksListQuery();
-    Query *getCatsListQuery();
-    Query *getAuthorsListQuery();
-    void chooseProxy(int index);
     void setupCleanMenu();
 
 public slots:
@@ -41,14 +39,12 @@ public slots:
     void loadSettings();
     void clearSpecialChar();
     void clearLineText();
-    void enableFilterWidget();
 
 protected slots:
-    void on_tabWidgetFilter_currentChanged(int index);
     void on_lineFilter_textChanged(QString text);
-    void on_treeViewAuthors_doubleClicked(QModelIndex index);
     void on_pushSelectAll_clicked();
     void on_pushUnSelectAll_clicked();
+    void itemChanged(QStandardItem *item);
 
 protected:
     IndexInfo *m_currentIndex;
@@ -57,10 +53,10 @@ protected:
     ShamelaModels *m_shaModel;
     SearchFilterHandler *m_filterHandler;
     QString m_searchQuery;
-    QStringList m_filterText;
     int m_resultParPage;
     int m_searchCount;
     bool m_useMultiTab;
+    bool m_proccessItemChange;
 
 private:
     Ui::ShamelaSearchWidget *ui;

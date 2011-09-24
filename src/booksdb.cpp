@@ -54,7 +54,7 @@ BookInfo *BooksDB::next()
 
         return book;
     } else {
-        return NULL;
+        return 0;
     }
 }
 
@@ -115,12 +115,12 @@ void BooksDB::getAuthorFromShamela(QSet<int> author)
         QSqlQuery query(m_indexDB);
         QSqlQuery shamelaQuery(m_shamelaSpecialDB);
 
-        query.exec(QString("SELECT COUNT(id) FROM authors WHERE shamelaAuthorID = %1").arg(id));
+        query.exec(QString("SELECT COUNT(*) FROM authors WHERE shamelaAuthorID = %1").arg(id));
         if(query.next()) {
             if(query.value(0).toInt() == 0) {
                 shamelaQuery.exec(QString("SELECT authid, auth FROM Auth WHERE authid = %1").arg(id));
                 if(shamelaQuery.next()) {
-                    query.exec(QString("INSERT INTO authors VALUES (NULL, %1, '%2')")
+                    query.exec(QString("INSERT INTO authors VALUES (%1, '%2')")
                                .arg(id)
                                .arg(shamelaQuery.value(1).toString()));
                 }
@@ -192,7 +192,7 @@ void BooksDB::openShamelaSpecialDB()
                          "\n" "%1").arg(book);
         }
 
-        m_shamelaSpecialQuery = new QSqlQuery(m_shamelaDB);
+        m_shamelaSpecialQuery = new QSqlQuery(m_shamelaSpecialDB);
     }
 }
 
@@ -230,8 +230,9 @@ void BooksDB::importBooksListFromShamela()
                     "indexFLags INTEGER)");
 
     m_indexQuery->exec("DROP TABLE IF EXISTS authors");
-    m_indexQuery->exec("CREATE TABLE IF NOT EXISTS authors (id INTEGER PRIMARY KEY, "
-                       "shamelaAuthorID INTEGER, name TEXT)");
+    m_indexQuery->exec("CREATE TABLE IF NOT EXISTS authors ("
+                       "shamelaAuthorID INTEGER UNIQUE, "
+                       "name TEXT)");
 
 
     m_indexDB.transaction();
@@ -387,20 +388,59 @@ QStringList BooksDB::connections()
 
 QStandardItemModel *BooksDB::getBooksListModel()
 {
-    openIndexDB();
+    openShamelaDB();
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
-    m_indexQuery->exec("SELECT shamelaID, bookName FROM books WHERE indexFLags = 1");
-
-    while(m_indexQuery->next()) {
-        item = new QStandardItem(m_indexQuery->value(1).toString());
-        item->setData(m_indexQuery->value(0).toInt(), Qt::UserRole);
+    if(!m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord"))
+        qDebug() << m_shamelaQuery->lastError().text();
+    while(m_shamelaQuery->next()) {
+        item = new QStandardItem();
+        item->setText(m_shamelaQuery->value(1).toString());
+        item->setData(m_shamelaQuery->value(0).toInt(), idRole);
+        item->setData(Categorie, typeRole);
         item->setCheckable(true);
+
+        booksCat(item, m_shamelaQuery->value(0).toInt());
+
         model->appendRow(item);
     }
 
+    model->setHorizontalHeaderLabels(QStringList() << tr("الكتاب") << tr("المؤلف"));
+
     return model;
+}
+
+void BooksDB::booksCat(QStandardItem *parentNode, int catID)
+{
+    openIndexDB();
+    QSqlQuery query(m_indexDB);
+
+    query.prepare("SELECT books.shamelaID, books.bookName, authors.name "
+                  "FROM books LEFT JOIN authors "
+                  "ON authors.shamelaAuthorID = books.authorId "
+                  "WHERE books.indexFLags = 1 AND books.cat = ? ");
+
+    query.bindValue(0, catID);
+    if(!query.exec())
+        qDebug() << query.lastError().text();
+
+    while(query.next()) {
+        int row = parentNode->rowCount();
+        QStandardItem *bookItem = new QStandardItem();
+        bookItem->setText(query.value(1).toString());
+        bookItem->setData(query.value(0).toInt(), idRole);
+        bookItem->setData(Book, typeRole);
+
+        bookItem->setCheckable(true);
+        bookItem->setCheckState(Qt::Unchecked);
+
+        QStandardItem *authItem = new QStandardItem();
+        authItem->setText(query.value(2).toString());
+
+        parentNode->setChild(row, 0, bookItem);
+        parentNode->setChild(row, 1, authItem);
+    }
 }
 
 QStandardItemModel *BooksDB::getCatsListModel()

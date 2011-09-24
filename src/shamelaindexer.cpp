@@ -35,7 +35,7 @@ void ShamelaIndexer::startIndexing()
 {
     try {
         BookInfo *book = m_bookDB->next();
-        while(book != NULL) {
+        while(book != 0) {
             book->genInfo();
 
             emit currentBookName(book->name());

@@ -7,7 +7,7 @@
 #include "shamelamodels.h"
 #include "tabwidget.h"
 #include "searchfilterhandler.h"
-#include "ShamelaFilterProxyModel.h"
+#include "shamelafilterproxymodel.h"
 #include "selectedfilterwidget.h"
 
 #include <qmessagebox.h>
@@ -30,19 +30,18 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
 
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
-    m_filterHandler->setShamelaModels(m_shaModel);
 
     SelectedFilterWidget *selected = new SelectedFilterWidget(this);
     selected->hide();
     ui->widgetSelectedFilter->layout()->addWidget(selected);
     m_filterHandler->setSelectedFilterWidget(selected);
 
-    m_filterText << "" << "" << "";
-    ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
+    if(m_filterHandler->getFilterLineMenu())
+        ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
     m_searchCount = 0;
+    m_proccessItemChange = true;
 
     loadSettings();
-    enableFilterWidget();
     setupCleanMenu();
 
     QSettings settings;
@@ -54,7 +53,8 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     connect(ui->lineQueryShould, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->lineQueryShouldNot, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(search()));
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(enableFilterWidget()));
+    connect(ui->lineFilter, SIGNAL(textChanged(QString)), ui->treeViewBooks, SLOT(expandAll()));
+    connect(m_filterHandler, SIGNAL(clearText()), ui->lineFilter, SLOT(clear()));
 }
 
 ShamelaSearchWidget::~ShamelaSearchWidget()
@@ -73,7 +73,6 @@ void ShamelaSearchWidget::loadSettings()
     QSettings settings;
     m_resultParPage = settings.value("resultPeerPage", 10).toInt();
     m_useMultiTab = settings.value("useTabs", true).toBool();
-    ui->comboBox->setCurrentIndex(settings.value("comboIndex", 0).toInt());
 
     if(m_resultParPage <= 0)
         m_resultParPage = 10;
@@ -91,7 +90,6 @@ void ShamelaSearchWidget::saveSettings()
 
     settings.setValue("resultPeerPage", m_resultParPage);
     settings.setValue("useTabs", m_useMultiTab);
-    settings.setValue("comboIndex", ui->comboBox->currentIndex());
 }
 
 void ShamelaSearchWidget::search()
@@ -121,9 +119,11 @@ void ShamelaSearchWidget::search()
 
     ArabicAnalyzer analyzer;
     BooleanQuery *q = new BooleanQuery;
-    BooleanQuery *allFilterQuery = new BooleanQuery;
+    Query *filterQuery = 0;
     QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
     queryPareser->setAllowLeadingWildcard(true);
+
+    m_shaModel->generateLists();
 
     try {
         if(!mustQureyStr.isEmpty()) {
@@ -159,48 +159,31 @@ void ShamelaSearchWidget::search()
         }
 
         // Filtering
-        if(ui->comboBox->currentIndex() == 1) {
-            Query * filterQuery;
-            bool required = ui->radioRequired->isChecked();
-            bool prohibited = ui->radioProhibited->isChecked();
-            bool gotAFilter = false;
 
-            filterQuery = getBooksListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
+        bool required = m_shaModel->selectedBooksCount() <= m_shaModel->unSelectBooksCount();
+        bool prohibited = !required;
 
-            filterQuery = getCatsListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
+        filterQuery = getBooksListQuery();
 
-            filterQuery = getAuthorsListQuery();
-            if(filterQuery != NULL) {
-                allFilterQuery->add(filterQuery, BooleanClause::SHOULD);
-                gotAFilter = true;
-            }
-
-            if(gotAFilter) {
-                allFilterQuery->setBoost(0.0);
-                q->add(allFilterQuery, required, prohibited);
-            }
+        if(filterQuery) {
+            filterQuery->setBoost(0.0);
+            q->add(filterQuery, required, prohibited);
         }
+
     } catch(CLuceneError &e) {
         if(e.number() == CL_ERR_Parse)
             QMessageBox::warning(this,
                                  tr("خطأ في استعلام البحث"),
                                  tr("هنالك خطأ في احدى حقول البحث"
-                                        "\n"
-                                        "تأكد من حذف الأقواس و المعقوفات وغيرها، ويمكنك فعل ذلك من خلال زر التنظيف الموجود يسار حقل البحث، بعد الضغط على هذا الزر اعد البحث"
-                                        "\n"
-                                        "او تأكد من أنك تستخدمها بشكل صحيح"));
+                                    "\n"
+                                    "تأكد من حذف الأقواس و المعقوفات وغيرها،"
+                                    " ويمكنك فعل ذلك من خلال زر التنظيف الموجود يسار حقل البحث، بعد الضغط على هذا الزر اعد البحث"
+                                    "\n"
+                                    "او تأكد من أنك تستخدمها بشكل صحيح"));
         else
             QMessageBox::warning(0,
                                  "CLucene Query error",
-                                 tr("Error: %2\ncode: %1").arg(e.number()).arg(e.what()));
+                                 tr("code: %1\nError: %2").arg(e.number()).arg(e.what()));
 
         _CLDELETE(q);
         _CLDELETE(queryPareser);
@@ -221,6 +204,7 @@ void ShamelaSearchWidget::search()
     m_searcher->setIndexInfo(m_currentIndex);
     m_searcher->setQueryString(m_searchQuery);
     m_searcher->setQuery(q);
+
     m_searcher->setResultsPeerPage(m_resultParPage);
 
     ShamelaResultWidget *widget;
@@ -251,40 +235,30 @@ void ShamelaSearchWidget::search()
 Query *ShamelaSearchWidget::getBooksListQuery()
 {
     int count = 0;
+
+    // Every thing is selected we don't need a filter
+    if(m_shaModel->unSelectBooksCount()==0 ||
+            m_shaModel->selectedBooksCount()==0 ) {
+        return 0;
+    }
+
+    QList<int> books;
     BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedBooks()) {
+    q->setMaxClauseCount(0x7FFFFFFFL);
+
+    if(m_shaModel->selectedBooksCount() <= m_shaModel->unSelectBooksCount()) {
+        books = m_shaModel->selectedBooks();
+    } else {
+        books = m_shaModel->unSelectedBooks();
+    }
+
+    foreach(int id, books) {
         TermQuery *term = new TermQuery(new Term(_T("bookid"), QStringToTChar(QString::number(id))));
-        q->add(term,  BooleanClause::SHOULD);
-        count++;
-    }
-
-    return count ? q : NULL;
-}
-
-Query *ShamelaSearchWidget::getCatsListQuery()
-{
-    int count = 0;
-    BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedCats()) {
-        TermQuery *term = new TermQuery(new Term(_T("cat"), QStringToTChar(QString::number(id))));
-        q->add(term,  BooleanClause::SHOULD);
-        count++;
-    }
-
-    return count ? q : NULL;
-}
-
-Query *ShamelaSearchWidget::getAuthorsListQuery()
-{
-    int count = 0;
-    BooleanQuery *q = new BooleanQuery();
-    foreach(int id, m_shaModel->getSelectedAuthors()) {
-        TermQuery *term = new TermQuery(new Term(_T("author"), QStringToTChar(QString::number(id))));
         q->add(term, BooleanClause::SHOULD);
         count++;
     }
 
-    return count ? q : NULL;
+    return count ? q : 0;
 }
 
 void ShamelaSearchWidget::setIndexInfo(IndexInfo *info)
@@ -308,68 +282,27 @@ void ShamelaSearchWidget::indexChanged()
     QProgressDialog progress(tr("جاري انشاء مجالات البحث..."), QString(), 0, 4, this);
     progress.setModal(Qt::WindowModal);
 
-    QStandardItemModel *catsModel = m_booksDB->getCatsListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة الأقسام");
-
     QStandardItemModel *booksModel = m_booksDB->getBooksListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة الكتب");
-
-    QStandardItemModel *authModel = m_booksDB->getAuthorsListModel();
-    PROGRESS_DIALOG_STEP("انشاء لائحة المؤلفيين");
+    progress.setLabelText("انشاء لائحة الكتب");
 
     m_shaModel->setBooksListModel(booksModel);
-    m_shaModel->setCatsListModel(catsModel);
-    m_shaModel->setAuthorsListModel(authModel);
 
     ui->treeViewBooks->setModel(booksModel);
-    ui->treeViewCats->setModel(catsModel);
-    ui->treeViewAuthors->setModel(authModel);
 
+    ui->treeViewBooks->expandAll();
+    ui->treeViewBooks->resizeColumnToContents(0);
     // Set the proxy model
-    chooseProxy(ui->tabWidgetFilter->currentIndex());
+    m_filterHandler->setShamelaModels(m_shaModel);
+    ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
 
     progress.setValue(progress.maximum());
-}
 
-void ShamelaSearchWidget::chooseProxy(int index)
-{
-    m_filterHandler->setFilterSourceModel(index);
-
-    if(index == 0)
-        ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
-
-    else if(index == 1)
-        ui->treeViewCats->setModel(m_filterHandler->getFilterModel());
-
-    else
-        ui->treeViewAuthors->setModel(m_filterHandler->getFilterModel());
+    connect(booksModel, SIGNAL(itemChanged(QStandardItem*)), SLOT(itemChanged(QStandardItem*)));
 }
 
 void ShamelaSearchWidget::on_lineFilter_textChanged(QString text)
 {
-    m_filterText[ui->tabWidgetFilter->currentIndex()] = text;
-
     m_filterHandler->setFilterText(text);
-}
-
-void ShamelaSearchWidget::on_tabWidgetFilter_currentChanged(int index)
-{
-    chooseProxy(index);
-
-    if(m_filterHandler->clearFilterOnChange() && !m_filterHandler->getFilterModel()->filterByAuthor())
-        m_filterHandler->clearFilter();
-
-    ui->lineFilter->setText(m_filterText.at(index));
-    m_filterHandler->getFilterModel()->setFilterByAuthor(false);
-}
-
-void ShamelaSearchWidget::enableFilterWidget()
-{
-    if(ui->comboBox->currentIndex() == 1) {
-        ui->groupBoxFilter->setEnabled(true);
-    } else {
-        ui->groupBoxFilter->setEnabled(false);
-    }
 }
 
 void ShamelaSearchWidget::clearLineText()
@@ -415,43 +348,79 @@ void ShamelaSearchWidget::setupCleanMenu()
     }
 }
 
-void ShamelaSearchWidget::on_treeViewAuthors_doubleClicked(QModelIndex index)
-{
-    if(index.isValid() && (ui->tabWidgetFilter->currentIndex() == 2)) {
-        SelectedFilterWidget *selected = m_filterHandler->selectedFilterWidget();
-        selected->setText(tr("عرض كتب %1").arg(index.data().toString()));
-        selected->show();
-        m_filterHandler->getFilterModel()->setFilterByAuthor(true);
-        m_filterHandler->getFilterModel()->setAuthor(index.data(Qt::UserRole).toInt());
-        m_filterHandler->setClearFilterOnChange(true);
-        ui->tabWidgetFilter->setCurrentIndex(0);
-    }
-}
-
 void ShamelaSearchWidget::on_pushSelectAll_clicked()
 {
-    int rowCount =  m_filterHandler->getFilterModel()->rowCount();
-    QModelIndex topLeft =  m_filterHandler->getFilterModel()->index(0, 0);
-    QModelIndex bottomRight =  m_filterHandler->getFilterModel()->index(rowCount-1, 0);
-    QItemSelection selection(topLeft, bottomRight);
-    QItemSelection modelSelection =  m_filterHandler->getFilterModel()->mapSelectionToSource(selection);
+    QAbstractItemModel *model = m_filterHandler->getFilterModel();
 
-    foreach (QModelIndex index, modelSelection.indexes()) {
-        QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
-        model->setData(index, Qt::Checked, Qt::CheckStateRole);
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            QModelIndex child = index.child(0, 0);
+
+            while(child.isValid()) {
+                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
+                    model->setData(child, Qt::Checked, Qt::CheckStateRole);
+
+                child = index.child(child.row()+1, 0);
+            }
+        }
     }
 }
 
 void ShamelaSearchWidget::on_pushUnSelectAll_clicked()
 {
-    int rowCount =  m_filterHandler->getFilterModel()->rowCount();
-    QModelIndex topLeft =  m_filterHandler->getFilterModel()->index(0, 0);
-    QModelIndex bottomRight =  m_filterHandler->getFilterModel()->index(rowCount-1, 0);
-    QItemSelection selection(topLeft, bottomRight);
-    QItemSelection modelSelection =  m_filterHandler->getFilterModel()->mapSelectionToSource(selection);
+    QAbstractItemModel *model = m_filterHandler->getFilterModel();
 
-    foreach (QModelIndex index, modelSelection.indexes()) {
-        QStandardItemModel *model = m_shaModel->getModel(ui->tabWidgetFilter->currentIndex());
-        model->setData(index, Qt::Unchecked, Qt::CheckStateRole);
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            QModelIndex child = index.child(0, 0);
+
+            while(child.isValid()) {
+                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
+                    model->setData(child, Qt::Unchecked, Qt::CheckStateRole);
+
+                child = index.child(child.row()+1, 0);
+            }
+        }
+    }
+}
+
+void ShamelaSearchWidget::itemChanged(QStandardItem *item)
+{
+    if(item && m_proccessItemChange) {
+        m_proccessItemChange = false;
+
+        if(item->data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            for(int i=0; i<item->rowCount(); i++) {
+                item->child(i)->setCheckState(item->checkState());
+            }
+        } else if(item->data(BooksDB::typeRole).toInt() == BooksDB::Book) {
+            QStandardItem *parentItem = item->parent();
+            int checkItems = 0;
+
+            for(int i=0; i<parentItem->rowCount(); i++) {
+                if(parentItem->child(i)->checkState()==Qt::Checked)
+                    checkItems++;
+            }
+
+            if(checkItems == 0)
+                parentItem->setCheckState(Qt::Unchecked);
+            else if(checkItems < parentItem->rowCount())
+                parentItem->setCheckState(Qt::PartiallyChecked);
+            else
+                parentItem->setCheckState(Qt::Checked);
+
+        }
+
+        m_proccessItemChange = true;
     }
 }

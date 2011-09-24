@@ -10,7 +10,7 @@
 
 class BookInfo;
 class IndexInfo;
-class QStandardItemModel;
+class QStandardItem;
 class QStandardItemModel;
 
 class BooksDB : public QThread
@@ -46,10 +46,16 @@ public:
     QStandardItemModel *getBooksListModel();
     QStandardItemModel *getCatsListModel();
     QStandardItemModel *getAuthorsListModel();
+    void booksCat(QStandardItem *parentNode, int catID);
 
     QList<QPair<QString, QString> > getBookShoorts(int bid);
 
     QStringList connections();
+
+    static const int idRole = Qt::UserRole + 2;
+    static const int typeRole = Qt::UserRole + 3;
+    static const int Categorie = 1;
+    static const int Book = 2;
 
 protected:
     IndexInfo* m_indexInfo;

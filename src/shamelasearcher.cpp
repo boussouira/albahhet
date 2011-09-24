@@ -17,9 +17,9 @@
 
 ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
 {
-    m_hits = NULL;
-    m_query = NULL;
-    m_searcher = NULL;
+    m_hits = 0;
+    m_query = 0;
+    m_searcher = 0;
     m_currentPage = 0;
     m_pageCount = 0;
     m_action = SEARCH;
@@ -27,17 +27,21 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_stopFeteching = false;
     m_resultParPage = 10;
     m_timeSearch = 0;
+    m_filter = 0;
 }
 
 ShamelaSearcher::~ShamelaSearcher()
 {
-    if(m_hits != NULL)
+    if(m_hits)
         delete m_hits;
 
-    if(m_query != NULL)
+    if(m_query)
         delete m_query;
 
-    if(m_searcher != NULL) {
+    if(m_filter)
+        delete m_filter;
+
+    if(m_searcher != 0) {
         m_searcher->close();
         delete m_searcher;
     }
@@ -81,11 +85,13 @@ void ShamelaSearcher::search()
 
     m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
 
-    qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
+    //qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
 
     QTime time;
     time.start();
+
     m_hits = m_searcher->search(m_query);
+
     m_timeSearch = time.elapsed();
 
     m_pageCount = ceil((resultsCount()/(double)m_resultParPage));
@@ -214,13 +220,13 @@ void ShamelaSearcher::fetech()
 
 void ShamelaSearcher::clear()
 {
-    if(m_hits != NULL)
+    if(m_hits != 0)
         _CLDELETE(m_hits)
 
-    if(m_query != NULL)
+    if(m_query != 0)
         _CLDELETE(m_query)
 
-    if(m_searcher != NULL) {
+    if(m_searcher != 0) {
         m_searcher->close();
         _CLDELETE(m_searcher)
     }
@@ -276,6 +282,11 @@ void ShamelaSearcher::setHits(Hits *hit)
 void ShamelaSearcher::setQuery(Query* q)
 {
     m_query = q;
+}
+
+void ShamelaSearcher::setFilterQuery(Query *q)
+{
+    m_filter = new QueryFilter(q, true);
 }
 
 void ShamelaSearcher::setQueryString(QString q)

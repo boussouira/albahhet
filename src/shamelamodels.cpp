@@ -15,90 +15,57 @@ void ShamelaModels::setIndexInfo(IndexInfo *info)
 void ShamelaModels::setBooksListModel(QStandardItemModel *model)
 {
     m_booksModel = model;
-    m_bookIds.clear();
-
-    connect(model,
-            SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            SLOT(booksListChange(QModelIndex,QModelIndex)));
+    m_selectedBooks.clear();
+    m_unSelectedBooks.clear();
 }
 
-void ShamelaModels::setCatsListModel(QStandardItemModel *model)
+QList<int> ShamelaModels::selectedBooks()
 {
-    m_catsModel = model;
-    m_catIds.clear();
-
-    connect(model,
-            SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            SLOT(catsListChange(QModelIndex,QModelIndex)));
+    return m_selectedBooks;
 }
 
-void ShamelaModels::setAuthorsListModel(QStandardItemModel *model)
+QList<int> ShamelaModels::unSelectedBooks()
 {
-    m_authorsModel = model;
-    m_authorIds.clear();
-
-    connect(model,
-            SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            SLOT(authorsListChange(QModelIndex,QModelIndex)));
+    return m_unSelectedBooks;
 }
 
-void ShamelaModels::booksListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/)
+void ShamelaModels::getBooks(QModelIndex index)
 {
-    int id = topLeft.data(Qt::UserRole).toInt();
-    bool checked = topLeft.data(Qt::CheckStateRole).toBool();
+    if(index.isValid()) {
+        QModelIndex child = index.child(0, 0);
+        while(child.isValid()) {
+            if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book) {
+                if(child.data(Qt::CheckStateRole).toInt() ==  Qt::Checked) {
+                    m_selectedBooks.append(child.data(BooksDB::idRole).toInt());
+                } else {
+                    m_unSelectedBooks.append(child.data(BooksDB::idRole).toInt());
+                }
+            }
 
-    if(checked)
-        m_bookIds.append(id);
-    else
-        m_bookIds.removeAll(id);
+            child = index.child(child.row()+1, 0);
+        }
+    }
 }
 
-void ShamelaModels::catsListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/)
+void ShamelaModels::generateLists()
 {
-    int id = topLeft.data(Qt::UserRole).toInt();
-    bool checked = topLeft.data(Qt::CheckStateRole).toBool();
+    m_selectedBooks.clear();
+    m_unSelectedBooks.clear();
 
-    if(checked)
-        m_catIds.append(id);
-    else
-        m_catIds.removeAll(id);
+    QModelIndex index = m_booksModel->index(0, 0);
+    while(index.isValid()) {
+        getBooks(index);
+
+        index = index.sibling(index.row()+1, 0);
+    }
 }
 
-void ShamelaModels::authorsListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/)
+int ShamelaModels::selectedBooksCount()
 {
-    int id = topLeft.data(Qt::UserRole).toInt();
-    bool checked = topLeft.data(Qt::CheckStateRole).toBool();
-
-    if(checked)
-        m_authorIds.append(id);
-    else
-        m_authorIds.removeAll(id);
+    return m_selectedBooks.count();
 }
 
-QList<int> ShamelaModels::getSelectedBooks()
+int ShamelaModels::unSelectBooksCount()
 {
-    return m_bookIds;
+    return m_unSelectedBooks.count();
 }
-
-QList<int> ShamelaModels::getSelectedCats()
-{
-    return m_catIds;
-}
-
-QList<int> ShamelaModels::getSelectedAuthors()
-{
-    return m_authorIds;
-}
-
-QStandardItemModel * ShamelaModels::getModel(int index)
-{
-    if(index == 0)
-        return m_booksModel;
-    else if(index == 1)
-        return m_catsModel;
-    else if(index == 2)
-        return m_authorsModel;
-    else
-        return 0;
-}
-

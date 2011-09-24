@@ -12,6 +12,7 @@
 #include <CLucene/util/StringBuffer.h>
 #include <CLucene/util/dirent.h>
 #include <CLucene/search/IndexSearcher.h>
+#include <CLucene/search/QueryFilter.h>
 
 #include <CLucene/highlighter/QueryTermExtractor.h>
 #include <CLucene/highlighter/QueryScorer.h>

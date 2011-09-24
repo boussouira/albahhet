@@ -39,6 +39,7 @@ public:
     void setCurrentPage(int page);
     void setHits(Hits *hit);
     void setQuery(Query* q);
+    void setFilterQuery(Query *q);
     void setQueryString(QString q);
     void setSearcher(IndexSearcher *searcher);
     void setsetDefaultOperator(bool DefautIsAnd);
@@ -46,7 +47,6 @@ public:
 
     QString getTitleId(const QSqlDatabase &db, ShamelaResult *result);
     ShamelaResult *getSavedResult(int resultID);
-
 protected:
     void search();
     void fetech();
@@ -74,6 +74,7 @@ private:
     BooksDB *m_booksDb;
     Hits* m_hits;
     Query* m_query;
+    QueryFilter *m_filter;
     QString m_queryStr;
     IndexSearcher *m_searcher;
     int m_currentPage;

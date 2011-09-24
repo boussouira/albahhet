@@ -12,25 +12,29 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
 //    m_filterProxy->setDynamicSortFilter(true);
 
     m_menu = new QMenu(0);
-    QAction *actionIgnore = new QAction(tr("تجاهل الفروق في الهمزات ونحوها"), this);
-    actionIgnore->setCheckable(true);
-    actionIgnore->setChecked(true);
 
-    m_menu->addAction(actionIgnore);
-    m_menu->addSeparator();
+    QAction *actionClearText = new QAction(tr("مسح النص"), this);
+    m_menu->addAction(actionClearText);
 
     QAction *actionSelected = new QAction(tr("عرض ما تم اختياره"), this);
     m_menu->addAction(actionSelected);
 
-    QAction *actionUnSelected = new QAction(tr("عرض ما لم يتم اختياره"), this);
-    m_menu->addAction(actionUnSelected);
+    m_menu->addSeparator();
 
-    m_ignore = true;
+    QMenu *menu2 =  m_menu->addMenu(tr("بحث في"));
+    m_actFilterByBooks = menu2->addAction(tr("اسماء الكتب"));
+    m_actFilterByAuthors = menu2->addAction(tr("اسماء المؤلفيين"));
+
+    m_actFilterByBooks->setCheckable(true);
+    m_actFilterByBooks->setChecked(true);
+    m_actFilterByAuthors->setCheckable(true);
+
     m_clearFilterOnChange = false;
 
-    connect(actionIgnore, SIGNAL(toggled(bool)), SLOT(ignoreSameChars(bool)));
+    connect(m_actFilterByBooks, SIGNAL(toggled(bool)), SLOT(filterByBooks(bool)));
+    connect(m_actFilterByAuthors, SIGNAL(toggled(bool)), SLOT(filterByAuthors(bool)));
     connect(actionSelected, SIGNAL(triggered()), SLOT(showSelected()));
-    connect(actionUnSelected, SIGNAL(triggered()), SLOT(showUnSelected()));
+    connect(actionClearText, SIGNAL(triggered()), SIGNAL(clearText()));
 }
 
 SearchFilterHandler::~SearchFilterHandler()
@@ -41,50 +45,22 @@ SearchFilterHandler::~SearchFilterHandler()
 void SearchFilterHandler::setShamelaModels(ShamelaModels *shaModel)
 {
     m_shaModel = shaModel;
-}
-
-void SearchFilterHandler::setFilterModel(ShamelaFilterProxyModel *filter)
-{
-    m_filterProxy = filter;
+    m_filterProxy->setSourceModel(m_shaModel->booksModel());
 }
 
 void SearchFilterHandler::setFilterText(QString text)
 {
     m_filterText = text;
 
-    if(m_ignore) {
-        text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-        text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
-        text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
-        text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
-    }
+    text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
+    text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
+    text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
+    text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
 
     m_filterProxy->setFilterRole(Qt::DisplayRole);
     m_filterProxy->setFilterRegExp(text);
 
     m_selectedFilterWidget->hide();
-}
-
-void SearchFilterHandler::setFilterSourceModel(int index)
-{
-    m_index = index;
-    chooseFilterSourceModel();
-}
-
-void SearchFilterHandler::chooseFilterSourceModel()
-{
-    QStandardItemModel *model;
-
-    if(m_index == 0)
-        model = m_shaModel->booksModel();
-
-    else if(m_index == 1)
-        model = m_shaModel->catsModel();
-
-    else
-        model = m_shaModel->authorsModel();
-
-    m_filterProxy->setSourceModel(model);
 }
 
 ShamelaFilterProxyModel *SearchFilterHandler::getFilterModel()
@@ -97,10 +73,42 @@ QMenu *SearchFilterHandler::getFilterLineMenu()
     return m_menu;
 }
 
-void SearchFilterHandler::ignoreSameChars(bool ignore)
+void SearchFilterHandler::filterByBooks(bool booksFilter)
 {
-    m_ignore = ignore;
-    setFilterText(m_filterText);
+    m_actFilterByBooks->blockSignals(true);
+    m_actFilterByAuthors->blockSignals(true);
+
+    if(booksFilter) {
+        m_filterProxy->setFilterKeyColumn(0);
+        m_actFilterByAuthors->setChecked(false);
+    } else {
+        m_filterProxy->setFilterKeyColumn(1);
+        m_actFilterByAuthors->setChecked(true);
+    }
+
+    setFilterText("");
+
+    m_actFilterByBooks->blockSignals(false);
+    m_actFilterByAuthors->blockSignals(false);
+}
+
+void SearchFilterHandler::filterByAuthors(bool authorsFilter)
+{
+    m_actFilterByBooks->blockSignals(true);
+    m_actFilterByAuthors->blockSignals(true);
+
+    if(authorsFilter) {
+        m_filterProxy->setFilterKeyColumn(1);
+        m_actFilterByBooks->setChecked(false);
+    } else {
+        m_filterProxy->setFilterKeyColumn(0);
+        m_actFilterByBooks->setChecked(true);
+    }
+
+    setFilterText("");
+
+    m_actFilterByBooks->blockSignals(false);
+    m_actFilterByAuthors->blockSignals(false);
 }
 
 void SearchFilterHandler::showSelected()
@@ -131,6 +139,8 @@ void SearchFilterHandler::setSelectedFilterWidget(SelectedFilterWidget *widget)
 {
     m_selectedFilterWidget = widget;
     connect(m_selectedFilterWidget, SIGNAL(deleteFilter()), SLOT(clearFilter()));
+    connect(m_selectedFilterWidget, SIGNAL(deleteFilter()),
+            m_selectedFilterWidget, SLOT(hide()));
 }
 
 SelectedFilterWidget * SearchFilterHandler::selectedFilterWidget()
@@ -140,7 +150,8 @@ SelectedFilterWidget * SearchFilterHandler::selectedFilterWidget()
 
 void SearchFilterHandler::clearFilter()
 {
-    setFilterText(m_filterText);
+    m_filterProxy->setFilterRole(Qt::DisplayRole);
+    m_filterProxy->setFilterRegExp("");
 }
 
 void SearchFilterHandler::setClearFilterOnChange(bool clear)

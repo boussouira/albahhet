@@ -14,33 +14,23 @@ public:
     ShamelaModels(QObject *parent = 0);
     void setIndexInfo(IndexInfo *info);
     void setBooksListModel(QStandardItemModel *model);
-    void setCatsListModel(QStandardItemModel *model);
-    void setAuthorsListModel(QStandardItemModel *model);
 
-    QList<int> getSelectedBooks();
-    QList<int> getSelectedCats();
-    QList<int> getSelectedAuthors();
+    QList<int> selectedBooks();
+    QList<int> unSelectedBooks();
+    int selectedBooksCount();
+    int unSelectBooksCount();
 
+    void generateLists();
     QStandardItemModel *booksModel() { return m_booksModel; }
-    QStandardItemModel *catsModel() { return m_catsModel; }
-    QStandardItemModel *authorsModel() { return m_authorsModel; }
 
-     QStandardItemModel *getModel(int index);
-public slots:
-    void booksListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/);
-    void catsListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/);
-    void authorsListChange(const QModelIndex &topLeft, const QModelIndex &/*bottomRight*/);
+    void getBooks(QModelIndex index);
 
 protected:
     IndexInfo *m_indexInfo;
     QStandardItemModel *m_booksModel;
-    QStandardItemModel *m_catsModel;
-    QStandardItemModel *m_authorsModel;
-    QList<int> m_bookIds;
-    QList<int> m_catIds;
-    QList<int> m_authorIds;
+    QList<int> m_selectedBooks;
+    QList<int> m_unSelectedBooks;
     bool m_reload;
-
 };
 
 #endif // SHAMELAMODELS_H

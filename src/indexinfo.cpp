@@ -8,6 +8,7 @@ IndexInfo::IndexInfo()
     m_optimizeIndex = true;
     m_ramSize = 0;
     m_indexingInfo = 0;
+    m_indexDirName = "index";
 }
 
 IndexInfo::~IndexInfo()
@@ -23,16 +24,18 @@ void IndexInfo::setName(QString name)
 
 void IndexInfo::setPath(QString path)
 {
-    m_path = path;
-    if(m_path.endsWith(QDir::separator()))
-        m_path.resize(m_path.size()-1);
+    QDir dir(path);
+    if(!dir.exists(m_indexDirName))
+        dir.mkdir(m_indexDirName);
+//    dir.cd(m_indexDirName);
+
+    m_path = dir.absolutePath();
 }
 
 void IndexInfo::setShamelaPath(QString path)
 {
-    m_shamelaPath = path;
-    if(m_shamelaPath.endsWith(QDir::separator()))
-        m_shamelaPath.resize(m_shamelaPath.size()-1);
+    QDir dir(path);
+    m_shamelaPath = dir.absolutePath();
 }
 
 
@@ -43,7 +46,8 @@ QString IndexInfo::name()
 
 QString IndexInfo::path()
 {
-    return m_path;
+    QDir dir(m_path);
+    return dir.filePath(m_indexDirName);
 }
 
 QString IndexInfo::shamelaPath()
@@ -58,7 +62,9 @@ QString IndexInfo::shamelaMainDbName()
 
 QString IndexInfo::shamelaMainDbPath()
 {
-    return QString("%1/Files/%2").arg(shamelaPath()).arg(shamelaMainDbName());
+    QDir dir(shamelaPath());
+    dir.cd("Files");
+    return dir.filePath(shamelaMainDbName());
 }
 
 QString IndexInfo::shamelaSpecialDbName()
@@ -68,12 +74,18 @@ QString IndexInfo::shamelaSpecialDbName()
 
 QString IndexInfo::shamelaSpecialDbPath()
 {
-    return QString("%1/Files/%2").arg(shamelaPath()).arg(shamelaSpecialDbName());
+    QDir dir(shamelaPath());
+    dir.cd("Files");
+    return dir.filePath(shamelaSpecialDbName());
 }
 
 bool IndexInfo::isShamelaPath(QString path)
 {
-    return QFile::exists(QString("%1/Files/%2").arg(path).arg(shamelaMainDbName()));
+    QDir dir(path);
+    if(dir.cd("Files"))
+        return dir.exists(shamelaMainDbName());
+
+    return false;
 }
 
 QString IndexInfo::indexDbName()
@@ -83,8 +95,8 @@ QString IndexInfo::indexDbName()
 
 QString IndexInfo::indexDbPath()
 {
-    return QString("%1/%2").arg(path()).arg(indexDbName());
-
+    QDir dir(m_path);
+    return dir.filePath(indexDbName());
 }
 
 QString IndexInfo::buildFilePath(QString bkid, int archive)

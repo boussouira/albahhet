@@ -7,6 +7,7 @@ class ShamelaModels;
 class ShamelaFilterProxyModel;
 class SelectedFilterWidget;
 class QMenu;
+class QAction;
 
 class SearchFilterHandler : public QObject
 {
@@ -15,7 +16,6 @@ public:
     SearchFilterHandler(QObject *parent = 0);
     ~SearchFilterHandler();
     void setShamelaModels(ShamelaModels *shaModel);
-    void setFilterModel(ShamelaFilterProxyModel *filter);
     void setSelectedFilterWidget(SelectedFilterWidget *widget);
     ShamelaFilterProxyModel *getFilterModel();
     QMenu *getFilterLineMenu();
@@ -25,21 +25,24 @@ public:
 
 public slots:
     void setFilterText(QString text);
-    void setFilterSourceModel(int index);
-    void chooseFilterSourceModel();
-    void ignoreSameChars(bool ignore);
+    void filterByBooks(bool booksFilter);
+    void filterByAuthors(bool authorsFilter);
     void showSelected();
     void showUnSelected();
     void clearFilter();
+
+signals:
+    void clearText();
 
 protected:
     ShamelaModels *m_shaModel;
     ShamelaFilterProxyModel *m_filterProxy;
     SelectedFilterWidget *m_selectedFilterWidget;
     QMenu *m_menu;
+    QAction *m_actFilterByBooks;
+    QAction *m_actFilterByAuthors;
     QString m_filterText;
     int m_index;
-    bool m_ignore;
     bool m_clearFilterOnChange;
 };
 

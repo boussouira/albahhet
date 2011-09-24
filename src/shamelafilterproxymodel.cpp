@@ -1,9 +1,7 @@
 #include "shamelafilterproxymodel.h"
 #include <qvariant.h>
 
-ShamelaFilterProxyModel::ShamelaFilterProxyModel(QObject *parent)
-    : QSortFilterProxyModel(parent),
-      m_filterByAuthor(false)
+ShamelaFilterProxyModel::ShamelaFilterProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
 {
 }
 
@@ -11,24 +9,52 @@ ShamelaFilterProxyModel::~ShamelaFilterProxyModel()
 {
 }
 
-
-void ShamelaFilterProxyModel::setFilterByAuthor(bool authorFilter)
-{
-    m_filterByAuthor = authorFilter;
-}
-
 bool ShamelaFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-    if(m_filterByAuthor) {
-        int bid = sourceModel()->index(source_row, 0, source_parent).data(Qt::UserRole).toInt();
-        return m_list.contains(bid);
-    } else {
-        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    if (filterAcceptsRowItself(source_row, source_parent))
+        return true;
+
+    //accept if any of the parents is accepted on it's own merits
+    QModelIndex parent = source_parent;
+    while (parent.isValid()) {
+        if (filterAcceptsRowItself(parent.row(), parent.parent()))
+            return true;
+        parent = parent.parent();
     }
+
+    //accept if any of the children is accepted on it's own merits
+    if (hasAcceptedChildren(source_row, source_parent)) {
+        return true;
+    }
+
+    return false;
 }
 
-void ShamelaFilterProxyModel::setAuthor(int id)
+bool ShamelaFilterProxyModel::filterAcceptsRowItself(int source_row, const QModelIndex &source_parent) const
 {
-    m_ahuthorId = id;
-    m_list = m_booksDB->getAuthorBooks(m_ahuthorId);
+    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+}
+
+bool ShamelaFilterProxyModel::hasAcceptedChildren(int source_row, const QModelIndex &source_parent) const
+{
+    QModelIndex item = sourceModel()->index(source_row,0,source_parent);
+    if (!item.isValid()) {
+        //qDebug() << "item invalid" << source_parent << source_row;
+        return false;
+    }
+
+    //check if there are children
+    int childCount = item.model()->rowCount(item);
+    if (childCount == 0)
+        return false;
+
+    for (int i = 0; i < childCount; ++i) {
+        if (filterAcceptsRowItself(i, item))
+            return true;
+        //recursive call
+        if (hasAcceptedChildren(i, item))
+            return true;
+    }
+
+    return false;
 }

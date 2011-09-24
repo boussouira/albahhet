@@ -182,7 +182,7 @@ void IndexesDialog::on_pushOptimize_clicked()
 
 void IndexesDialog::optimizeIndex(IndexInfo *info)
 {
-    IndexWriter *writer = NULL;
+    IndexWriter *writer = 0;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
     if(!dir.exists(info->path()))
