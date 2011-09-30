@@ -32,7 +32,7 @@ void SettingsChecker::checkIndexes()
 
 bool SettingsChecker::checkIndex(IndexInfo *index)
 {
-    QString indexPath = index->path();
+    QString indexPath = index->indexPath();
     QString shaPath = index->shamelaPath();
 
     QDir indexDir(indexPath);

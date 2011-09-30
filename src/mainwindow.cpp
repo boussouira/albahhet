@@ -278,7 +278,7 @@ void MainWindow::editIndexes()
 void MainWindow::showStatistic()
 {
     try {
-        IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->path()));
+        IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->indexPath()));
         //int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
         QTreeWidget *treeWidget = new QTreeWidget;

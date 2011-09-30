@@ -32,7 +32,15 @@ bool ShamelaFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex
 
 bool ShamelaFilterProxyModel::filterAcceptsRowItself(int source_row, const QModelIndex &source_parent) const
 {
-    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    if(filterKeyColumn() == 2) {
+        QModelIndex index = sourceModel()->index(source_row, 2, source_parent);
+        int deathYear = index.data().toInt();
+
+//        qDebug("%d <= %d <= %d", m_fromYear, deathYear, m_toYear);
+        return (deathYear && m_fromYear <= deathYear && deathYear <= m_toYear);
+    } else {
+        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    }
 }
 
 bool ShamelaFilterProxyModel::hasAcceptedChildren(int source_row, const QModelIndex &source_parent) const
@@ -57,4 +65,10 @@ bool ShamelaFilterProxyModel::hasAcceptedChildren(int source_row, const QModelIn
     }
 
     return false;
+}
+
+void ShamelaFilterProxyModel::setFilterByDeath(int fromYear, int toYear)
+{
+    m_fromYear = fromYear;
+    m_toYear = toYear;
 }

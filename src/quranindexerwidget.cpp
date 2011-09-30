@@ -86,7 +86,7 @@ void QuranIndexerWidget::readPaths()
 void QuranIndexerWidget::checkIndex()
 {
     try {
-        IndexReader* r = IndexReader::open(qPrintable(m_indexInfo->path()));
+        IndexReader* r = IndexReader::open(qPrintable(m_indexInfo->indexPath()));
 //        int64_t ver = r->gtCurrentVersion(qPrintable(m_indexInfo->path()));
 
         int rep = QMessageBox::question(this,
@@ -134,15 +134,15 @@ void QuranIndexerWidget::startIndexing()
     int ramSize = settings.value("ramSize", 100).toInt();
     ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
 
-    if(!dir.exists(m_indexInfo->path()))
-        dir.mkdir(m_indexInfo->path());
-    if(IndexReader::indexExists(qPrintable(m_indexInfo->path()))) {
-        if(IndexReader::isLocked(qPrintable(m_indexInfo->path()))) {
-            IndexReader::unlock(qPrintable(m_indexInfo->path()));
+    if(!dir.exists(m_indexInfo->indexPath()))
+        dir.mkdir(m_indexInfo->indexPath());
+    if(IndexReader::indexExists(qPrintable(m_indexInfo->indexPath()))) {
+        if(IndexReader::isLocked(qPrintable(m_indexInfo->indexPath()))) {
+            IndexReader::unlock(qPrintable(m_indexInfo->indexPath()));
         }
     }
 
-    m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->path()) ,analyzer, true);
+    m_writer = _CLNEW IndexWriter( qPrintable(m_indexInfo->indexPath()) ,analyzer, true);
 
     m_writer->setUseCompoundFile(false);
     m_writer->setMaxFieldLength(IndexWriter::DEFAULT_MAX_FIELD_LENGTH);

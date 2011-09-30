@@ -9,16 +9,16 @@ class ShamelaFilterProxyModel : public QSortFilterProxyModel
 public:
     ShamelaFilterProxyModel(QObject *parent = 0);
     ~ShamelaFilterProxyModel();
-    void setFilterByAuthor(bool authorFilter);
-    void setAuthor(int id);
-    void setBooksDb(BooksDB *db) { m_booksDB = db;}
+    void setFilterByDeath(int fromYear, int toYear);
 
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
     bool filterAcceptsRowItself(int source_row, const QModelIndex &source_parent) const;
     bool hasAcceptedChildren(int source_row, const QModelIndex &source_parent) const;
-    BooksDB *m_booksDB;
-    QList<int> m_list;
+
+protected:
+    int m_fromYear;
+    int m_toYear;
 };
 
 #endif // SHAMELAFILTERPROXYMODEL_H

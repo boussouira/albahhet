@@ -25,9 +25,9 @@ void IndexInfo::setName(QString name)
 void IndexInfo::setPath(QString path)
 {
     QDir dir(path);
+
     if(!dir.exists(m_indexDirName))
         dir.mkdir(m_indexDirName);
-//    dir.cd(m_indexDirName);
 
     m_path = dir.absolutePath();
 }
@@ -45,6 +45,11 @@ QString IndexInfo::name()
 }
 
 QString IndexInfo::path()
+{
+    return m_path;
+}
+
+QString IndexInfo::indexPath()
 {
     QDir dir(m_path);
     return dir.filePath(m_indexDirName);

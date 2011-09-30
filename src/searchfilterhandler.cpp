@@ -3,6 +3,7 @@
 #include "shamelafilterproxymodel.h"
 #include "selectedfilterwidget.h"
 #include <qmenu.h>
+#include <QItemSelection>
 #include <qdebug.h>
 
 SearchFilterHandler::SearchFilterHandler(QObject *parent) :
@@ -23,18 +24,19 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
 
     QMenu *menu2 =  m_menu->addMenu(tr("بحث في"));
     m_actFilterByBooks = menu2->addAction(tr("اسماء الكتب"));
-    m_actFilterByAuthors = menu2->addAction(tr("اسماء المؤلفيين"));
+    m_actFilterByAuthors = menu2->addAction(tr("اسماء المؤلفين"));
 
     m_actFilterByBooks->setCheckable(true);
     m_actFilterByBooks->setChecked(true);
     m_actFilterByAuthors->setCheckable(true);
 
-    m_clearFilterOnChange = false;
+    m_hideFilterWidgetOnChange = false;
 
     connect(m_actFilterByBooks, SIGNAL(toggled(bool)), SLOT(filterByBooks(bool)));
     connect(m_actFilterByAuthors, SIGNAL(toggled(bool)), SLOT(filterByAuthors(bool)));
     connect(actionSelected, SIGNAL(triggered()), SLOT(showSelected()));
     connect(actionClearText, SIGNAL(triggered()), SIGNAL(clearText()));
+//    connect(m_filterProxy, SIGNAL(layoutChanged()), SLOT(enableCatSelection()));
 }
 
 SearchFilterHandler::~SearchFilterHandler()
@@ -52,15 +54,30 @@ void SearchFilterHandler::setFilterText(QString text)
 {
     m_filterText = text;
 
-    text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
-    text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
-    text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
-    text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
+    QRegExp rx("[0-9\\?\\*]+\\-[0-9\\?\\*]+");
+    if(rx.indexIn(text) == -1) {
+        text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
+        text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
+        text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
+        text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
 
-    m_filterProxy->setFilterRole(Qt::DisplayRole);
-    m_filterProxy->setFilterRegExp(text);
+        m_filterProxy->setFilterKeyColumn(m_actFilterByBooks->isChecked() ? 0 : 1);
+        m_filterProxy->setFilterRole(Qt::DisplayRole);
+        m_filterProxy->setFilterRegExp(text);
+    } else {
+        QStringList t = text.split('-');
+        int dStart = (t.first() == "?" || t.first() == "*") ? 0x80000000 : t.first().toInt();
+        int dEnd = (t.last() == "?" || t.last() == "*") ? 99999 : t.last().toInt();
 
-    m_selectedFilterWidget->hide();
+        //qDebug("Authors from %d to %d", dStart, dEnd);
+        m_filterProxy->setFilterByDeath(dStart, dEnd);
+        m_filterProxy->setFilterRegExp("");
+        m_filterProxy->setFilterKeyColumn(2);
+    }
+    if(m_hideFilterWidgetOnChange)
+        m_selectedFilterWidget->hide();
+
+    enableCatSelection();
 }
 
 ShamelaFilterProxyModel *SearchFilterHandler::getFilterModel()
@@ -120,7 +137,7 @@ void SearchFilterHandler::showSelected()
 
     m_selectedFilterWidget->setText(tr("عرض ما تم اختياره"));
     m_selectedFilterWidget->show();
-    m_clearFilterOnChange = false;
+    m_hideFilterWidgetOnChange = false;
 }
 
 void SearchFilterHandler::showUnSelected()
@@ -132,7 +149,7 @@ void SearchFilterHandler::showUnSelected()
 
     m_selectedFilterWidget->setText(tr("عرض ما لم يتم اختياره"));
     m_selectedFilterWidget->show();
-    m_clearFilterOnChange = false;
+    m_hideFilterWidgetOnChange = false;
 }
 
 void SearchFilterHandler::setSelectedFilterWidget(SelectedFilterWidget *widget)
@@ -154,12 +171,16 @@ void SearchFilterHandler::clearFilter()
     m_filterProxy->setFilterRegExp("");
 }
 
-void SearchFilterHandler::setClearFilterOnChange(bool clear)
+void SearchFilterHandler::enableCatSelection()
 {
-    m_clearFilterOnChange = clear;
-}
+    bool catCheckable = m_filterProxy->filterRegExp().isEmpty();
 
-bool SearchFilterHandler::clearFilterOnChange()
-{
-    return m_clearFilterOnChange;
+    int rowCount = m_filterProxy->rowCount();
+    QModelIndex topLeft = m_filterProxy->index(0, 0);
+    QModelIndex bottomRight = m_filterProxy->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        m_shaModel->booksModel()->item(index.row())->setCheckable(catCheckable);
+    }
 }

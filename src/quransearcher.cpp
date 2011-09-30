@@ -75,7 +75,7 @@ void QuranSearcher::search()
     emit startSearching();
 
     if(!m_init) {
-        m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
+        m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
         m_analyzer = new ArabicAnalyzer();
         m_queryPareser = new QueryParser(_T("text"), m_analyzer);
 
@@ -102,7 +102,7 @@ void QuranSearcher::fetech()
     emit startFeteching();
 
     ArabicAnalyzer hl_analyzer;
-    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->path()))));
+    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->indexPath()))));
     SimpleCssFormatter hl_formatter;
     int maxNumFragmentsRequired = 30;
     const TCHAR* fragmentSeparator = _T("...");

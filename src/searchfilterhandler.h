@@ -20,8 +20,6 @@ public:
     ShamelaFilterProxyModel *getFilterModel();
     QMenu *getFilterLineMenu();
     SelectedFilterWidget *selectedFilterWidget();
-    void setClearFilterOnChange(bool clear);
-    bool clearFilterOnChange();
 
 public slots:
     void setFilterText(QString text);
@@ -30,6 +28,7 @@ public slots:
     void showSelected();
     void showUnSelected();
     void clearFilter();
+    void enableCatSelection();
 
 signals:
     void clearText();
@@ -43,7 +42,7 @@ protected:
     QAction *m_actFilterByAuthors;
     QString m_filterText;
     int m_index;
-    bool m_clearFilterOnChange;
+    bool m_hideFilterWidgetOnChange;
 };
 
 #endif // SEARCHFILTERHANDLER_H

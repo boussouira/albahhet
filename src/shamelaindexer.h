@@ -25,7 +25,6 @@ public slots:
 protected:
     void indexBook(BookInfo *book);
     void startIndexing();
-    void removeDatabase(QString &connName);
 
 signals:
     void currentBookName(const QString &bookName);
@@ -38,7 +37,6 @@ protected:
     IndexWriter* m_writer;
     IndexInfo* m_indexInfo;
     bool m_skipCurrent;
-    int m_prevArchive;
     int m_threadId;
     QSet<int> m_indexedBooks;
     QSet<int> m_authors;

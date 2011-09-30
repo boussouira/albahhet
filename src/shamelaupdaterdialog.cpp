@@ -139,14 +139,14 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
 
         QDir dir;
         ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-        if(!dir.exists(info->path()))
-            dir.mkdir(info->path());
-        if ( IndexReader::indexExists(qPrintable(info->path())) ){
-            if ( IndexReader::isLocked(qPrintable(info->path())) ){
-                IndexReader::unlock(qPrintable(info->path()));
+        if(!dir.exists(info->indexPath()))
+            dir.mkdir(info->indexPath());
+        if ( IndexReader::indexExists(qPrintable(info->indexPath())) ){
+            if ( IndexReader::isLocked(qPrintable(info->indexPath())) ){
+                IndexReader::unlock(qPrintable(info->indexPath()));
             }
 
-            writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
+            writer = _CLNEW IndexWriter( qPrintable(info->indexPath()), analyzer, false);
         } else {
             QMessageBox::critical(this,
                                   tr("خطأ عند التحديث"),
@@ -196,14 +196,14 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
         int ramSize = settings.value("ramSize", 100).toInt();
 
         QDir dir;
-        if(!dir.exists(info->path()))
-            dir.mkdir(info->path());
-        if ( IndexReader::indexExists(qPrintable(info->path())) ){
-            if ( IndexReader::isLocked(qPrintable(info->path())) ){
-                IndexReader::unlock(qPrintable(info->path()));
+        if(!dir.exists(info->indexPath()))
+            dir.mkdir(info->indexPath());
+        if ( IndexReader::indexExists(qPrintable(info->indexPath())) ){
+            if ( IndexReader::isLocked(qPrintable(info->indexPath())) ){
+                IndexReader::unlock(qPrintable(info->indexPath()));
             }
 
-            writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
+            writer = _CLNEW IndexWriter( qPrintable(info->indexPath()), analyzer, false);
         } else {
             QMessageBox::critical(this,
                                   tr("خطأ عند التحديث"),

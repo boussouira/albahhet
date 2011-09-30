@@ -48,6 +48,8 @@ public:
     QStandardItemModel *getAuthorsListModel();
     void booksCat(QStandardItem *parentNode, int catID);
 
+    int getAuthorDeath(int authorID);
+
     QList<QPair<QString, QString> > getBookShoorts(int bid);
 
     QStringList connections();
@@ -66,6 +68,7 @@ protected:
     QSqlQuery *m_shamelaQuery;
     QSqlQuery *m_shamelaSpecialQuery;
     QMutex m_mutex;
+    QHash<int, int> m_authorsDeath;
     QHash<int, BookInfo*> m_bookInfoHash;
     QHash<int, QList<QPair<QString, QString> > > m_savedShoorts;
     QStringList m_sowarNames;

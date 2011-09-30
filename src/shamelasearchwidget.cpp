@@ -269,7 +269,6 @@ void ShamelaSearchWidget::setIndexInfo(IndexInfo *info)
 void ShamelaSearchWidget::setBooksDb(BooksDB *db)
 {
     m_booksDB = db;
-    m_filterHandler->getFilterModel()->setBooksDb(db);
 }
 
 void ShamelaSearchWidget::setTabWidget(TabWidget *tabWidget)

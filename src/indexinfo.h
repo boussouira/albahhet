@@ -39,6 +39,7 @@ public:
     IndexType type();
     QString name();
     QString path();
+    QString indexPath();
     QString shamelaPath();
     IndexingInfo *indexingInfo();
 

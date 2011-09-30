@@ -185,14 +185,14 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     IndexWriter *writer = 0;
     QDir dir;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
-    if(!dir.exists(info->path()))
-        dir.mkdir(info->path());
-    if ( IndexReader::indexExists(qPrintable(info->path())) ){
-        if ( IndexReader::isLocked(qPrintable(info->path())) ){
-            IndexReader::unlock(qPrintable(info->path()));
+    if(!dir.exists(info->indexPath()))
+        dir.mkdir(info->indexPath());
+    if ( IndexReader::indexExists(qPrintable(info->indexPath())) ){
+        if ( IndexReader::isLocked(qPrintable(info->indexPath())) ){
+            IndexReader::unlock(qPrintable(info->indexPath()));
         }
 
-        writer = _CLNEW IndexWriter( qPrintable(info->path()), analyzer, false);
+        writer = _CLNEW IndexWriter( qPrintable(info->indexPath()), analyzer, false);
     } else {
         QMessageBox::critical(this,
                               tr("خطأ عند التحديث"),

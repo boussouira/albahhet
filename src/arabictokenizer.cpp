@@ -27,9 +27,9 @@ TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
         c = 0x0647; // HAH
         break;
 
-//    case 0x0649: // ALEF MAKSURA
-//        c = 0x064A; // YEH
-//        break;
+   case 0x0649: // ALEF MAKSURA
+       c = 0x064A; // YEH
+       break;
     }
 
     return c;

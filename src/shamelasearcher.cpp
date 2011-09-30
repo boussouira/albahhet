@@ -70,7 +70,7 @@ void ShamelaSearcher::run()
      emit gotException(e.what(), 0);
     }
     catch(...) {
-        qCritical("Unknow error when searching at \"%s\".", qPrintable(m_indexInfo->path()));
+        qCritical("Unknow error when searching at \"%s\".", qPrintable(m_indexInfo->indexPath()));
         emit gotException("UNKNOW", -1);
     }
 
@@ -83,7 +83,7 @@ void ShamelaSearcher::search()
     qDeleteAll(m_resultsHash);
     m_resultsHash.clear();
 
-    m_searcher = new IndexSearcher(qPrintable(m_indexInfo->path()));
+    m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
 
     //qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
 
@@ -105,7 +105,7 @@ void ShamelaSearcher::fetech()
     emit startFeteching();
 
     ArabicAnalyzer hl_analyzer;
-    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->path()))));
+    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->indexPath()))));
     SimpleCssFormatter hl_formatter;
     int maxNumFragmentsRequired = 30;
     const TCHAR* fragmentSeparator = _T("...");

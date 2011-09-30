@@ -51,6 +51,7 @@ BookInfo *BooksDB::next()
                                       m_indexQuery->value(3).toInt());
         book->setCat(m_indexQuery->value(4).toInt());
         book->setAuthorID(m_indexQuery->value(5).toInt());
+        book->setAuthorDeath(getAuthorDeath(book->authorID()));
 
         return book;
     } else {
@@ -118,11 +119,14 @@ void BooksDB::getAuthorFromShamela(QSet<int> author)
         query.exec(QString("SELECT COUNT(*) FROM authors WHERE shamelaAuthorID = %1").arg(id));
         if(query.next()) {
             if(query.value(0).toInt() == 0) {
-                shamelaQuery.exec(QString("SELECT authid, auth FROM Auth WHERE authid = %1").arg(id));
+                shamelaQuery.exec(QString("SELECT authid, auth, AD FROM Auth WHERE authid = %1").arg(id));
                 if(shamelaQuery.next()) {
-                    query.exec(QString("INSERT INTO authors VALUES (%1, '%2')")
-                               .arg(id)
-                               .arg(shamelaQuery.value(1).toString()));
+                    query.prepare("INSERT INTO authors VALUES (?, ?, ?)");
+                    query.bindValue(0, id);
+                    query.bindValue(1, shamelaQuery.value(1).toString());
+                    query.bindValue(2, shamelaQuery.value(2).toInt());
+
+                    query.exec();
                 }
             }
         }
@@ -232,7 +236,8 @@ void BooksDB::importBooksListFromShamela()
     m_indexQuery->exec("DROP TABLE IF EXISTS authors");
     m_indexQuery->exec("CREATE TABLE IF NOT EXISTS authors ("
                        "shamelaAuthorID INTEGER UNIQUE, "
-                       "name TEXT)");
+                       "name TEXT, "
+                       "authorDeath INTEGER)");
 
 
     m_indexDB.transaction();
@@ -406,7 +411,10 @@ QStandardItemModel *BooksDB::getBooksListModel()
         model->appendRow(item);
     }
 
-    model->setHorizontalHeaderLabels(QStringList() << tr("الكتاب") << tr("المؤلف"));
+    model->setHorizontalHeaderLabels(QStringList()
+                                     << tr("الكتاب")
+                                     << tr("المؤلف")
+                                     << tr("تاريخ الوفاة"));
 
     return model;
 }
@@ -416,7 +424,7 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
     openIndexDB();
     QSqlQuery query(m_indexDB);
 
-    query.prepare("SELECT books.shamelaID, books.bookName, authors.name "
+    query.prepare("SELECT books.shamelaID, books.bookName, authors.name, authors.authorDeath "
                   "FROM books LEFT JOIN authors "
                   "ON authors.shamelaAuthorID = books.authorId "
                   "WHERE books.indexFLags = 1 AND books.cat = ? ");
@@ -438,8 +446,12 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         QStandardItem *authItem = new QStandardItem();
         authItem->setText(query.value(2).toString());
 
+        QStandardItem *authDeathItem = new QStandardItem();
+        authDeathItem->setData(query.value(3).toInt(), Qt::DisplayRole);
+
         parentNode->setChild(row, 0, bookItem);
         parentNode->setChild(row, 1, authItem);
+        parentNode->setChild(row, 2, authDeathItem);
     }
 }
 
@@ -546,4 +558,33 @@ QString BooksDB::getSoraName(int soraNumber)
         return m_sowarNames.at(num);
     else
         return "Out of range!";
+}
+
+int BooksDB::getAuthorDeath(int authorID)
+{
+    openShamelaSpecialDB();
+
+    if(authorID > 0) {
+        int sdy = m_authorsDeath.value(authorID, 0);
+
+        if(sdy)
+            return sdy;
+
+        QSqlQuery specialQuery(m_shamelaSpecialDB);
+
+        specialQuery.prepare("SELECT AD FROM Auth WHERE authid = ?");
+        specialQuery.bindValue(0, authorID);
+
+        if(!specialQuery.exec())
+            SQL_ERROR(specialQuery.lastError().text());
+
+        if(specialQuery.next()) {
+            int dYear = specialQuery.value(0).toInt();
+            m_authorsDeath.insert(authorID, dYear);
+
+            return dYear;
+        }
+    }
+
+    return 99999;
 }

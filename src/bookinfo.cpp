@@ -7,32 +7,27 @@ BookInfo::BookInfo()
     init();
 }
 
-BookInfo::BookInfo(int id, QString name, QString path, int archive):
-        m_id(id),
-        m_name(name),
-        m_path(path),
-        m_archive(archive)
+BookInfo::BookInfo(int bid, QString bname, QString bpath, int barchive):
+        m_id(bid),
+        m_name(bname),
+        m_path(bpath),
+        m_archive(barchive)
 {
     init();
 
-    m_idT = _itow(id, m_idT, 10);
-    m_archiveT = _itow(archive, m_archiveT, 10);
+    m_idT = _itow(bid, m_idT, 10);
 }
 
 BookInfo::~BookInfo()
 {
     free(m_idT);
-    free(m_archiveT);
-    free(m_authorIDT);
-    free(m_catT);
+    free(m_authorDeathT);
 }
 
 void BookInfo::init()
 {
-    m_idT       = (TCHAR*) malloc(sizeof(TCHAR) * 10);
-    m_archiveT  = (TCHAR*) malloc(sizeof(TCHAR) * 10);
-    m_catT      = (TCHAR*) malloc(sizeof(TCHAR) * 10);
-    m_authorIDT = (TCHAR*) malloc(sizeof(TCHAR) * 10);
+    m_idT           = (TCHAR*) malloc(sizeof(TCHAR) * 10);
+    m_authorDeathT  = (TCHAR*) malloc(sizeof(TCHAR) * 10);
 }
 
 void BookInfo::genInfo()
@@ -57,19 +52,16 @@ void BookInfo::setId(int id)
 void BookInfo::setArchive(int archive)
 {
     m_archive = archive;
-    m_archiveT = _itow(archive, m_archiveT, 10);
 }
 
 void BookInfo::setCat(int cat)
 {
     m_cat = cat;
-    m_catT = _itow(cat, m_catT, 10);
 }
 
 void BookInfo::setAuthorID(int id)
 {
     m_authorID = id;
-    m_authorIDT = _itow(id, m_authorIDT, 10);
 }
 
 void BookInfo::setName(const QString &name)
@@ -82,13 +74,8 @@ void BookInfo::setPath(const QString &path)
     m_path = path;
 }
 
-void BookInfo::debug()
+void BookInfo::setAuthorDeath(int dYear)
 {
-    qDebug() /*<< QDebug::nospace()*/
-            << "(ID:" << id()
-            << ", Archive:" << archive()
-            << ", Path:" << path()
-            << ", Tables('" << mainTable() << "', '" << tocTable() << "')"
-            << "Name:" << name()
-            << ")";
+    m_authorDeath = dYear;
+    m_authorDeathT = _itow(dYear, m_authorDeathT, 10);
 }

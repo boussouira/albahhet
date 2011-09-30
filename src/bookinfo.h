@@ -11,7 +11,7 @@ class BookInfo
 {
 public:
     BookInfo();
-    BookInfo(int id, QString name, QString path, int archive);
+    BookInfo(int bid, QString bname, QString bpath, int barchive);
     ~BookInfo();
 
     int id() { return m_id; }
@@ -27,9 +27,7 @@ public:
     void genInfo(IndexInfo *info);
 
     TCHAR *idT() { return m_idT; }
-    TCHAR *archiveT() { return m_archiveT; }
-    TCHAR *authorIDT() { return m_authorIDT; }
-    TCHAR *catT() { return m_catT; }
+    TCHAR *authorDeathT() { return m_authorDeathT; }
 
     void setId(int id);
     void setArchive(int archive);
@@ -37,7 +35,7 @@ public:
     void setAuthorID(int id);
     void setName(const QString &name);
     void setPath(const QString &path);
-    void debug();
+    void setAuthorDeath(int dYear);
 
 protected:
     void init();
@@ -51,10 +49,9 @@ protected:
     int m_archive;
     int m_cat;
     int m_authorID;
+    int m_authorDeath;
     TCHAR *m_idT;
-    TCHAR *m_archiveT;
-    TCHAR *m_authorIDT;
-    TCHAR *m_catT;
+    TCHAR *m_authorDeathT;
 };
 
 #endif // BOOKINFO_H
