@@ -90,6 +90,10 @@ void ShamelaSearcher::search()
     QTime time;
     time.start();
 
+//     SortField *sortFields[] = {new SortField(_T("death")), SortField::FIELD_SCORE() /*new SortField(_T( "bookid"))*/, NULL};
+//     Sort *_sort = new Sort();
+//     _sort->setSort(sortFields);
+
     m_hits = m_searcher->search(m_query);
 
     m_timeSearch = time.elapsed();

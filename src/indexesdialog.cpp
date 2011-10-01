@@ -13,6 +13,7 @@
 #include <qprogressdialog.h>
 #include <qdir.h>
 #include <assert.h>
+#include <QTime>
 
 IndexesDialog::IndexesDialog(IndexesManager *manager, QWidget *parent) :
     m_indexesManager(manager),
@@ -184,7 +185,10 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
 {
     IndexWriter *writer = 0;
     QDir dir;
+    QTime time;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
+    QSettings settings;
+
     if(!dir.exists(info->indexPath()))
         dir.mkdir(info->indexPath());
     if ( IndexReader::indexExists(qPrintable(info->indexPath())) ){
@@ -201,9 +205,14 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     }
 
     writer->setUseCompoundFile(false);
+    writer->setRAMBufferSizeMB(settings.value("ramSize", 100).toInt());
+
+    time.start();
 
     writer->optimize(MAX_SEGMENT);
     writer->close();
+
+    qDebug("Optimzed in %d ms", time.elapsed());
 
     _CLDELETE(writer);
 }

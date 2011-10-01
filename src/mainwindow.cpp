@@ -315,7 +315,7 @@ void MainWindow::showStatistic()
             if(info->optimizingTime != -1)
                 ADD_QTREEWIDGET_ITEM("مدة ضغط الفهرس", getTimeString(info->optimizingTime, false));
         } else {
-            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->path())));
+            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->indexPath())));
             ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
         }
 

@@ -54,20 +54,20 @@ void SearchFilterHandler::setFilterText(QString text)
 {
     m_filterText = text;
 
-    QRegExp rx("[0-9\\?\\*]+\\-[0-9\\?\\*]+");
+    QRegExp rx("[0-9\\?\\*-]+:[0-9\\?\\*-]+");
     if(rx.indexIn(text) == -1) {
         text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
         text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
-        text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
+        //text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
         text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
 
         m_filterProxy->setFilterKeyColumn(m_actFilterByBooks->isChecked() ? 0 : 1);
         m_filterProxy->setFilterRole(Qt::DisplayRole);
         m_filterProxy->setFilterRegExp(text);
     } else {
-        QStringList t = text.split('-');
-        int dStart = (t.first() == "?" || t.first() == "*") ? 0x80000000 : t.first().toInt();
-        int dEnd = (t.last() == "?" || t.last() == "*") ? 99999 : t.last().toInt();
+        QStringList t = text.split(':');
+        int dStart = (t.first() == "*") ? 0x80000000 : t.first().toInt();
+        int dEnd = (t.last() == "*") ? 99999 : t.last().toInt();
 
         //qDebug("Authors from %d to %d", dStart, dEnd);
         m_filterProxy->setFilterByDeath(dStart, dEnd);

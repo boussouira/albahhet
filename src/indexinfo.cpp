@@ -151,6 +151,6 @@ void IndexInfo::generateIndexingInfo()
 {
     if(!m_indexingInfo)
         m_indexingInfo = new IndexingInfo;
-    m_indexingInfo->indexSize = getIndexSize(m_path);
+    m_indexingInfo->indexSize = getIndexSize(indexPath());
     m_indexingInfo->shamelaSize = getBooksSize(m_shamelaPath);
 }
