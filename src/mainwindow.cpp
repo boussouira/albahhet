@@ -205,9 +205,12 @@ void MainWindow::indexChanged()
     m_searchWidget->setTabWidget(m_tabWidget);
     m_searchWidget->indexChanged();
 
-    m_tabWidget->addTab(m_searchWidget,
-                        QIcon(":/data/images/find.png"),
-                        tr("بحث"));
+    m_tabWidget->insertTab(0,
+                           m_searchWidget,
+                           QIcon(":/data/images/find.png"),
+                           tr("بحث"));
+
+    m_tabWidget->setCurrentIndex(0);
 
     QSettings settings;
 
@@ -277,51 +280,41 @@ void MainWindow::editIndexes()
 
 void MainWindow::showStatistic()
 {
+#define ADD_VALUE(name, value) \
+    textBrowser->append(QString("<strong>%1:</strong> <strong style=\"color:green\">%2</strong>").arg(tr(name)).arg(value));
+
     try {
         IndexReader* r = IndexReader::open(qPrintable(m_currentIndex->indexPath()));
         //int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
-        QTreeWidget *treeWidget = new QTreeWidget;
-        treeWidget->setColumnCount(2);
-        treeWidget->setHeaderHidden(true);
-        treeWidget->setRootIsDecorated(false);
-
-        QList<QTreeWidgetItem *> itemList;
+        QTextBrowser *textBrowser = new QTextBrowser;
         IndexingInfo *info = m_currentIndex->indexingInfo();
 
-        ADD_QTREEWIDGET_ITEM("اسم الفهرس", m_currentIndex->name());
+        ADD_VALUE("اسم الفهرس", m_currentIndex->name());
 
         if(info)
-            ADD_QTREEWIDGET_ITEM("تاريخ الانشاء", QDateTime::fromTime_t(info->creatTime).toString("dd/MM/yyyy - hh:mm"));
+            ADD_VALUE("تاريخ الانشاء", QDateTime::fromTime_t(info->creatTime).toString("dd/MM/yyyy - hh:mm"));
 
-        ADD_QTREEWIDGET_ITEM("مسار الفهرس", m_currentIndex->path());
-        ADD_QTREEWIDGET_ITEM("مسار المكتبة الشاملة", m_currentIndex->shamelaPath());
-        ADD_QTREEWIDGET_ITEM("عدد الصفحات", r->numDocs());
+        ADD_VALUE("مسار الفهرس", m_currentIndex->path());
+        ADD_VALUE("المكتبة الشاملة", m_currentIndex->shamelaPath());
+        ADD_VALUE("عدد الصفحات", r->numDocs());
 
-        //ADD_QTREEWIDGET_ITEM("Max Docs", r->maxDoc());
-        //ADD_QTREEWIDGET_ITEM("Current Version", ver));
+        //ADD_VALUE("Current Version", ver));
 
         TermEnum* te = r->terms();
         int32_t nterms = 0;
 
         for (nterms = 0; te->next() == true; nterms++) {}
 
-        ADD_QTREEWIDGET_ITEM("عدد الكلمات", nterms);
+        ADD_VALUE("عدد الكلمات", nterms);
+        ADD_VALUE("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->indexPath())));
+        ADD_VALUE("حجم المكتبة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
         if(info) {
-            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(info->indexSize));
-            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(info->shamelaSize));
-            ADD_QTREEWIDGET_ITEM("مدة الفهرسة", getTimeString(info->indexingTime, false));
+            ADD_VALUE("مدة الفهرسة", getTimeString(info->indexingTime, false));
 
             if(info->optimizingTime != -1)
-                ADD_QTREEWIDGET_ITEM("مدة ضغط الفهرس", getTimeString(info->optimizingTime, false));
-        } else {
-            ADD_QTREEWIDGET_ITEM("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->indexPath())));
-            ADD_QTREEWIDGET_ITEM("حجم الكتب المفهرسة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
+                ADD_VALUE("مدة ضغط الفهرس", getTimeString(info->optimizingTime, false));
         }
-
-        treeWidget->addTopLevelItems(itemList);
-        treeWidget->resizeColumnToContents(1);
-        treeWidget->resizeColumnToContents(0);
 
         QDialog *dialog = new QDialog(this);
         hideHelpButton(dialog);
@@ -329,11 +322,11 @@ void MainWindow::showStatistic()
         QVBoxLayout *layout = new QVBoxLayout();
         QLabel *label = new QLabel(tr("معلومات حول الفهرس:"), dialog);
         layout->addWidget(label);
-        layout->addWidget(treeWidget);
+        layout->addWidget(textBrowser);
 
         dialog->setWindowTitle(tr("%1 %2").arg(APP_NAME).arg(APP_VERSION_STR));
         dialog->setLayout(layout);
-        dialog->resize(400, 300);
+        dialog->resize(350, 200);
         dialog->show();
 
         _CLLDELETE(te);

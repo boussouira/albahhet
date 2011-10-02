@@ -44,6 +44,7 @@ public:
     void setSearcher(IndexSearcher *searcher);
     void setsetDefaultOperator(bool DefautIsAnd);
     void setResultsPeerPage(int count) { m_resultParPage = count; }
+    void setSortNum(SearchSort sortNum) { m_sortNum = sortNum; }
 
     QString getTitleId(const QSqlDatabase &db, ShamelaResult *result);
     ShamelaResult *getSavedResult(int resultID);
@@ -77,6 +78,7 @@ private:
     QueryFilter *m_filter;
     QString m_queryStr;
     IndexSearcher *m_searcher;
+    Sort *m_sort;
     int m_currentPage;
     int m_pageCount;
     int m_timeSearch;
@@ -84,6 +86,7 @@ private:
     bool m_defautOpIsAnd;
     bool m_stopFeteching;
     QHash<int, ShamelaResult*> m_resultsHash;
+    SearchSort m_sortNum;
 };
 
 #endif // SHAMELASEARCHER_H

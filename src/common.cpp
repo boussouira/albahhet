@@ -84,11 +84,17 @@ void forceRTL(QWidget *widget)
 
 void clearShorts(QString &str)
 {
-    str.replace('A', QObject::tr("صلى الله عليه وسلم"));
-    str.replace('B', QObject::tr("رضي الله عن"));
-    str.replace('C', QObject::tr("رحمه الله"));
-    str.replace('D', QObject::tr("عز وجل"));
-    str.replace('E', QObject::tr("عليه الصلاة و السلام"));
+
+    if(!str.contains(QRegExp("[a-zA-Z]{3,}"))) {
+        str.replace(QRegExp("\\bA\\b"), QObject::tr("صلى الله عليه وسلم"));
+        str.replace(QRegExp("\\bB\\b"), QObject::tr("رضي الله عن"));
+        str.replace(QRegExp("\\bC\\b"), QObject::tr("رحمه الله"));
+        str.replace(QRegExp("\\bD\\b"), QObject::tr("عز وجل"));
+        str.replace(QRegExp("\\bE\\b"), QObject::tr("عليه الصلاة و السلام"));
+    }
+//    QRegExp rx(">v (.+)<");
+//    rx.setMinimal(true);
+//    str.replace(rx, "><li>\\1</li><");
 }
 
 quint64 getIndexSize(const QString &path)

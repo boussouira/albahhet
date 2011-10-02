@@ -70,9 +70,9 @@ void QuranIndexer::indexQuran()
 
     while(shaQuery.next())
     {
-        doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(0).toString()),   Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-        doc.add( *_CLNEW Field(_T("sora"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-        doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(shaQuery.value(2).toString()), Field::STORE_NO | Field::INDEX_TOKENIZED));
+        doc.add( *_CLNEW Field(PAGE_ID_FIELD, QSTRING_TO_TCHAR(shaQuery.value(0).toString()),   Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+        doc.add( *_CLNEW Field(QURAN_SORA_FIELD, QSTRING_TO_TCHAR(shaQuery.value(1).toString()), Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+        doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(shaQuery.value(2).toString()), Field::STORE_NO | Field::INDEX_TOKENIZED));
 
         m_writer->addDocument(&doc);
 

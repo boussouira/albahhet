@@ -42,13 +42,6 @@ quint64 getDirSize(const QString &path);
 QString getSizeString(quint64 size);
 QString getTimeString(int milsec, bool html=true);
 
-#define ADD_QTREEWIDGET_ITEM(name, value) { \
-        QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget); \
-        item->setData(0, Qt::DisplayRole, tr(name)); \
-        item->setData(1, Qt::DisplayRole, value); \
-        itemList.append(item); \
-        }
-
 #define PROGRESS_DIALOG_STEP(text)     progress.setValue(progress.value()+1); \
                                 progress.setLabelText(tr("جاري " text "..."));
 

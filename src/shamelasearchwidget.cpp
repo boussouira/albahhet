@@ -120,7 +120,7 @@ void ShamelaSearchWidget::search()
     ArabicAnalyzer analyzer;
     BooleanQuery *q = new BooleanQuery;
     Query *filterQuery = 0;
-    QueryParser *queryPareser = new QueryParser(_T("text"), &analyzer);
+    QueryParser *queryPareser = new QueryParser(PAGE_TEXT_FIELD, &analyzer);
     queryPareser->setAllowLeadingWildcard(true);
 
     m_shaModel->generateLists();
@@ -207,6 +207,13 @@ void ShamelaSearchWidget::search()
 
     m_searcher->setResultsPeerPage(m_resultParPage);
 
+    if      (ui->radioSortRelvance->isChecked())  m_searcher->setSortNum(Relvance);
+    else if (ui->radioSortBookRelv->isChecked())  m_searcher->setSortNum(BookRelvance);
+    else if (ui->radioSortBookPage->isChecked())  m_searcher->setSortNum(BookPage);
+    else if (ui->radioSortDeathRelv->isChecked()) m_searcher->setSortNum(DeathRelvance);
+    else if (ui->radioSortDeathBook->isChecked()) m_searcher->setSortNum(DeathBookPage);
+    else m_searcher->setSortNum(Relvance);
+
     ShamelaResultWidget *widget;
     int index=1;
     QString title = tr("%1 (%2)")
@@ -253,7 +260,7 @@ Query *ShamelaSearchWidget::getBooksListQuery()
     }
 
     foreach(int id, books) {
-        TermQuery *term = new TermQuery(new Term(_T("bookid"), QStringToTChar(QString::number(id))));
+        TermQuery *term = new TermQuery(new Term(BOOK_ID_FIELD, QStringToTChar(QString::number(id))));
         q->add(term, BooleanClause::SHOULD);
         count++;
     }
@@ -290,6 +297,7 @@ void ShamelaSearchWidget::indexChanged()
 
     ui->treeViewBooks->expandAll();
     ui->treeViewBooks->resizeColumnToContents(0);
+    ui->treeViewBooks->resizeColumnToContents(1);
     // Set the proxy model
     m_filterHandler->setShamelaModels(m_shaModel);
     ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
@@ -422,4 +430,14 @@ void ShamelaSearchWidget::itemChanged(QStandardItem *item)
 
         m_proccessItemChange = true;
     }
+}
+
+void ShamelaSearchWidget::on_pushExpandTree_clicked()
+{
+    ui->treeViewBooks->expandAll();
+}
+
+void ShamelaSearchWidget::on_pushCollapseTree_clicked()
+{
+    ui->treeViewBooks->collapseAll();
 }

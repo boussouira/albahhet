@@ -59,7 +59,22 @@ public:
 
 #define MAX_SEGMENT 2
 
+#define IS_LATIN(c) (0x41 <= c &&  c <= 0x7A)
 #define IS_NUMBER(c) (0x30 <= c &&  c <= 0x39)
 #define IS_ARABIC_CHAR(c) (0x0621 <= c &&  c <= 0x06ED)
+
+enum SearchSort {
+    Relvance,
+    BookRelvance,
+    BookPage,
+    DeathRelvance,
+    DeathBookPage
+};
+
+#define PAGE_ID_FIELD _T("icd")
+#define BOOK_ID_FIELD _T("bookid")
+#define PAGE_TEXT_FIELD _T("text")
+#define QURAN_SORA_FIELD _T("sora")
+#define AUTHOR_DEATH_FIELD _T("death")
 
 #endif // CL_COMMON_H

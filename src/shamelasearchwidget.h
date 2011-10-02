@@ -58,6 +58,11 @@ protected:
     bool m_useMultiTab;
     bool m_proccessItemChange;
 
+private slots:
+    void on_pushExpandTree_clicked();
+
+    void on_pushCollapseTree_clicked();
+
 private:
     Ui::ShamelaSearchWidget *ui;
 };

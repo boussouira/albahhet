@@ -91,10 +91,10 @@ void ShamelaIndexer::indexBook(BookInfo *book)
 
         while(shaQuery.next())
         {
-            doc.add( *_CLNEW Field(_T("id"), QSTRING_TO_TCHAR(shaQuery.value(0).toString()), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("bookid"), book->idT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("death"), book->authorDeathT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(_T("text"), QSTRING_TO_TCHAR(shaQuery.value(1).toString()), tokenAndNoStore));
+            doc.add( *_CLNEW Field(PAGE_ID_FIELD, QSTRING_TO_TCHAR(shaQuery.value(0).toString()), storeAndNoToken));
+            doc.add( *_CLNEW Field(BOOK_ID_FIELD, book->idT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(AUTHOR_DEATH_FIELD, book->authorDeathT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(shaQuery.value(1).toString()), tokenAndNoStore));
 
             m_writer->addDocument(&doc);
             doc.clear();

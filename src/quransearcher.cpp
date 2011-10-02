@@ -77,13 +77,13 @@ void QuranSearcher::search()
     if(!m_init) {
         m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
         m_analyzer = new ArabicAnalyzer();
-        m_queryPareser = new QueryParser(_T("text"), m_analyzer);
+        m_queryPareser = new QueryParser(PAGE_TEXT_FIELD, m_analyzer);
 
         m_init = true;
     }
 
     m_query = m_queryPareser->parse(QStringToTChar(m_queryText));
-    qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
+    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();
@@ -129,12 +129,12 @@ void QuranSearcher::fetech()
         for(int i=start; i < maxResult;i++){
 
             Document &doc = m_hits->doc(i);
-            int entryID = _wtoi(doc.get(_T("id")));
-            int soraNumber = _wtoi(doc.get(_T("sora")));
+            int entryID = _wtoi(doc.get(PAGE_ID_FIELD));
+            int soraNumber = _wtoi(doc.get(QURAN_SORA_FIELD));
             int score = (int) (m_hits->score(i) * 100.0);
             /*
-            qDebug() << TCharToQString(doc.get(_T("text")));
-            int bookID = _wtoi(doc.get(_T("bookid")));
+            qDebug() << TCharToQString(doc.get(PAGE_TEXT_FIELD));
+            int bookID = _wtoi(doc.get(BOOK_ID_FIELD));
             qDebug("Result at %d == %d", i, entryID);
             */
 
@@ -163,7 +163,7 @@ void QuranSearcher::fetech()
 
                 const TCHAR* text = QStringToTChar(pageText);
                 StringReader reader(text);
-                TokenStream* tokenStream = hl_analyzer.tokenStream(_T("text"), &reader);
+                TokenStream* tokenStream = hl_analyzer.tokenStream(PAGE_TEXT_FIELD, &reader);
 
                 TCHAR* hi_result = highlighter.getBestFragments(
                             tokenStream,

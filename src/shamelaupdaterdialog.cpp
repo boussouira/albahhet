@@ -216,7 +216,7 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
 
         for(int i=0; i<ids.count(); i++) {
             TCHAR str[10];
-            Term *term = new Term(_itow(ids.at(i), str, 10), _T("bookid"));
+            Term *term = new Term(_itow(ids.at(i), str, 10), BOOK_ID_FIELD);
             writer->deleteDocuments(term);
 //            _CLDELETE(term);
         }

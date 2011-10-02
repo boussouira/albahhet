@@ -28,6 +28,8 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_resultParPage = 10;
     m_timeSearch = 0;
     m_filter = 0;
+
+    m_sort = new Sort();
 }
 
 ShamelaSearcher::~ShamelaSearcher()
@@ -46,6 +48,8 @@ ShamelaSearcher::~ShamelaSearcher()
         delete m_searcher;
     }
 
+    delete m_sort;
+
     qDeleteAll(m_resultsHash);
     m_resultsHash.clear();
 }
@@ -63,11 +67,11 @@ void ShamelaSearcher::run()
             fetech();
         }
     } catch(CLuceneError &e) {
-        qCritical("Error when searching: %s\ncode: %d", e.what(), e.number());
+        qCritical("Search error: %s", e.what());
         emit gotException(e.what(), e.number());
     }
     catch(std::exception &e){
-     emit gotException(e.what(), 0);
+        emit gotException(e.what(), 0);
     }
     catch(...) {
         qCritical("Unknow error when searching at \"%s\".", qPrintable(m_indexInfo->indexPath()));
@@ -85,21 +89,36 @@ void ShamelaSearcher::search()
 
     m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
 
-    //qDebug() << "Search for:" << TCharToQString(m_query->toString(_T("text")));
+    //qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();
 
-//     SortField *sortFields[] = {new SortField(_T("death")), SortField::FIELD_SCORE() /*new SortField(_T( "bookid"))*/, NULL};
-//     Sort *_sort = new Sort();
-//     _sort->setSort(sortFields);
+    SortField *sort1[] = {SortField::FIELD_SCORE(), NULL};
+    SortField *sort2[] = {new SortField(BOOK_ID_FIELD), SortField::FIELD_SCORE(), NULL};
+    SortField *sort3[] = {new SortField(BOOK_ID_FIELD), new SortField(PAGE_ID_FIELD), NULL};
+    SortField *sort4[] = {new SortField(AUTHOR_DEATH_FIELD), SortField::FIELD_SCORE(), NULL};
+    SortField *sort5[] = {new SortField(AUTHOR_DEATH_FIELD), new SortField(BOOK_ID_FIELD), new SortField(PAGE_ID_FIELD), NULL};
 
-    m_hits = m_searcher->search(m_query);
+    QList<SortField**> sortFields;
+    sortFields << sort1;
+    sortFields << sort2;
+    sortFields << sort3;
+    sortFields << sort4;
+    sortFields << sort5;
+
+    m_sort->setSort(sortFields.at(m_sortNum));
+
+    m_hits = m_searcher->search(m_query, m_sort);
 
     m_timeSearch = time.elapsed();
 
     m_pageCount = ceil((resultsCount()/(double)m_resultParPage));
     m_currentPage = 0;
+
+//    foreach(SortField** f, m_sortFields) {
+//        delete[] f;
+//    }
 
     emit doneSearching();
 }
@@ -109,7 +128,7 @@ void ShamelaSearcher::fetech()
     emit startFeteching();
 
     ArabicAnalyzer hl_analyzer;
-    QueryScorer scorer(m_query->rewrite(IndexReader::open(qPrintable(m_indexInfo->indexPath()))));
+    QueryScorer scorer(m_searcher->rewrite(m_query));
     SimpleCssFormatter hl_formatter;
     int maxNumFragmentsRequired = 30;
     const TCHAR* fragmentSeparator = _T("...");
@@ -128,8 +147,8 @@ void ShamelaSearcher::fetech()
         }
 
         Document &doc = m_hits->doc(i);
-        int entryID = _wtoi(doc.get(_T("id")));
-        int bookID = _wtoi(doc.get(_T("bookid")));
+        int entryID = _wtoi(doc.get(PAGE_ID_FIELD));
+        int bookID = _wtoi(doc.get(BOOK_ID_FIELD));
         int score = (int) (m_hits->score(i) * 100.0);
 
         BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
@@ -191,7 +210,7 @@ void ShamelaSearcher::fetech()
 
                 const TCHAR* text = QStringToTChar(pageText);
                 StringReader reader(text);
-                TokenStream* tokenStream = hl_analyzer.tokenStream(_T("text"), &reader);
+                TokenStream* tokenStream = hl_analyzer.tokenStream(PAGE_TEXT_FIELD, &reader);
 
                 TCHAR* hi_result = highlighter.getBestFragments(
                         tokenStream,
