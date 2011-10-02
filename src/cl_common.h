@@ -13,6 +13,7 @@
 #include <CLucene/util/dirent.h>
 #include <CLucene/search/IndexSearcher.h>
 #include <CLucene/search/QueryFilter.h>
+#include <CLucene/queryParser/MultiFieldQueryParser.h>
 
 #include <CLucene/highlighter/QueryTermExtractor.h>
 #include <CLucene/highlighter/QueryScorer.h>
@@ -59,7 +60,9 @@ public:
 
 #define MAX_SEGMENT 2
 
-#define IS_LATIN(c) (0x41 <= c &&  c <= 0x7A)
+#define IS_UPPER(c) (0x41 <= c &&  c <= 0x5A)
+#define IS_LOWER(c) (0x61 <= c &&  c <= 0x7A)
+#define IS_LATIN(c) (IS_LOWER(c) || IS_UPPER(c))
 #define IS_NUMBER(c) (0x30 <= c &&  c <= 0x39)
 #define IS_ARABIC_CHAR(c) (0x0621 <= c &&  c <= 0x06ED)
 
@@ -71,9 +74,10 @@ enum SearchSort {
     DeathBookPage
 };
 
-#define PAGE_ID_FIELD _T("icd")
-#define BOOK_ID_FIELD _T("bookid")
+#define PAGE_ID_FIELD _T("page")
+#define BOOK_ID_FIELD _T("book")
 #define PAGE_TEXT_FIELD _T("text")
+#define FOOT_NOTE_FIELD _T("fn")
 #define QURAN_SORA_FIELD _T("sora")
 #define AUTHOR_DEATH_FIELD _T("death")
 

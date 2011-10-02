@@ -9,14 +9,14 @@ ArabicTokenizer::~ArabicTokenizer()
 
 bool ArabicTokenizer::isTokenChar(const TCHAR c)  const
 {
-    return (IS_ARABIC_CHAR(c) || IS_NUMBER(c));
+    return (IS_ARABIC_CHAR(c) || IS_NUMBER(c) || IS_LATIN(c));
 }
 
 TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
 {
     TCHAR c = chr;
 
-    switch(chr){
+    switch(chr) {
     case 0x0622: // ALEF WITH MADDA ABOVE
     case 0x0623: // ALEF WITH HAMEZA ABOVE
     case 0x0625: // ALEF WITH HAMEZA BELOW
@@ -31,6 +31,9 @@ TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
        c = 0x064A; // YEH
        break;
     }
+
+    if(IS_UPPER(c))
+        c += 0x20;
 
     return c;
 }

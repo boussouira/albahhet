@@ -84,8 +84,7 @@ void forceRTL(QWidget *widget)
 
 void clearShorts(QString &str)
 {
-
-    if(!str.contains(QRegExp("[a-zA-Z]{3,}"))) {
+    if(str.count(QRegExp("\\b[a-zA-Z]{5,}\\b")) < 10) {
         str.replace(QRegExp("\\bA\\b"), QObject::tr("صلى الله عليه وسلم"));
         str.replace(QRegExp("\\bB\\b"), QObject::tr("رضي الله عن"));
         str.replace(QRegExp("\\bC\\b"), QObject::tr("رحمه الله"));
