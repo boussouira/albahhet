@@ -19,6 +19,7 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
 {
     m_hits = 0;
     m_query = 0;
+    m_orignalQuery = 0;
     m_searcher = 0;
     m_currentPage = 0;
     m_pageCount = 0;
@@ -27,31 +28,13 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_stopFeteching = false;
     m_resultParPage = 10;
     m_timeSearch = 0;
-    m_filter = 0;
 
     m_sort = new Sort();
 }
 
 ShamelaSearcher::~ShamelaSearcher()
 {
-    if(m_hits)
-        delete m_hits;
-
-    if(m_query)
-        delete m_query;
-
-    if(m_filter)
-        delete m_filter;
-
-    if(m_searcher != 0) {
-        m_searcher->close();
-        delete m_searcher;
-    }
-
-    delete m_sort;
-
-    qDeleteAll(m_resultsHash);
-    m_resultsHash.clear();
+    clear();
 }
 
 void ShamelaSearcher::run()
@@ -89,7 +72,9 @@ void ShamelaSearcher::search()
 
     m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
 
-    //qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
+    m_query = m_searcher->rewrite(m_orignalQuery);
+//    qDebug() << "Search [Orig]:" << TCharToQString(m_orignalQuery->toString(PAGE_TEXT_FIELD));
+    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();
@@ -128,7 +113,7 @@ void ShamelaSearcher::fetech()
     emit startFeteching();
 
     ArabicAnalyzer hl_analyzer;
-    QueryScorer scorer(m_searcher->rewrite(m_query));
+    QueryScorer scorer(m_query);
     SimpleCssFormatter hl_formatter;
     int maxNumFragmentsRequired = 30;
     const TCHAR* fragmentSeparator = _T("...");
@@ -154,7 +139,7 @@ void ShamelaSearcher::fetech()
         BookInfo *bookInfo = m_booksDb->getBookInfo(bookID);
 
         if(!bookInfo) {
-            qWarning("No book with id %d where found", bookID);
+            qCritical("ShamelaSearcher::fetech: No book with id %d where found", bookID);
             return;
         }
 
@@ -227,6 +212,8 @@ void ShamelaSearcher::fetech()
 
                         emit gotResult(result);
                 m_resultsHash.insert(i, result);
+            } else {
+                qWarning("No result found for id %d book %d", entryID, bookID);
             }
         }
         if(!bookInfo->archive())
@@ -244,15 +231,20 @@ void ShamelaSearcher::fetech()
 void ShamelaSearcher::clear()
 {
     if(m_hits != 0)
-        _CLDELETE(m_hits)
+        _CLDELETE(m_hits);
 
     if(m_query != 0)
-        _CLDELETE(m_query)
+        _CLDELETE(m_query);
+
+    if(m_orignalQuery != 0)
+        _CLDELETE(m_orignalQuery);
 
     if(m_searcher != 0) {
         m_searcher->close();
-        _CLDELETE(m_searcher)
+        _CLDELETE(m_searcher);
     }
+
+    _CLDELETE(m_sort);
 
     qDeleteAll(m_resultsHash);
     m_resultsHash.clear();
@@ -304,12 +296,7 @@ void ShamelaSearcher::setHits(Hits *hit)
 
 void ShamelaSearcher::setQuery(Query* q)
 {
-    m_query = q;
-}
-
-void ShamelaSearcher::setFilterQuery(Query *q)
-{
-    m_filter = new QueryFilter(q, true);
+    m_orignalQuery = q;
 }
 
 void ShamelaSearcher::setQueryString(QString q)

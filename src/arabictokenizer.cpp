@@ -9,7 +9,7 @@ ArabicTokenizer::~ArabicTokenizer()
 
 bool ArabicTokenizer::isTokenChar(const TCHAR c)  const
 {
-    return (IS_ARABIC_CHAR(c) || IS_NUMBER(c) || IS_LATIN(c));
+    return (IS_ARABIC_CHAR(c) || IS_NUMBER(c));
 }
 
 TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
@@ -31,9 +31,6 @@ TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
        c = 0x064A; // YEH
        break;
     }
-
-    if(IS_UPPER(c))
-        c += 0x20;
 
     return c;
 }

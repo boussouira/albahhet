@@ -120,7 +120,21 @@ void ShamelaSearchWidget::search()
     ArabicAnalyzer analyzer;
     BooleanQuery *q = new BooleanQuery;
     Query *filterQuery = 0;
-    QueryParser *queryPareser = new QueryParser(PAGE_TEXT_FIELD, &analyzer);
+    QueryParser *queryPareser;
+
+    if(ui->radioSearchText->isChecked()) {
+        queryPareser = new QueryParser(PAGE_TEXT_FIELD, &analyzer);
+    } else if(ui->radioSearchFN->isChecked()) {
+        queryPareser = new QueryParser(FOOT_NOTE_FIELD, &analyzer);
+    } else {
+        //BoostMap *boosts = new BoostMap();
+        //boosts->put(PAGE_TEXT_FIELD, 1.0);
+        //boosts->put(FOOT_NOTE_FIELD, 0.5);
+
+        const TCHAR *fields[] = {PAGE_TEXT_FIELD, FOOT_NOTE_FIELD, NULL};
+        queryPareser = new MultiFieldQueryParser(fields, &analyzer);
+    }
+
     queryPareser->setAllowLeadingWildcard(true);
 
     m_shaModel->generateLists();

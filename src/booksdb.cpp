@@ -35,6 +35,9 @@ BookInfo *BooksDB::getBookInfo(int id)
         book->genInfo(m_indexInfo);
 
         m_bookInfoHash.insert(id, book);
+    } else {
+        delete book;
+        book = 0;
     }
 
     return book;

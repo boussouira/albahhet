@@ -179,6 +179,11 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
 
     QSettings settings;
     BookInfo *info = m_booksDb->getBookInfo(bookID);
+    if(!info) {
+        qCritical("openResult: No book with id %d where found", bookID);
+        return;
+    }
+
     ShamelaResult *result = m_searcher->getSavedResult(resultID);
 
     m_bookReader->setBooksDB(m_booksDb);

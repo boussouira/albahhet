@@ -66,20 +66,15 @@ void ShamelaIndexer::startIndexing()
 
 void ShamelaIndexer::indexBook(BookInfo *book)
 {
-    QSqlDatabase mdbDB;
     QString connName(QString("_%1_%2").arg(book->archive()).arg(m_threadId));
-
     {
-
-        mdbDB = QSqlDatabase::addDatabase("QODBC", connName);
+        QSqlDatabase mdbDB = QSqlDatabase::addDatabase("QODBC", connName);
         mdbDB.setDatabaseName(QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1")
                               .arg(book->path()));
 
-        if(!mdbDB.isOpen()) {
-            if (!mdbDB.open()) {
-                DB_OPEN_ERROR(book->path());
-                return;
-            }
+        if (!mdbDB.open()) {
+            DB_OPEN_ERROR(book->path());
+            return;
         }
 
         QSqlQuery shaQuery(mdbDB);
@@ -94,7 +89,19 @@ void ShamelaIndexer::indexBook(BookInfo *book)
             doc.add( *_CLNEW Field(PAGE_ID_FIELD, QSTRING_TO_TCHAR(shaQuery.value(0).toString()), storeAndNoToken));
             doc.add( *_CLNEW Field(BOOK_ID_FIELD, book->idT(), storeAndNoToken));
             doc.add( *_CLNEW Field(AUTHOR_DEATH_FIELD, book->authorDeathT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(shaQuery.value(1).toString()), tokenAndNoStore));
+
+            QString text = shaQuery.value(1).toString();
+            if(!text.contains("__________")) {
+                doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(text), tokenAndNoStore));
+            } else {
+                QStringList texts = text.split("__________", QString::SkipEmptyParts);
+                if(texts.count() == 2) {
+                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(texts.first()), tokenAndNoStore));
+                    doc.add( *_CLNEW Field(FOOT_NOTE_FIELD, QSTRING_TO_TCHAR(texts.last()), tokenAndNoStore));
+                } else {
+                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(text), tokenAndNoStore));
+                }
+            }
 
             m_writer->addDocument(&doc);
             doc.clear();

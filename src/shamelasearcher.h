@@ -39,7 +39,6 @@ public:
     void setCurrentPage(int page);
     void setHits(Hits *hit);
     void setQuery(Query* q);
-    void setFilterQuery(Query *q);
     void setQueryString(QString q);
     void setSearcher(IndexSearcher *searcher);
     void setsetDefaultOperator(bool DefautIsAnd);
@@ -75,7 +74,7 @@ private:
     BooksDB *m_booksDb;
     Hits* m_hits;
     Query* m_query;
-    QueryFilter *m_filter;
+    Query* m_orignalQuery;
     QString m_queryStr;
     IndexSearcher *m_searcher;
     Sort *m_sort;
