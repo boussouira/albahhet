@@ -81,7 +81,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>dc</string>
+               <string>Index</string>
               </property>
              </widget>
             </item>
@@ -91,7 +91,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>D:\Programming\albahhet-vc-build\index</string>
+               <string>D:\shamela-indexes\index</string>
               </property>
              </widget>
             </item>

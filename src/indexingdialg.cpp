@@ -16,6 +16,9 @@ IndexingDialg::IndexingDialg(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    SettingsChecker check;
+    check.indexingConfig();
+
     connect(ui->pushNext, SIGNAL(clicked()), SLOT(showIndexingWidget()));
     connect(ui->pushCancel, SIGNAL(clicked()), SLOT(reject()));
 }

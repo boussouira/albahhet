@@ -11,7 +11,6 @@ ShamelaIndexer::ShamelaIndexer()
 {
     m_skipCurrent = false;
     m_indexedBooks.reserve(5000);
-    m_authors.reserve(3000);
 }
 
 void ShamelaIndexer::run()
@@ -24,10 +23,6 @@ void ShamelaIndexer::run()
     qDebug("Update indexed book in thread: %d", m_threadId);
     m_indexedBooks.squeeze();
     m_bookDB->setBookIndexed(m_indexedBooks);
-
-    qDebug("Update authors in thread: %d", m_threadId);
-    m_authors.squeeze();
-    m_bookDB->getAuthorFromShamela(m_authors);
 }
 
 void ShamelaIndexer::startIndexing()
@@ -108,7 +103,6 @@ void ShamelaIndexer::indexBook(BookInfo *book)
         }
 
         m_indexedBooks.insert(book->id());
-        m_authors.insert(book->authorID());
     }
 
     QSqlDatabase::removeDatabase(connName);

@@ -39,7 +39,6 @@ protected:
     bool m_skipCurrent;
     int m_threadId;
     QSet<int> m_indexedBooks;
-    QSet<int> m_authors;
 };
 
 #endif // SHAMELAINDEXER_H

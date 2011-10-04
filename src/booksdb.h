@@ -13,6 +13,19 @@ class IndexInfo;
 class QStandardItem;
 class QStandardItemModel;
 
+class ShamelaAuthorInfo
+{
+public:
+    ShamelaAuthorInfo(int aid, int adieYear, QString aname):
+        authorID(aid),
+        dieYear(adieYear),
+        name(aname) {}
+
+    int authorID;
+    int dieYear;
+    QString name;
+};
+
 class BooksDB : public QThread
 {
 public:
@@ -32,7 +45,6 @@ public:
     void clear();
     void close();
     void setBookIndexed(QSet<int> books);
-    void getAuthorFromShamela(QSet<int> author);
     void loadSowarNames();
     QString getSoraName(int soraNumber);
 
@@ -44,11 +56,10 @@ public:
     QStringList removeBooks(QList<int> savedIds);
 
     QStandardItemModel *getBooksListModel();
-    QStandardItemModel *getCatsListModel();
-    QStandardItemModel *getAuthorsListModel();
     void booksCat(QStandardItem *parentNode, int catID);
 
     int getAuthorDeath(int authorID);
+    ShamelaAuthorInfo *getAuthorInfo(int authorID);
 
     QList<QPair<QString, QString> > getBookShoorts(int bid);
 
@@ -69,6 +80,7 @@ protected:
     QSqlQuery *m_shamelaSpecialQuery;
     QMutex m_mutex;
     QHash<int, int> m_authorsDeath;
+    QHash<int, ShamelaAuthorInfo*> m_authorsInfo;
     QHash<int, BookInfo*> m_bookInfoHash;
     QHash<int, QList<QPair<QString, QString> > > m_savedShoorts;
     QStringList m_sowarNames;

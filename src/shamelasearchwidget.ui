@@ -266,111 +266,98 @@ p, li { white-space: pre-wrap; }
       <attribute name="label">
        <string>خيارات البحث</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QLabel" name="label_6">
-         <property name="text">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
           <string>بحث في:</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="rightMargin">
+           <number>25</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="radioSearchBoth">
+            <property name="text">
+             <string>النص والحاشية</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSearchText">
+            <property name="text">
+             <string>النص فقط</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSearchFN">
+            <property name="text">
+             <string>الحاشية فقط</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <property name="rightMargin">
-          <number>20</number>
-         </property>
-         <item>
-          <widget class="QRadioButton" name="radioSearchBoth">
-           <property name="text">
-            <string>النص والحاشية</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSearchText">
-           <property name="text">
-            <string>النص فقط</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSearchFN">
-           <property name="text">
-            <string>الحاشية فقط</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_5">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
           <string>ترتيب النتائج حسب:</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="rightMargin">
+           <number>25</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="radioSortRelvance">
+            <property name="text">
+             <string>التطابق</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSortBookRelv">
+            <property name="text">
+             <string>الكتاب ثم التطابق</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSortBookPage">
+            <property name="text">
+             <string>كتاب ثم ترتيب الصفحات</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSortDeathRelv">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>وفاة المؤلف ثم التطابق</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioSortDeathBook">
+            <property name="text">
+             <string>وفاة المؤلف ثم الكتاب</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <property name="rightMargin">
-          <number>20</number>
-         </property>
-         <item>
-          <widget class="QRadioButton" name="radioSortRelvance">
-           <property name="text">
-            <string>التطابق</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSortBookRelv">
-           <property name="text">
-            <string>الكتاب ثم التطابق</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSortBookPage">
-           <property name="text">
-            <string>كتاب ثم ترتيب الصفحات</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSortDeathRelv">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>وفاة المؤلف ثم التطابق</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioSortDeathBook">
-           <property name="text">
-            <string>وفاة المؤلف ثم الكتاب</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
        <item>
         <spacer name="verticalSpacer">

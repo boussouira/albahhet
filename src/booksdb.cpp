@@ -84,10 +84,12 @@ void BooksDB::close()
         m_shamelaSpecialDB.close();
     }
 
-    if(!m_bookInfoHash.isEmpty()) {
-        qDeleteAll(m_bookInfoHash);
-        m_bookInfoHash.clear();
-    }
+
+    qDeleteAll(m_bookInfoHash);
+    m_bookInfoHash.clear();
+
+    qDeleteAll(m_authorsInfo);
+    m_authorsInfo.clear();
 }
 
 void BooksDB::setBookIndexed(QSet<int> books)
@@ -101,38 +103,6 @@ void BooksDB::setBookIndexed(QSet<int> books)
 
     foreach(int shaId, books) {
         query.exec(QString("UPDATE books SET indexFLags = 1 WHERE shamelaID = %1").arg(shaId));
-    }
-
-    m_indexDB.commit();
-}
-
-void BooksDB::getAuthorFromShamela(QSet<int> author)
-{
-    QMutexLocker locker(&m_mutex);
-
-    openIndexDB();
-    openShamelaSpecialDB();
-
-    m_indexDB.transaction();
-
-    foreach(int id, author) {
-        QSqlQuery query(m_indexDB);
-        QSqlQuery shamelaQuery(m_shamelaSpecialDB);
-
-        query.exec(QString("SELECT COUNT(*) FROM authors WHERE shamelaAuthorID = %1").arg(id));
-        if(query.next()) {
-            if(query.value(0).toInt() == 0) {
-                shamelaQuery.exec(QString("SELECT authid, auth, AD FROM Auth WHERE authid = %1").arg(id));
-                if(shamelaQuery.next()) {
-                    query.prepare("INSERT INTO authors VALUES (?, ?, ?)");
-                    query.bindValue(0, id);
-                    query.bindValue(1, shamelaQuery.value(1).toString());
-                    query.bindValue(2, shamelaQuery.value(2).toInt());
-
-                    query.exec();
-                }
-            }
-        }
     }
 
     m_indexDB.commit();
@@ -231,36 +201,39 @@ void BooksDB::importBooksListFromShamela()
 
 
     m_indexQuery->exec("DROP TABLE IF EXISTS books");
+
     m_indexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
-                    "shamelaID INTEGER, filePath TEXT, authorId INTEGER, authorName TEXT, "
-                    "fileSize INTEGER, cat INTEGER, archive INTEGER, titleTable TEXT, bookTable TEXT, "
-                    "indexFLags INTEGER)");
-
-    m_indexQuery->exec("DROP TABLE IF EXISTS authors");
-    m_indexQuery->exec("CREATE TABLE IF NOT EXISTS authors ("
-                       "shamelaAuthorID INTEGER UNIQUE, "
-                       "name TEXT, "
-                       "authorDeath INTEGER)");
-
+                       "shamelaID INTEGER, bookInfo TEXT, filePath TEXT, authorId INTEGER, authorName TEXT, "
+                       "authorDeath INTEGER, version INTEGER, cat INTEGER, archive INTEGER, titleTable TEXT, "
+                       "bookTable TEXT, indexFLags INTEGER)");
 
     m_indexDB.transaction();
 
-    m_shamelaQuery->exec(QString("SELECT Bk, bkid, auth, authno, Archive, cat FROM 0bok"));
+    m_shamelaQuery->exec("SELECT Bk, bkid, cat, authno, Archive, betaka, oVer FROM 0bok");
     while(m_shamelaQuery->next()) {
         int archive = m_shamelaQuery->value(4).toInt();
-        QString sql = QString("INSERT INTO books VALUES "
-                              "(NULL, '%1', %2, '%3', %4, '%5', '', %9, %6, '%7', '%8', 0)")
-                .arg(m_shamelaQuery->value(0).toString())
-                .arg(m_shamelaQuery->value(1).toString())
-                .arg(m_indexInfo->buildFilePath(m_shamelaQuery->value(1).toString(), archive))
-                .arg(m_shamelaQuery->value(3).toString())
-                .arg(m_shamelaQuery->value(2).toString())
-                .arg(archive)
-                .arg((!archive) ? "title" : QString("t%1").arg(m_shamelaQuery->value(1).toInt()))
-                .arg((!archive) ? "book" : QString("b%1").arg(m_shamelaQuery->value(1).toInt()))
-                .arg(m_shamelaQuery->value(5).toInt());
+        ShamelaAuthorInfo* auth = getAuthorInfo(m_shamelaQuery->value(3).toInt());
 
-        if(!m_indexQuery->exec(sql))
+        m_indexQuery->prepare("INSERT INTO books "
+                              "(bookName, shamelaID, bookInfo, filePath, authorId, authorName, authorDeath, "
+                              "version, cat, archive, titleTable, bookTable, indexFLags) "
+                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        m_indexQuery->bindValue(0, m_shamelaQuery->value(0).toString());    // bookName
+        m_indexQuery->bindValue(1, m_shamelaQuery->value(1).toInt());       // shamelaID
+        m_indexQuery->bindValue(2, m_shamelaQuery->value(5).toString());    // bookInfo
+        m_indexQuery->bindValue(3, m_indexInfo->buildFilePath(m_shamelaQuery->value(1).toString(), archive));   // filePath
+        m_indexQuery->bindValue(4, auth->authorID);                         // authorId
+        m_indexQuery->bindValue(5, auth->name);                             // authorName
+        m_indexQuery->bindValue(6, auth->dieYear);                          // authorDeath
+        m_indexQuery->bindValue(7, m_shamelaQuery->value(6).toInt());       // version
+        m_indexQuery->bindValue(8, m_shamelaQuery->value(2).toInt());       // cat
+        m_indexQuery->bindValue(9, archive);                                // archive
+        m_indexQuery->bindValue(10, (!archive) ? "title" : QString("t%1").arg(m_shamelaQuery->value(1).toInt()));// titleTable
+        m_indexQuery->bindValue(11, (!archive) ? "book" : QString("b%1").arg(m_shamelaQuery->value(1).toInt())); // bookTable
+        m_indexQuery->bindValue(12, 0);                                     // indexFLags
+
+        if(!m_indexQuery->exec())
             SQL_ERROR(m_indexQuery->lastError().text());
 
     }
@@ -315,7 +288,7 @@ QStringList BooksDB::addBooks(QList<int> shaIds)
     }
 
     m_indexDB.transaction();
-    QString sql(QString("SELECT Bk, bkid, auth, authno, Archive FROM 0bok WHERE bkid IN(%1)")
+    QString sql(QString("SELECT Bk, bkid, cat, authno, Archive, betaka, oVer FROM 0bok WHERE bkid IN(%1)")
                 .arg(whereIds));
 
     m_shamelaQuery->exec(sql);
@@ -323,18 +296,28 @@ QStringList BooksDB::addBooks(QList<int> shaIds)
 
     while(m_shamelaQuery->next()) {
         int archive = m_shamelaQuery->value(4).toInt();
-        sql = QString("INSERT INTO books VALUES "
-                      "(NULL, '%1', %2, '%3', %4, '%5', '', '', %6, '%7', '%8', 0)")
-                .arg(m_shamelaQuery->value(0).toString())
-                .arg(m_shamelaQuery->value(1).toString())
-                .arg(m_indexInfo->buildFilePath(m_shamelaQuery->value(1).toString(), archive))
-                .arg(m_shamelaQuery->value(3).toString())
-                .arg(m_shamelaQuery->value(2).toString())
-                .arg(archive)
-                .arg((!archive) ? "title" : QString("t%1").arg(m_shamelaQuery->value(1).toInt()))
-                .arg((!archive) ? "book" : QString("b%1").arg(m_shamelaQuery->value(1).toInt()));
+        ShamelaAuthorInfo* auth = getAuthorInfo(m_shamelaQuery->value(3).toInt());
 
-        if(m_indexQuery->exec(sql)) {
+        m_indexQuery->prepare("INSERT INTO books "
+                              "(bookName, shamelaID, bookInfo, filePath, authorId, authorName, authorDeath, "
+                              "version, cat, archive, titleTable, bookTable, indexFLags) "
+                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        m_indexQuery->bindValue(0, m_shamelaQuery->value(0).toString());    // bookName
+        m_indexQuery->bindValue(1, m_shamelaQuery->value(1).toInt());       // shamelaID
+        m_indexQuery->bindValue(2, m_shamelaQuery->value(5).toString());    // bookInfo
+        m_indexQuery->bindValue(3, m_indexInfo->buildFilePath(m_shamelaQuery->value(1).toString(), archive));   // filePath
+        m_indexQuery->bindValue(4, auth->authorID);                         // authorId
+        m_indexQuery->bindValue(5, auth->name);                             // authorName
+        m_indexQuery->bindValue(6, auth->dieYear);                          // authorDeath
+        m_indexQuery->bindValue(7, m_shamelaQuery->value(6).toInt());       // version
+        m_indexQuery->bindValue(8, m_shamelaQuery->value(2).toInt());       // cat
+        m_indexQuery->bindValue(9, archive);                                // archive
+        m_indexQuery->bindValue(10, (!archive) ? "title" : QString("t%1").arg(m_shamelaQuery->value(1).toInt()));// titleTable
+        m_indexQuery->bindValue(11, (!archive) ? "book" : QString("b%1").arg(m_shamelaQuery->value(1).toInt())); // bookTable
+        m_indexQuery->bindValue(12, 0);                                     // indexFLags
+
+        if(m_indexQuery->exec()) {
             addedBooksName << m_shamelaQuery->value(0).toString();
         } else {
             SQL_ERROR(m_indexQuery->lastError().text());
@@ -427,10 +410,8 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
     openIndexDB();
     QSqlQuery query(m_indexDB);
 
-    query.prepare("SELECT books.shamelaID, books.bookName, authors.name, authors.authorDeath "
-                  "FROM books LEFT JOIN authors "
-                  "ON authors.shamelaAuthorID = books.authorId "
-                  "WHERE books.indexFLags = 1 AND books.cat = ? ");
+    query.prepare("SELECT shamelaID, bookName, bookInfo, authorName, authorDeath "
+                  "FROM books WHERE indexFLags = 1 AND cat = ? ");
 
     query.bindValue(0, catID);
     if(!query.exec())
@@ -442,61 +423,21 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         bookItem->setText(query.value(1).toString());
         bookItem->setData(query.value(0).toInt(), idRole);
         bookItem->setData(Book, typeRole);
+        bookItem->setToolTip(query.value(2).toString());
 
         bookItem->setCheckable(true);
         bookItem->setCheckState(Qt::Unchecked);
 
         QStandardItem *authItem = new QStandardItem();
-        authItem->setText(query.value(2).toString());
+        authItem->setText(query.value(3).toString());
 
         QStandardItem *authDeathItem = new QStandardItem();
-        authDeathItem->setData(query.value(3).toInt(), Qt::DisplayRole);
+        authDeathItem->setData(query.value(4).toInt(), Qt::DisplayRole);
 
         parentNode->setChild(row, 0, bookItem);
         parentNode->setChild(row, 1, authItem);
         parentNode->setChild(row, 2, authDeathItem);
     }
-}
-
-QStandardItemModel *BooksDB::getCatsListModel()
-{
-    openShamelaDB();
-    QStandardItemModel *model= new QStandardItemModel();
-    QStandardItem *item;
-
-    m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord");
-
-    while(m_shamelaQuery->next()) {
-        item = new QStandardItem(m_shamelaQuery->value(1).toString());
-        item->setData(m_shamelaQuery->value(0).toInt(), Qt::UserRole);
-        item->setCheckable(true);
-        model->appendRow(item);
-    }
-
-    return model;
-}
-
-QStandardItemModel *BooksDB::getAuthorsListModel()
-{
-    openIndexDB();
-    QStandardItemModel *model= new QStandardItemModel();
-    QStandardItem *item;
-
-    item = new QStandardItem(tr("-- غير محدد --"));
-    item->setData(0);
-    item->setCheckable(true);
-    model->appendRow(item);
-
-    m_indexQuery->exec("SELECT shamelaAuthorID, name FROM authors");
-
-    while(m_indexQuery->next()) {
-        item = new QStandardItem(m_indexQuery->value(1).toString());
-        item->setData(m_indexQuery->value(0).toInt(), Qt::UserRole);
-        item->setCheckable(true);
-        model->appendRow(item);
-    }
-
-    return model;
 }
 
 QList<QPair<QString, QString> > BooksDB::getBookShoorts(int bid)
@@ -590,4 +531,32 @@ int BooksDB::getAuthorDeath(int authorID)
     }
 
     return 99999;
+}
+
+ShamelaAuthorInfo* BooksDB::getAuthorInfo(int authorID)
+{
+    ShamelaAuthorInfo *info = m_authorsInfo.value(authorID, 0);
+    if(info)
+        return info;
+
+    openShamelaSpecialDB();
+
+    info = new ShamelaAuthorInfo(0, 0, QString());
+    QSqlQuery specialQuery(m_shamelaSpecialDB);
+
+    specialQuery.prepare("SELECT auth, AD FROM Auth WHERE authid = ?");
+    specialQuery.bindValue(0, authorID);
+
+    if(!specialQuery.exec())
+        SQL_ERROR(specialQuery.lastError().text());
+
+    if(specialQuery.next()) {
+        info->authorID = authorID;
+        info->dieYear = specialQuery.value(1).toInt();
+        info->name = specialQuery.value(0).toString();
+    }
+
+    m_authorsInfo.insert(authorID, info);
+
+    return info;
 }

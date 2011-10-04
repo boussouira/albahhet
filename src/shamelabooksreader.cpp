@@ -29,12 +29,13 @@ bool ShamelaBooksReader::open()
     QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(m_bookInfo->path());
     QString connName = QString("shamelaBook_%1").arg(m_bookInfo->id());
 
-    if(QSqlDatabase::contains(connName)) {
-        m_bookDB = QSqlDatabase::database(connName);
-    } else {
-        m_bookDB = QSqlDatabase::addDatabase("QODBC", connName);
-        m_bookDB.setDatabaseName(mdbpath);
+    while(QSqlDatabase::contains(connName)) {
+        connName = connName + "_1";
     }
+
+    m_bookDB = QSqlDatabase::addDatabase("QODBC", connName);
+    m_bookDB.setDatabaseName(mdbpath);
+
     if (!m_bookDB.open()) {
         DB_OPEN_ERROR(m_bookInfo->path());
         return false;
@@ -112,7 +113,7 @@ int ShamelaBooksReader::currentPart()
 
 void ShamelaBooksReader::close()
 {
-    if(m_query != 0) {
+    if(m_query) {
         delete m_query;
         m_query = 0;
     }

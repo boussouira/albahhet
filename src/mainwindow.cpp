@@ -71,7 +71,8 @@ void MainWindow::saveSettings()
     if(m_currentIndex && m_currentIndex->id() != -1)
         settings.setValue("currentIndex", m_currentIndex->id());
 
-    m_searchWidget->saveSettings();
+    if(m_searchWidget)
+        m_searchWidget->saveSettings();
 }
 
 void MainWindow::loadSettings()
