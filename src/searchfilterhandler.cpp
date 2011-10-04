@@ -24,19 +24,23 @@ SearchFilterHandler::SearchFilterHandler(QObject *parent) :
 
     QMenu *menu2 =  m_menu->addMenu(tr("بحث في"));
     m_actFilterByBooks = menu2->addAction(tr("اسماء الكتب"));
+    m_actFilterByBetaka = menu2->addAction(tr("بطاقة الكتاب"));
     m_actFilterByAuthors = menu2->addAction(tr("اسماء المؤلفين"));
 
     m_actFilterByBooks->setCheckable(true);
     m_actFilterByBooks->setChecked(true);
+    m_actFilterByBetaka->setCheckable(true);
     m_actFilterByAuthors->setCheckable(true);
 
     m_hideFilterWidgetOnChange = false;
+    m_filterColumn = 0;
+    m_role = Qt::DisplayRole;
 
-    connect(m_actFilterByBooks, SIGNAL(toggled(bool)), SLOT(filterByBooks(bool)));
-    connect(m_actFilterByAuthors, SIGNAL(toggled(bool)), SLOT(filterByAuthors(bool)));
+    connect(m_actFilterByBooks, SIGNAL(triggered()), SLOT(changeFilterAction()));
+    connect(m_actFilterByBetaka, SIGNAL(triggered()), SLOT(changeFilterAction()));
+    connect(m_actFilterByAuthors, SIGNAL(triggered()), SLOT(changeFilterAction()));
     connect(actionSelected, SIGNAL(triggered()), SLOT(showSelected()));
     connect(actionClearText, SIGNAL(triggered()), SIGNAL(clearText()));
-//    connect(m_filterProxy, SIGNAL(layoutChanged()), SLOT(enableCatSelection()));
 }
 
 SearchFilterHandler::~SearchFilterHandler()
@@ -58,11 +62,10 @@ void SearchFilterHandler::setFilterText(QString text)
     if(rx.indexIn(text) == -1) {
         text.replace(QRegExp("[\\x0627\\x0622\\x0623\\x0625]"), "[\\x0627\\x0622\\x0623\\x0625]");//ALEFs
         text.replace(QRegExp("[\\x0647\\x0629]"), "[\\x0647\\x0629]"); //TAH_MARBUTA, HEH
-        //text.replace(QRegExp("[\\x062F\\x0630]"), "[\\x062F\\x0630]"); //DAL, THAL
         text.replace(QRegExp("[\\x064A\\x0649]"), "[\\x064A\\x0649]"); //YAH, ALEF MAKSOURA
 
-        m_filterProxy->setFilterKeyColumn(m_actFilterByBooks->isChecked() ? 0 : 1);
-        m_filterProxy->setFilterRole(Qt::DisplayRole);
+        m_filterProxy->setFilterKeyColumn(m_filterColumn);
+        m_filterProxy->setFilterRole(m_role);
         m_filterProxy->setFilterRegExp(text);
     } else {
         QStringList t = text.split(':');
@@ -90,42 +93,40 @@ QMenu *SearchFilterHandler::getFilterLineMenu()
     return m_menu;
 }
 
-void SearchFilterHandler::filterByBooks(bool booksFilter)
+void SearchFilterHandler::changeFilterAction()
 {
-    m_actFilterByBooks->blockSignals(true);
-    m_actFilterByAuthors->blockSignals(true);
+    QAction *act = qobject_cast<QAction*>(sender());
+    QList<QAction*> actList;
 
-    if(booksFilter) {
-        m_filterProxy->setFilterKeyColumn(0);
-        m_actFilterByAuthors->setChecked(false);
-    } else {
-        m_filterProxy->setFilterKeyColumn(1);
-        m_actFilterByAuthors->setChecked(true);
+    if(act) {
+        if(!act->isChecked()) {
+            act->setChecked(true);
+            return;
+        }
+
+        actList << m_actFilterByBooks;
+        actList << m_actFilterByBetaka;
+        actList << m_actFilterByAuthors;
+
+        foreach (QAction *a, actList) {
+            if(act != a)
+                a->setChecked(false);
+        }
+
+        if(act == m_actFilterByBooks) {
+            m_filterColumn = 0;
+            m_role = Qt::DisplayRole;
+        } else if(act == m_actFilterByAuthors) {
+            m_filterColumn = 1;
+            m_role = Qt::DisplayRole;
+        } else if(act == m_actFilterByBetaka) {
+            m_filterColumn = 0;
+            m_role = Qt::ToolTipRole;
+        }
+
+        m_filterProxy->setFilterKeyColumn(m_filterColumn);
+        m_filterProxy->setFilterRole(m_role);
     }
-
-    setFilterText("");
-
-    m_actFilterByBooks->blockSignals(false);
-    m_actFilterByAuthors->blockSignals(false);
-}
-
-void SearchFilterHandler::filterByAuthors(bool authorsFilter)
-{
-    m_actFilterByBooks->blockSignals(true);
-    m_actFilterByAuthors->blockSignals(true);
-
-    if(authorsFilter) {
-        m_filterProxy->setFilterKeyColumn(1);
-        m_actFilterByBooks->setChecked(false);
-    } else {
-        m_filterProxy->setFilterKeyColumn(0);
-        m_actFilterByBooks->setChecked(true);
-    }
-
-    setFilterText("");
-
-    m_actFilterByBooks->blockSignals(false);
-    m_actFilterByAuthors->blockSignals(false);
 }
 
 void SearchFilterHandler::showSelected()

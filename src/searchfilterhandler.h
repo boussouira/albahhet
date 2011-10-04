@@ -23,8 +23,7 @@ public:
 
 public slots:
     void setFilterText(QString text);
-    void filterByBooks(bool booksFilter);
-    void filterByAuthors(bool authorsFilter);
+    void changeFilterAction();
     void showSelected();
     void showUnSelected();
     void clearFilter();
@@ -40,9 +39,12 @@ protected:
     QMenu *m_menu;
     QAction *m_actFilterByBooks;
     QAction *m_actFilterByAuthors;
+    QAction *m_actFilterByBetaka;
     QString m_filterText;
     int m_index;
     bool m_hideFilterWidgetOnChange;
+    Qt::ItemDataRole m_role;
+    int m_filterColumn;
 };
 
 #endif // SEARCHFILTERHANDLER_H
