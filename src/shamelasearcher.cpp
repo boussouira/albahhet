@@ -193,6 +193,8 @@ void ShamelaSearcher::fetech()
                 SimpleFragmenter frag(20);
                 highlighter.setTextFragmenter(&frag);
 
+                clearShorts(pageText);
+
                 const TCHAR* text = QStringToTChar(pageText);
                 StringReader reader(text);
                 TokenStream* tokenStream = hl_analyzer.tokenStream(PAGE_TEXT_FIELD, &reader);

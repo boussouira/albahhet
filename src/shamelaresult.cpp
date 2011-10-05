@@ -115,7 +115,6 @@ void ShamelaResult::setSnippet(const QString &snippet)
 {
     if(m_snippet != snippet) {
         m_snippet = snippet;
-        clearShorts(m_snippet);
 
         m_edited = true;
     }

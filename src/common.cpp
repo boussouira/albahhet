@@ -1,5 +1,6 @@
 #include "common.h"
 #include <qstringlist.h>
+#include <QTime>
 
 TCHAR* QStringToTChar(const QString &str)
 {
@@ -84,16 +85,11 @@ void forceRTL(QWidget *widget)
 
 void clearShorts(QString &str)
 {
-    if(str.count(QRegExp("\\b[a-zA-Z]{5,}\\b")) < 10) {
-        str.replace(QRegExp("\\bA\\b"), QObject::tr("صلى الله عليه وسلم"));
-        str.replace(QRegExp("\\bB\\b"), QObject::tr("رضي الله عن"));
-        str.replace(QRegExp("\\bC\\b"), QObject::tr("رحمه الله"));
-        str.replace(QRegExp("\\bD\\b"), QObject::tr("عز وجل"));
-        str.replace(QRegExp("\\bE\\b"), QObject::tr("عليه الصلاة و السلام"));
-    }
-//    QRegExp rx(">v (.+)<");
-//    rx.setMinimal(true);
-//    str.replace(rx, "><li>\\1</li><");
+    str.replace(QRegExp(QObject::tr("([\\x0621-\\x06ED]\\W)A\\b")), QObject::tr("\\1""صلى الله عليه وسلم"));
+    str.replace(QRegExp(QObject::tr("([\\x0621-\\x06ED]\\W)B\\b")), QObject::tr("\\1""رضي الله عن"));
+    str.replace(QRegExp(QObject::tr("([\\x0621-\\x06ED]\\W)C\\b")), QObject::tr("\\1""رحمه الله"));
+    str.replace(QRegExp(QObject::tr("([\\x0621-\\x06ED]\\W)D\\b")), QObject::tr("\\1""عز وجل"));
+    str.replace(QRegExp(QObject::tr("([\\x0621-\\x06ED]\\W)E\\b")), QObject::tr("\\1""عليه الصلاة و السلام"));
 }
 
 quint64 getIndexSize(const QString &path)
