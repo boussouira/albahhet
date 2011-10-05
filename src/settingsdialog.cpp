@@ -20,6 +20,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->checkShowNewIndex->setChecked(settings.value("showNewIndexMsg", true).toBool());
     ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
     ui->spinThreadCount->setValue(settings.value("threadCount", QThread::idealThreadCount()).toInt());
+    ui->spinThreadCount->setMinimum(1);
+    ui->spinThreadCount->setMaximum(QThread::idealThreadCount()*2);
 
     settings.beginGroup("BooksViewer");
     ui->checkHLFirstPage->setChecked(settings.value("highlightOnlyFirst", true).toBool());
