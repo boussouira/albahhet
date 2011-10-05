@@ -230,16 +230,16 @@ void ShamelaSearcher::fetech()
 
 void ShamelaSearcher::clear()
 {
-    if(m_hits != 0)
+    if(m_hits)
         _CLDELETE(m_hits);
 
-    if(m_query != 0)
+    if(m_query)
         _CLDELETE(m_query);
 
-    if(m_orignalQuery != 0)
-        _CLDELETE(m_orignalQuery);
+//    if(m_orignalQuery)
+//        _CLDELETE(m_orignalQuery);
 
-    if(m_searcher != 0) {
+    if(m_searcher) {
         m_searcher->close();
         _CLDELETE(m_searcher);
     }
