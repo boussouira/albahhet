@@ -43,25 +43,6 @@ BookInfo *BooksDB::getBookInfo(int id)
     return book;
 }
 
-BookInfo *BooksDB::next()
-{
-    QMutexLocker locker(&m_mutex);
-
-    if(m_indexQuery->next()){
-        BookInfo *book = new BookInfo(m_indexQuery->value(0).toInt(),
-                                      m_indexQuery->value(1).toString(),
-                                      m_indexQuery->value(2).toString(),
-                                      m_indexQuery->value(3).toInt());
-        book->setCat(m_indexQuery->value(4).toInt());
-        book->setAuthorID(m_indexQuery->value(5).toInt());
-        book->setAuthorDeath(getAuthorDeath(book->authorID()));
-
-        return book;
-    } else {
-        return 0;
-    }
-}
-
 void BooksDB::clear()
 {
     m_indexQuery->finish();
@@ -176,7 +157,7 @@ void BooksDB::openShamelaSpecialDB()
 void BooksDB::queryBooksToIndex()
 {
     openIndexDB();
-    m_indexQuery->exec("SELECT shamelaID, bookName, filePath, archive, cat, authorId FROM books ORDER BY archive ASC");
+    m_indexQuery->exec("SELECT shamelaID, bookName, filePath, archive, authorDeath FROM books ORDER BY archive ASC");
 }
 
 void BooksDB::queryBooksToIndex(QList<int> ids)
@@ -190,8 +171,25 @@ void BooksDB::queryBooksToIndex(QList<int> ids)
         whereIds.append(QString::number(ids.at(i)));
     }
 
-    m_indexQuery->exec(QString("SELECT shamelaID, bookName, filePath, archive, cat, authorId FROM books "
+    m_indexQuery->exec(QString("SELECT shamelaID, bookName, filePath, archive, authorDeath FROM books "
                                "WHERE shamelaID IN(%1)").arg(whereIds));
+}
+
+BookInfo *BooksDB::next()
+{
+    QMutexLocker locker(&m_mutex);
+
+    if(m_indexQuery->next()){
+        BookInfo *book = new BookInfo(m_indexQuery->value(0).toInt(),
+                                      m_indexQuery->value(1).toString(),
+                                      m_indexQuery->value(2).toString(),
+                                      m_indexQuery->value(3).toInt());
+        book->setAuthorDeath(m_indexQuery->value(4).toInt());
+
+        return book;
+    } else {
+        return 0;
+    }
 }
 
 void BooksDB::importBooksListFromShamela()

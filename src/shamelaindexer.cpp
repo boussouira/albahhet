@@ -83,7 +83,7 @@ void ShamelaIndexer::indexBook(BookInfo *book)
         {
             doc.add( *_CLNEW Field(PAGE_ID_FIELD, QSTRING_TO_TCHAR(shaQuery.value(0).toString()), storeAndNoToken));
             doc.add( *_CLNEW Field(BOOK_ID_FIELD, book->idT(), storeAndNoToken));
-            doc.add( *_CLNEW Field(AUTHOR_DEATH_FIELD, book->authorDeathT(), storeAndNoToken));
+            doc.add( *_CLNEW Field(AUTHOR_DEATH_FIELD, book->authorDeathT(), tokenAndNoStore));
 
             QString text = shaQuery.value(1).toString();
             if(!text.contains("__________")) {
