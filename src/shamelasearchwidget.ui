@@ -122,19 +122,13 @@ p, li { white-space: pre-wrap; }
    </item>
    <item>
     <widget class="QToolBox" name="toolBox">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <property name="tabSpacing">
-      <number>0</number>
-     </property>
      <widget class="QWidget" name="page">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
         <width>613</width>
-        <height>347</height>
+        <height>335</height>
        </rect>
       </property>
       <attribute name="label">
@@ -260,7 +254,7 @@ p, li { white-space: pre-wrap; }
         <x>0</x>
         <y>0</y>
         <width>613</width>
-        <height>347</height>
+        <height>332</height>
        </rect>
       </property>
       <attribute name="label">
@@ -279,14 +273,14 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QRadioButton" name="radioSearchBoth">
             <property name="text">
-             <string>النص والحاشية</string>
+             <string>المتن  والحاشية</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="radioSearchText">
             <property name="text">
-             <string>النص فقط</string>
+             <string>المتن  فقط</string>
             </property>
             <property name="checked">
              <bool>true</bool>
