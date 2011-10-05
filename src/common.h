@@ -8,14 +8,13 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define APP_VERSION 0x010009
-#define APP_VERSION_STR "1.0.11"
+#define APP_VERSION 0x010200
+#define APP_VERSION_STR QObject::tr("1.2.0" " - " "اصدار تجريبي 1")
 #define APP_NAME QObject::tr("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
 #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
 
-#define LOCAL_SETTINGS_FILE (qApp->applicationDirPath() + "/settings.ini")
 #define LOG_FILE QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).filePath("session.txt")
 
 enum PULRAL{

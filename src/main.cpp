@@ -88,9 +88,6 @@ int main(int argc, char *argv[])
     QSettings settings;
     SettingsChecker check;
 
-    check.update();
-    check.updateToXml();
-
     if(settings.value("checkIndexes", true).toBool())
         check.checkIndexes();
 
@@ -106,12 +103,5 @@ int main(int argc, char *argv[])
 
     QObject::connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
 
-    int ret = app.exec();
-
-    if(!ret)
-        qDebug("Exit with success");
-    else
-        qDebug("Exit with code: %d", ret);
-
-    return ret;
+     return app.exec();
 }

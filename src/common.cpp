@@ -4,8 +4,6 @@
 
 TCHAR* QStringToTChar(const QString &str)
 {
-    //    TCHAR *string = new TCHAR[(str.length() +1) * sizeof(TCHAR)];
-    //    memset(string, 0, (str.length() +1) * sizeof(TCHAR));
     TCHAR *string = new TCHAR[str.length()+1];
     str.toWCharArray(string);
     string[str.length()] = 0;
@@ -60,11 +58,9 @@ QString arPlural(int count, PULRAL word, bool html)
 
 void normaliseSearchString(QString &text)
 {
-    text.replace(QRegExp(QObject::tr("ـفق")), "(");
-    text.replace(QRegExp(QObject::tr("ـغق")), ")");
-    text.replace(QRegExp(QObject::tr("ـ[أا]و")), "OR");
-    text.replace(QRegExp(QObject::tr("ـو")), "AND");
-    text.replace(QRegExp(QObject::tr("ـبدون")), "NOT");
+    text.replace(QRegExp(QObject::tr("\\b" "ـ[أا]و" "\\b")), "OR");
+    text.replace(QRegExp(QObject::tr("\\b" "ـو" "\\b")), "AND");
+    text.replace(QRegExp(QObject::tr("\\b" "ـبدون" "\\b")), "NOT");
     text.replace(QObject::tr("؟"), "?");
 }
 

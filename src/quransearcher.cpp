@@ -78,6 +78,7 @@ void QuranSearcher::search()
         m_searcher = new IndexSearcher(qPrintable(m_indexInfo->indexPath()));
         m_analyzer = new ArabicAnalyzer();
         m_queryPareser = new QueryParser(PAGE_TEXT_FIELD, m_analyzer);
+        m_queryPareser->setAllowLeadingWildcard(true);
 
         m_init = true;
     }

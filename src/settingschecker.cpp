@@ -50,54 +50,6 @@ bool SettingsChecker::checkIndex(IndexInfo *index)
     return true;
 }
 
-void SettingsChecker::update()
-{
-    QSettings settings;
-
-    int currentVersion = settings.value("currentVersion", 0).toInt();
-
-    if(currentVersion == 0) {
-        if(QFile::exists(LOCAL_SETTINGS_FILE)) {
-            qDebug("Try to upgard...");
-
-            QSettings oldSettings(LOCAL_SETTINGS_FILE, QSettings::IniFormat);
-            QStringList allKeys;
-            allKeys = oldSettings.allKeys();
-
-            foreach(QString key, allKeys) {
-                settings.setValue(key, oldSettings.value(key));
-            }
-
-            if(!QFile::remove(LOCAL_SETTINGS_FILE))
-                qWarning("Can't delete old settings file: \"%s\"", qPrintable(LOCAL_SETTINGS_FILE));
-            else
-                qDebug("Delete old settings file...");
-        }
-    }
-
-    settings.setValue("currentVersion", APP_VERSION);
-}
-
-void SettingsChecker::updateToXml()
-{
-    QSettings settings;
-
-    if(!settings.value("usingXml", false).toBool()) {
-        qDebug("Try to upgard to xml...");
-
-        IndexesManager manager;
-        foreach(QString key, settings.childGroups()) {
-            if(key.startsWith("i_")) {
-                manager.add(settings, key);
-                settings.remove(key);
-            }
-        }
-
-        settings.remove("indexes_list");
-        settings.setValue("usingXml", true);
-    }
-}
-
 void SettingsChecker::indexingConfig()
 {
     QSettings settings;
