@@ -28,6 +28,8 @@ public:
     void setTabWidget(TabWidget *tabWidget);
     void saveSettings();
     void indexChanged();
+    QList<int> selectedBooks();
+    void selectBooks(QList<int> books);
 
 protected:
     void closeEvent(QCloseEvent *e);
@@ -40,13 +42,19 @@ public slots:
     void clearSpecialChar();
     void clearLineText();
 
+    void selectAllBooks();
+    void unSelectAllBooks();
+    void selectVisibleBooks();
+    void unSelectVisibleBooks();
+    void expandFilterView();
+    void collapseFilterView();
+
 protected slots:
     void on_lineFilter_textChanged(QString text);
-    void on_pushSelectAll_clicked();
-    void on_pushUnSelectAll_clicked();
     void itemChanged(QStandardItem *item);
 
 protected:
+    Ui::ShamelaSearchWidget *ui;
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
     TabWidget *m_tabWidget;
@@ -57,14 +65,6 @@ protected:
     int m_searchCount;
     bool m_useMultiTab;
     bool m_proccessItemChange;
-
-private slots:
-    void on_pushExpandTree_clicked();
-
-    void on_pushCollapseTree_clicked();
-
-private:
-    Ui::ShamelaSearchWidget *ui;
 };
 
 #endif // SHAMELASEARCHWIDGET_H

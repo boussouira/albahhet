@@ -369,60 +369,16 @@ void ShamelaSearchWidget::setupCleanMenu()
     }
 }
 
-void ShamelaSearchWidget::on_pushSelectAll_clicked()
-{
-    QAbstractItemModel *model = m_filterHandler->getFilterModel();
-
-    int rowCount = model->rowCount();
-    QModelIndex topLeft = model->index(0, 0);
-    QModelIndex bottomRight = model->index(rowCount-1, 0);
-    QItemSelection selection(topLeft, bottomRight);
-
-    foreach (QModelIndex index, selection.indexes()) {
-        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
-            QModelIndex child = index.child(0, 0);
-
-            while(child.isValid()) {
-                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
-                    model->setData(child, Qt::Checked, Qt::CheckStateRole);
-
-                child = index.child(child.row()+1, 0);
-            }
-        }
-    }
-}
-
-void ShamelaSearchWidget::on_pushUnSelectAll_clicked()
-{
-    QAbstractItemModel *model = m_filterHandler->getFilterModel();
-
-    int rowCount = model->rowCount();
-    QModelIndex topLeft = model->index(0, 0);
-    QModelIndex bottomRight = model->index(rowCount-1, 0);
-    QItemSelection selection(topLeft, bottomRight);
-
-    foreach (QModelIndex index, selection.indexes()) {
-        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
-            QModelIndex child = index.child(0, 0);
-
-            while(child.isValid()) {
-                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
-                    model->setData(child, Qt::Unchecked, Qt::CheckStateRole);
-
-                child = index.child(child.row()+1, 0);
-            }
-        }
-    }
-}
-
 void ShamelaSearchWidget::itemChanged(QStandardItem *item)
 {
     if(item && m_proccessItemChange) {
         m_proccessItemChange = false;
 
         if(item->data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
-            for(int i=0; i<item->rowCount(); i++) {
-                item->child(i)->setCheckState(item->checkState());
+            if(item->checkState() != Qt::PartiallyChecked) {
+                for(int i=0; i<item->rowCount(); i++) {
+                    item->child(i)->setCheckState(item->checkState());
+                }
             }
         } else if(item->data(BooksDB::typeRole).toInt() == BooksDB::Book) {
             QStandardItem *parentItem = item->parent();
@@ -446,12 +402,119 @@ void ShamelaSearchWidget::itemChanged(QStandardItem *item)
     }
 }
 
-void ShamelaSearchWidget::on_pushExpandTree_clicked()
+void ShamelaSearchWidget::selectAllBooks()
+{
+
+    QAbstractItemModel *model = m_shaModel->booksModel();
+
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        model->setData(index, Qt::Checked, Qt::CheckStateRole);
+    }
+}
+
+void ShamelaSearchWidget::unSelectAllBooks()
+{
+    QAbstractItemModel *model = m_shaModel->booksModel();
+
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        model->setData(index, Qt::Unchecked, Qt::CheckStateRole);
+    }
+}
+
+void ShamelaSearchWidget::selectVisibleBooks()
+{
+    QAbstractItemModel *model = m_filterHandler->getFilterModel();
+
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            QModelIndex child = index.child(0, 0);
+
+            while(child.isValid()) {
+                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
+                    model->setData(child, Qt::Checked, Qt::CheckStateRole);
+
+                child = index.child(child.row()+1, 0);
+            }
+        }
+    }
+}
+
+void ShamelaSearchWidget::unSelectVisibleBooks()
+{
+    QAbstractItemModel *model = m_filterHandler->getFilterModel();
+
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            QModelIndex child = index.child(0, 0);
+
+            while(child.isValid()) {
+                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book)
+                    model->setData(child, Qt::Unchecked, Qt::CheckStateRole);
+
+                child = index.child(child.row()+1, 0);
+            }
+        }
+    }
+}
+
+void ShamelaSearchWidget::expandFilterView()
 {
     ui->treeViewBooks->expandAll();
 }
 
-void ShamelaSearchWidget::on_pushCollapseTree_clicked()
+void ShamelaSearchWidget::collapseFilterView()
 {
     ui->treeViewBooks->collapseAll();
+}
+
+QList<int> ShamelaSearchWidget::selectedBooks()
+{
+    m_shaModel->generateLists();
+    return m_shaModel->selectedBooks();
+}
+
+void ShamelaSearchWidget::selectBooks(QList<int> books)
+{
+    QAbstractItemModel *model = m_shaModel->booksModel();
+
+    int rowCount = model->rowCount();
+    QModelIndex topLeft = model->index(0, 0);
+    QModelIndex bottomRight = model->index(rowCount-1, 0);
+    QItemSelection selection(topLeft, bottomRight);
+
+    foreach (QModelIndex index, selection.indexes()) {
+        if(index.data(BooksDB::typeRole).toInt() == BooksDB::Categorie) {
+            QModelIndex child = index.child(0, 0);
+
+            while(child.isValid()) {
+                if(child.data(BooksDB::typeRole).toInt() == BooksDB::Book) {
+                    int bid = child.data(BooksDB::idRole).toInt();
+                    model->setData(child,
+                                   (books.contains(bid)) ? Qt::Checked : Qt::Unchecked,
+                                   Qt::CheckStateRole);
+                }
+                child = index.child(child.row()+1, 0);
+            }
+        }
+    }
 }

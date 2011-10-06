@@ -199,11 +199,16 @@ void BooksDB::importBooksListFromShamela()
 
 
     m_indexQuery->exec("DROP TABLE IF EXISTS books");
+    m_indexQuery->exec("DROP TABLE IF EXISTS fields");
+    m_indexQuery->exec("DROP TABLE IF EXISTS fieldsBooks");
 
-    m_indexQuery->exec("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, bookName TEXT, "
+    m_indexQuery->exec("CREATE TABLE books (id INTEGER PRIMARY KEY, bookName TEXT, "
                        "shamelaID INTEGER, bookInfo TEXT, filePath TEXT, authorId INTEGER, authorName TEXT, "
                        "authorDeath INTEGER, version INTEGER, cat INTEGER, archive INTEGER, titleTable TEXT, "
                        "bookTable TEXT, indexFLags INTEGER)");
+
+    m_indexQuery->exec("CREATE TABLE fields(id INTEGER PRIMARY KEY, indexID INTEGER, name TEXT)");
+    m_indexQuery->exec("CREATE TABLE fieldsBooks(id INTEGER, bookID INTEGER)");
 
     m_indexDB.transaction();
 

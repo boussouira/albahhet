@@ -133,6 +133,7 @@ void SearchFilterHandler::showSelected()
 {
     QVariant checked(Qt::Checked);
 
+    m_filterProxy->setFilterKeyColumn(0);
     m_filterProxy->setFilterRole(Qt::CheckStateRole);
     m_filterProxy->setFilterFixedString(checked.toString());
 

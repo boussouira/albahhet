@@ -14,6 +14,7 @@ class BooksDB;
 class TabWidget;
 class AbstractSearchWidget;
 class LogDialog;
+class SearchField;
 
 class MainWindow : public QMainWindow
 {
@@ -29,6 +30,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *e);
+    void loadSearchFields();
 
 protected slots:
     void saveSettings();
@@ -40,6 +42,9 @@ protected slots:
     void showStatistic();
     void aboutApp();
     void showLogDialog();
+    void saveSelectedField();
+    void searchfieldSelected();
+    void searchfieldsDialog();
 
 protected:
     IndexesManager *m_indexesManager;
@@ -48,6 +53,7 @@ protected:
     LogDialog *m_logDialog;
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
+    SearchField *m_searchFields;
     bool m_showNewIndexMsg;
     Ui::MainWindow *ui;
 

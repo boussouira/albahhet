@@ -40,7 +40,7 @@
      <x>0</x>
      <y>0</y>
      <width>508</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -71,7 +71,31 @@
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>البحث</string>
+    </property>
+    <widget class="QMenu" name="menuSearchFields">
+     <property name="title">
+      <string>مجال البحث</string>
+     </property>
+     <addaction name="actionSaveSelectedField"/>
+     <addaction name="actionEditField"/>
+     <addaction name="separator"/>
+    </widget>
+    <addaction name="actionSelectAllBooks"/>
+    <addaction name="actionUnSelectallBooks"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelectVisibleBooks"/>
+    <addaction name="actionUnselectVisisbleBooks"/>
+    <addaction name="separator"/>
+    <addaction name="actionCollapseFilter"/>
+    <addaction name="actionExpandFilter"/>
+    <addaction name="separator"/>
+    <addaction name="menuSearchFields"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_4"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
   </widget>
@@ -103,6 +127,46 @@
   <action name="actionLogDialog">
    <property name="text">
     <string>نافذة الاخطاء</string>
+   </property>
+  </action>
+  <action name="actionSelectAllBooks">
+   <property name="text">
+    <string>اختيار كل الكتب</string>
+   </property>
+  </action>
+  <action name="actionUnSelectallBooks">
+   <property name="text">
+    <string>الغاء كل الكتب</string>
+   </property>
+  </action>
+  <action name="actionSelectVisibleBooks">
+   <property name="text">
+    <string>اختيار الكتب الظاهرة</string>
+   </property>
+  </action>
+  <action name="actionUnselectVisisbleBooks">
+   <property name="text">
+    <string>الغاء الكتب الظاهرة</string>
+   </property>
+  </action>
+  <action name="actionCollapseFilter">
+   <property name="text">
+    <string>ضغط الشجرة</string>
+   </property>
+  </action>
+  <action name="actionExpandFilter">
+   <property name="text">
+    <string>عرض الشجرة</string>
+   </property>
+  </action>
+  <action name="actionSaveSelectedField">
+   <property name="text">
+    <string>حفظ الكتب المحدد...</string>
+   </property>
+  </action>
+  <action name="actionEditField">
+   <property name="text">
+    <string>تعديل مجالات البحث...</string>
    </property>
   </action>
  </widget>

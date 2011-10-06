@@ -10,6 +10,8 @@
 #include "abstractsearchwidget.h"
 #include "shamelasearchwidget.h"
 #include "quransearchwidget.h"
+#include "searchfield.h"
+#include "searchfieldsdialog.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -19,6 +21,7 @@
 #include <qtreewidget.h>
 #include <qevent.h>
 #include <qmessagebox.h>
+#include <qinputdialog.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow)
@@ -39,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_logDialog->hide();
     hideHelpButton(m_logDialog);
 
+    m_searchFields = new SearchField();
+
     loadSettings();
 
     connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
@@ -47,11 +52,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionEditIndexes, SIGNAL(triggered()), SLOT(editIndexes()));
     connect(ui->actionAbout, SIGNAL(triggered()), SLOT(aboutApp()));
     connect(ui->actionLogDialog, SIGNAL(triggered()), SLOT(showLogDialog()));
+    connect(ui->actionSaveSelectedField, SIGNAL(triggered()), SLOT(saveSelectedField()));
+    connect(ui->actionEditField, SIGNAL(triggered()), SLOT(searchfieldsDialog()));
 }
 
 MainWindow::~MainWindow()
 {
     DELETE_DB(m_booksDB);
+    delete m_searchFields;
     delete m_logDialog;
     delete m_tabWidget;
     delete m_indexesManager;
@@ -125,6 +133,28 @@ void MainWindow::loadIndexesList()
 
     if(haveIndexes)
         selectIndex(current);
+}
+
+void MainWindow::loadSearchFields()
+{
+    QList<SearchFieldInfo*> fields = m_searchFields->getFieldsNames(m_currentIndex->id());
+
+    // Delete existing search field
+    foreach(QAction *act, ui->menuSearchFields->actions()) {
+        if(act->data().toInt() > 0) {
+            delete act;
+        }
+    }
+
+    foreach(SearchFieldInfo *f, fields) {
+        QAction *act = new QAction(this);
+        act->setText(f->name);
+        act->setData(f->fieldID);
+
+        connect(act, SIGNAL(triggered()), SLOT(searchfieldSelected()));
+
+        ui->menuSearchFields->addAction(act);
+    }
 }
 
 void MainWindow::selectIndex(int id)
@@ -219,6 +249,23 @@ void MainWindow::indexChanged()
         settings.setValue("currentIndex", m_currentIndex->id());
 
     setWindowTitle(QString("%1 - %2").arg(APP_NAME).arg(m_currentIndex->name()));
+
+    m_searchFields->setIndexInfo(m_currentIndex);
+
+    loadSearchFields();
+
+    connect(ui->actionSelectAllBooks, SIGNAL(triggered()),
+            m_searchWidget, SLOT(selectAllBooks()));
+    connect(ui->actionUnSelectallBooks, SIGNAL(triggered()),
+            m_searchWidget, SLOT(unSelectAllBooks()));
+    connect(ui->actionSelectVisibleBooks, SIGNAL(triggered()),
+            m_searchWidget, SLOT(selectVisibleBooks()));
+    connect(ui->actionUnselectVisisbleBooks, SIGNAL(triggered()),
+            m_searchWidget, SLOT(unSelectVisibleBooks()));
+    connect(ui->actionExpandFilter, SIGNAL(triggered()),
+            m_searchWidget, SLOT(expandFilterView()));
+    connect(ui->actionCollapseFilter, SIGNAL(triggered()),
+            m_searchWidget, SLOT(collapseFilterView()));
 }
 
 void MainWindow::haveIndexesCheck()
@@ -254,6 +301,42 @@ void MainWindow::updateIndexesMenu()
     m_indexesManager->clear();
 
     loadIndexesList();
+}
+
+void MainWindow::saveSelectedField()
+{
+    QList<int> selectBooks = m_searchWidget->selectedBooks();
+    if(!selectBooks.isEmpty()) {
+        QString name = QInputDialog::getText(this,
+                                             tr("حفظ مجال البحث"),
+                                             tr("اسم مجال البحث:"));
+        if(name.isEmpty()) {
+            QMessageBox::warning(this,
+                                 tr("حفظ مجال البحث"),
+                                 tr("يجب ان تختار اسما لمجال البحث"));
+        } else {
+            if(m_searchFields->addField(m_currentIndex->id(), name, selectBooks)) {
+                QMessageBox::information(this,
+                                     tr("حفظ مجال البحث"),
+                                     tr("تم حفظ مجال البحث"));
+
+                loadSearchFields();
+            }
+        }
+    } else {
+        QMessageBox::warning(this,
+                             tr("حفظ مجال البحث"),
+                             tr("لم تقم باختيار اي كتاب!"));
+    }
+}
+
+void MainWindow::searchfieldSelected()
+{
+    QAction *act = qobject_cast<QAction*>(sender());
+    if(act) {
+       QList<int> selectBooks = m_searchFields->getFieldBooks(act->data().toInt());
+       m_searchWidget->selectBooks(selectBooks);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -371,4 +454,12 @@ void MainWindow::showLogDialog()
 {
     m_logDialog->startWatching();
     m_logDialog->show();
+}
+
+void MainWindow::searchfieldsDialog()
+{
+    SearchFieldsDialog dialog(m_searchFields, this);
+    dialog.exec();
+
+    loadSearchFields();
 }
