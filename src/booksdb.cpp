@@ -6,6 +6,7 @@
 #include <qsqlquery.h>
 #include <qsqlerror.h>
 #include <qstandarditemmodel.h>
+#include <QTime>
 
 BooksDB::BooksDB()
 {
@@ -386,6 +387,8 @@ QStandardItemModel *BooksDB::getBooksListModel()
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
+QTime time;
+time.start();
     if(!m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord"))
         qDebug() << m_shamelaQuery->lastError().text();
     while(m_shamelaQuery->next()) {
@@ -405,6 +408,7 @@ QStandardItemModel *BooksDB::getBooksListModel()
                                      << tr("المؤلف")
                                      << tr("تاريخ الوفاة"));
 
+    qDebug("Load model take %d ms", time.elapsed());
     return model;
 }
 

@@ -2,8 +2,9 @@
 #define ARABICTOKENIZER_H
 
 #include "cl_common.h"
+#include "customCharTokenizer.h"
 
-class ArabicTokenizer: public CharTokenizer {
+class ArabicTokenizer: public CustomCharTokenizer {
 public:
         ArabicTokenizer(Reader* in);
         virtual ~ArabicTokenizer();

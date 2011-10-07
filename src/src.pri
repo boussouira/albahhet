@@ -52,7 +52,8 @@ SOURCES += main.cpp \
     quranresult.cpp \
     quranindexerwidget.cpp \
     searchfield.cpp \
-    searchfieldsdialog.cpp
+    searchfieldsdialog.cpp \
+    customchartokenizer.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
@@ -95,7 +96,8 @@ HEADERS += mainwindow.h \
     quranresult.h \
     quranindexerwidget.h \
     searchfield.h \
-    searchfieldsdialog.h
+    searchfieldsdialog.h \
+    customchartokenizer.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \
