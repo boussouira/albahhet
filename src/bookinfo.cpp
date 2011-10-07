@@ -79,3 +79,8 @@ void BookInfo::setAuthorDeath(int dYear)
     m_authorDeath = dYear;
     m_authorDeathT = _itow(dYear, m_authorDeathT, 10);
 }
+
+void BookInfo::setInfo(QString &info)
+{
+    m_info = info;
+}

@@ -26,12 +26,13 @@ BookInfo *BooksDB::getBookInfo(int id)
 
     book = new BookInfo();
 
-    m_shamelaQuery->exec(QString("SELECT bk, Archive FROM 0bok WHERE bkid = %1").arg(id));
+    m_shamelaQuery->exec(QString("SELECT bk, Archive, betaka FROM 0bok WHERE bkid = %1").arg(id));
 
     if(m_shamelaQuery->next()) {
         book->setId(id);
         book->setArchive(m_shamelaQuery->value(1).toInt());
         book->setName(m_shamelaQuery->value(0).toString());
+        book->setInfo(m_shamelaQuery->value(2).toString());
         book->genInfo(m_indexInfo);
 
         m_bookInfoHash.insert(id, book);

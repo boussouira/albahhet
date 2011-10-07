@@ -14,6 +14,7 @@ public:
     QString title();
     QString snippet();
     QString bgColor();
+    QString bookInfo();
     QString toHtml();
     int page();
     int part();
@@ -28,6 +29,7 @@ public:
     void setSnippet(const QString &snippet);
     void setBgColor(const QString &color);
     void setBookName(const QString &name);
+    void setBookInfo(const QString &info);
     void setPage(int page);
     void setPart(int part);
     void setPageId(int pageID);
@@ -42,6 +44,7 @@ protected:
     QString m_snippet;
     QString m_bgColor;
     QString m_bookName;
+    QString m_info;
     QString m_html;
     bool m_edited;
     int m_page;

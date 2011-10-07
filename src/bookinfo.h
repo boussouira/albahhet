@@ -22,6 +22,7 @@ public:
     QString path() { return m_path; }
     QString mainTable() { return m_mainTable; }
     QString tocTable() { return m_tocTable; }
+    QString info() { return m_info; }
 
     void genInfo();
     void genInfo(IndexInfo *info);
@@ -36,6 +37,7 @@ public:
     void setName(const QString &name);
     void setPath(const QString &path);
     void setAuthorDeath(int dYear);
+    void setInfo(QString &info);
 
 protected:
     void init();
@@ -46,6 +48,7 @@ protected:
     QString m_path;
     QString m_mainTable;
     QString m_tocTable;
+    QString m_info;
     int m_archive;
     int m_cat;
     int m_authorID;
