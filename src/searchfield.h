@@ -1,12 +1,11 @@
 #ifndef SEARCHFIELD_H
 #define SEARCHFIELD_H
 
-#include <qlist.h>
 #include <qstringlist.h>
 #include <qsqldatabase.h>
 #include <qsqlquery.h>
 
-#include"indexinfo.h"
+#include "indexinfo.h"
 
 class SearchFieldInfo {
 public:

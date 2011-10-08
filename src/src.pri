@@ -53,6 +53,7 @@ SOURCES += main.cpp \
     quranindexerwidget.cpp \
     searchfield.cpp \
     searchfieldsdialog.cpp \
+    shamelaupdater.cpp \
     customchartokenizer.cpp
 
 HEADERS += mainwindow.h \
@@ -97,6 +98,7 @@ HEADERS += mainwindow.h \
     quranindexerwidget.h \
     searchfield.h \
     searchfieldsdialog.h \
+    shamelaupdater.h \
     customchartokenizer.h
 
 FORMS += mainwindow.ui \

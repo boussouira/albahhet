@@ -83,7 +83,7 @@ void ShamelaIndexerWidget::checkIndex()
 {
     QDir dir(m_indexInfo->indexPath());
     if(!dir.exists()) {
-        qDebug("DOESNT EXIST");
+        qDebug("Create index path...");
         dir.mkpath(m_indexInfo->indexPath());
     }
 

@@ -100,8 +100,12 @@ void BooksDB::openIndexDB()
 {
     if(!m_indexDB.isOpen()) {
         QString book = m_indexInfo->indexDbPath();
+        QString connName = QString("indexDb_%1").arg(m_indexInfo->id());
 
-        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", QString("indexDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", connName);
         m_indexDB.setDatabaseName(book);
 
         if (!m_indexDB.open()) {
@@ -119,8 +123,12 @@ void BooksDB::openShamelaDB()
 {
     if(!m_shamelaDB.isOpen()) {
         QString book = m_indexInfo->shamelaMainDbPath();
+        QString connName = QString("shamelaBookDb_%1").arg(m_indexInfo->id());
 
-        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaBookDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", connName);
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaDB.setDatabaseName(mdbpath);
 
@@ -139,8 +147,12 @@ void BooksDB::openShamelaSpecialDB()
 {
     if(!m_shamelaSpecialDB.isOpen()) {
         QString book = m_indexInfo->shamelaSpecialDbPath();
+        QString connName = QString("shamelaSpecialDb_%1").arg(m_indexInfo->id());
 
-        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaSpecialDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", connName);
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
@@ -250,35 +262,11 @@ void BooksDB::run()
     importBooksListFromShamela();
 }
 
-
-QList<int> BooksDB::getShamelaIds()
-{
-    openShamelaDB();
-
-    QList<int> shamelaIds;
-    m_shamelaQuery->exec("SELECT bkid FROM 0bok ORDER BY bkid");
-
-    while(m_shamelaQuery->next())
-        shamelaIds.append(m_shamelaQuery->value(0).toInt());
-
-    return shamelaIds;
-}
-
-QList<int> BooksDB::getSavedIds()
-{
-    openIndexDB();
-
-    QList<int> savedIds;
-    m_indexQuery->exec("SELECT shamelaID FROM books ORDER BY id");
-
-    while(m_indexQuery->next())
-        savedIds.append(m_indexQuery->value(0).toInt());
-
-    return savedIds;
-}
-
 QStringList BooksDB::addBooks(QList<int> shaIds)
 {
+    openIndexDB();
+    openShamelaDB();
+
     QStringList addedBooksName;
     QString whereIds;
 
@@ -335,6 +323,9 @@ QStringList BooksDB::addBooks(QList<int> shaIds)
 
 QStringList BooksDB::removeBooks(QList<int> savedIds)
 {
+    openIndexDB();
+    openShamelaDB();
+
     QStringList removedBooks;
     if(savedIds.count() <= 0)
         return removedBooks;

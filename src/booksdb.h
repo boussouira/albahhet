@@ -48,8 +48,6 @@ public:
     void loadSowarNames();
     QString getSoraName(int soraNumber);
 
-    QList<int> getShamelaIds();
-    QList<int> getSavedIds();
     QList<int> getAuthorBooks(int auth);
 
     QStringList addBooks(QList<int> shaIds);

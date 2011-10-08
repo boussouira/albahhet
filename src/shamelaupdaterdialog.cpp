@@ -5,6 +5,7 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 #include "indexingdialg.h"
+
 #include <exception>
 #include <iostream>
 #include <qmessagebox.h>
@@ -22,6 +23,14 @@ ShamelaUpdaterDialog::ShamelaUpdaterDialog(QWidget *parent) :
 ShamelaUpdaterDialog::~ShamelaUpdaterDialog()
 {
     delete ui;
+}
+
+void ShamelaUpdaterDialog::setBooksDB(BooksDB *db)
+{
+    m_bookDb = db;
+    m_updater.setIndexInfo(db->indexInfo());
+
+    getUpdateBooks();
 }
 
 void ShamelaUpdaterDialog::on_pushNext_clicked()
@@ -45,9 +54,23 @@ void ShamelaUpdaterDialog::on_pushCancel_clicked()
     reject();
 }
 
+void ShamelaUpdaterDialog::getUpdateBooks()
+{
+    m_updater.loadBooks();
+    QList<QStandardItem *> items = m_updater.getTaskItems();
+
+    QStandardItemModel *model = new QStandardItemModel(ui->listView);
+
+    foreach (QStandardItem *item, items) {
+        model->appendRow(item);
+    }
+
+    ui->listView->setModel(model);
+}
+
 void ShamelaUpdaterDialog::startUpdate()
 {
-    int progressMax = 7;
+    int progressMax = 5;
 
     // Progress dialog
     QProgressDialog progress(tr("جاري تحديث فهرس %1...").arg(m_bookDb->indexInfo()->name()),
@@ -56,26 +79,34 @@ void ShamelaUpdaterDialog::startUpdate()
                              progressMax,
                              this);
     progress.setWindowModality(Qt::WindowModal);
+    progress.show();
 
-    PROGRESS_DIALOG_STEP("التعرف على كتب الشاملة");
+    QList<int> booksToAdd = m_updater.getBooksToAdd();
+    QList<int> booksToDelete = m_updater.getBooksToDelete();
 
-    QList<int> shaIds = m_bookDb->getShamelaIds();
-    QList<int> savedIds = m_bookDb->getSavedIds();
+    if(booksToDelete.count() > 0) {
 
-    PROGRESS_DIALOG_STEP("مقارنة الكتب");
+        PROGRESS_DIALOG_STEP("حذف الكتب من قاعدة البيانات");
+        QStringList deletedBooksName = m_bookDb->removeBooks(booksToDelete);
 
-    if(shaIds.count() > savedIds.count())
-        removeSameIds(shaIds, savedIds);
-    else
-        removeSameIds(savedIds, shaIds);
+        PROGRESS_DIALOG_STEP("حذف الكتب من الفهرس");
+        deletBooksFromIndex(booksToDelete, m_bookDb->indexInfo());
 
-    if(shaIds.count() > 0  && ui->checkAddNewBooks->isChecked()) {
+        ui->labelDeletedBooks->setText(tr("تم حذف %1:")
+                                       .arg(arPlural(deletedBooksName.count(), BOOK, true)));
+        ui->listDeletedBooks->addItems(deletedBooksName);
+        ui->widgetDeletedBooks->show();
+    } else {
+        ui->widgetDeletedBooks->hide();
+    }
+
+    if(booksToAdd.count() > 0) {
 
         PROGRESS_DIALOG_STEP("اضافة الكتب الجديدة الى قاعدة البيانات");
-        QStringList addedBooksName = m_bookDb->addBooks(shaIds);
+        QStringList addedBooksName = m_bookDb->addBooks(booksToAdd);
 
         PROGRESS_DIALOG_STEP("فهرسة الكتب الجديدة");
-        indexBooks(shaIds, m_bookDb, m_bookDb->indexInfo());
+        indexBooks(booksToAdd, m_bookDb, m_bookDb->indexInfo());
 
         ui->labelAddedBooks->setText(tr("تم اضافة %1:")
                                      .arg(arPlural(addedBooksName.count(), BOOK, true)));
@@ -86,23 +117,7 @@ void ShamelaUpdaterDialog::startUpdate()
         ui->widgetAddedBooks->hide();
     }
 
-    if(savedIds.count() > 0 && ui->checkDeleteBooks->isChecked()) {
-
-        PROGRESS_DIALOG_STEP("حذف الكتب من قاعدة البيانات");
-        QStringList deletedBooksName = m_bookDb->removeBooks(savedIds);
-
-        PROGRESS_DIALOG_STEP("حذف الكتب من الفهرس");
-        deletBooksFromIndex(savedIds, m_bookDb->indexInfo());
-
-        ui->labelDeletedBooks->setText(tr("تم حذف %1:")
-                                       .arg(arPlural(deletedBooksName.count(), BOOK, true)));
-        ui->listDeletedBooks->addItems(deletedBooksName);
-        ui->widgetDeletedBooks->show();
-    } else {
-        ui->widgetDeletedBooks->hide();
-    }
-
-    if(shaIds.count() > 0 || savedIds.count() > 0) {
+    if(booksToAdd.count() > 0 || booksToDelete.count() > 0) {
         ui->labelNoChange->hide();
         ui->splitter->show();
     } else {
@@ -111,23 +126,6 @@ void ShamelaUpdaterDialog::startUpdate()
     }
 
     progress.setValue(progressMax);
-
-}
-
-void ShamelaUpdaterDialog::removeSameIds(QList<int> &bigList, QList<int> &smalList)
-{
-    int i=0;
-
-    for(i=0; i < smalList.count(); i++) {
-        int val = smalList.at(i);
-        int index = bigList.indexOf(val);
-
-        if(index != -1) {
-            smalList.removeAt(i);
-            bigList.removeAt(index);
-            i--;
-        }
-    }
 }
 
 void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info)
@@ -215,10 +213,9 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
         writer->setRAMBufferSizeMB(ramSize);
 
         for(int i=0; i<ids.count(); i++) {
-            TCHAR str[10];
-            Term *term = new Term(_itow(ids.at(i), str, 10), BOOK_ID_FIELD);
+            Term *term = new Term(QStringToTChar(QString::number(ids.at(i))), BOOK_ID_FIELD);
             writer->deleteDocuments(term);
-//            _CLDELETE(term);
+//            _CLDECDELETE(term);
         }
 
         writer->close();
