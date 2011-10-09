@@ -444,7 +444,6 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         qDebug() << query.lastError().text();
 
     while(query.next()) {
-        int row = parentNode->rowCount();
         QStandardItem *bookItem = new QStandardItem();
         bookItem->setText(query.value(1).toString());
         bookItem->setData(query.value(0).toInt(), idRole);
@@ -460,9 +459,12 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         QStandardItem *authDeathItem = new QStandardItem();
         authDeathItem->setData(query.value(4).toInt(), Qt::DisplayRole);
 
-        parentNode->setChild(row, 0, bookItem);
-        parentNode->setChild(row, 1, authItem);
-        parentNode->setChild(row, 2, authDeathItem);
+        QList<QStandardItem*> items;
+        items << bookItem;
+        items << authItem;
+        items << authDeathItem;
+
+        parentNode->appendRow(items);
     }
 }
 

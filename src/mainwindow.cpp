@@ -12,6 +12,7 @@
 #include "quransearchwidget.h"
 #include "searchfield.h"
 #include "searchfieldsdialog.h"
+#include "aboutdialog.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -446,15 +447,17 @@ void MainWindow::showSettingsDialog()
 
 void MainWindow::aboutApp()
 {
-    QString aTitle(tr(" حول البرنامج"));
-    QString aText(tr("برنامج %1 للبحث في كتب المكتبة الشاملة"
-                     "<br>"
-                     "اصدار البرنامج: "
-                     "<span style=\"direction:ltr;\">%2</span>")
-                  .arg(APP_NAME)
-                  .arg(APP_VERSION_STR));
+//    QString aTitle(tr(" حول البرنامج"));
+//    QString aText(tr("برنامج %1 للبحث في كتب المكتبة الشاملة"
+//                     "<br>"
+//                     "اصدار البرنامج: "
+//                     "<span style=\"direction:ltr;\">%2</span>")
+//                  .arg(APP_NAME)
+//                  .arg(APP_VERSION_STR));
 
-    QMessageBox::information(this, aTitle, aText);
+//    QMessageBox::information(this, aTitle, aText);
+    AboutDialog dialog(this);
+    dialog.exec();
 }
 
 void MainWindow::showLogDialog()
