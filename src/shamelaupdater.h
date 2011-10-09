@@ -24,6 +24,8 @@ public:
     Task task;
 
     bool operator==(const ShamelaUpdaterTask &s) const;
+    QString toString();
+    void fromString(QString text);
 };
 
 class ShamelaUpdater
@@ -37,10 +39,13 @@ public:
 
     void loadBooks();
     void addTask(ShamelaUpdaterTask task);
+    bool removeTask(ShamelaUpdaterTask task);
 
     QList<QStandardItem*> getTaskItems();
     QList<int> getBooksToAdd();
     QList<int> getBooksToDelete();
+
+    static const int taskStringRole = Qt::UserRole + 2;
 
 protected:
     void openDB();

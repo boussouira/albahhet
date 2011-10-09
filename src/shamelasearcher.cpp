@@ -74,7 +74,7 @@ void ShamelaSearcher::search()
 
     m_query = m_searcher->rewrite(m_orignalQuery);
 //    qDebug() << "Search [Orig]:" << TCharToQString(m_orignalQuery->toString(PAGE_TEXT_FIELD));
-    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
+//    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();

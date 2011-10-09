@@ -53,6 +53,7 @@ public:
     QStringList addBooks(QList<int> shaIds);
     QStringList removeBooks(QList<int> savedIds);
 
+    QStandardItemModel *getSimpleBooksListModel();
     QStandardItemModel *getBooksListModel();
     void booksCat(QStandardItem *parentNode, int catID);
 

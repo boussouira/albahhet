@@ -356,6 +356,13 @@ void MainWindow::newIndex()
 
 void MainWindow::editIndexes()
 {
+    if(m_tabWidget->count() > 1) {
+        QMessageBox::warning(this,
+                             tr("تعديل الفهارس"),
+                             tr("من فضلك قم باغلاق جميع نتائج البحث قبل تعديل الفهارس"));
+        return;
+    }
+
     IndexesDialog dialog(m_indexesManager, this);
     connect(&dialog, SIGNAL(indexesChanged()), SLOT(updateIndexesMenu()));
 

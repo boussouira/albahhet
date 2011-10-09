@@ -172,8 +172,9 @@ void ShamelaSearchWidget::search()
             q->add(mq, BooleanClause::MUST_NOT);
         }
 
-        // Filtering
+        qDebug() << "Search:" << TCharToQString(q->toString(PAGE_TEXT_FIELD));
 
+        // Filtering
         bool required = m_shaModel->selectedBooksCount() <= m_shaModel->unSelectBooksCount();
         bool prohibited = !required;
 

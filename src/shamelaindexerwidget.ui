@@ -47,7 +47,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>D:\shamela-r1</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -81,7 +81,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Index</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -91,7 +91,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>D:\shamela-indexes\index</string>
+               <string/>
               </property>
              </widget>
             </item>

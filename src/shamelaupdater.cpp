@@ -15,6 +15,29 @@ bool ShamelaUpdaterTask::operator ==(const ShamelaUpdaterTask &s) const
             s.bookVersion == bookVersion);
 }
 
+QString ShamelaUpdaterTask::toString()
+{
+    return QString("%1;%2;%3;%4")
+            .arg(bookID)
+            .arg(bookVersion)
+            .arg(task)
+            .arg(bookName);
+}
+
+void ShamelaUpdaterTask::fromString(QString text)
+{
+    QStringList list = text.split(';', QString::SkipEmptyParts);
+
+    if(list.count() == 4) {
+        bookID = list.at(0).toInt();
+        bookVersion = list.at(1).toInt();
+        task = (Task)list.at(2).toInt();
+        bookName = list.at(3);
+    } else {
+        qDebug("List doesn't contains four argument");
+    }
+}
+
 ShamelaUpdater::ShamelaUpdater()
 {
     m_query = 0;
@@ -120,17 +143,12 @@ void ShamelaUpdater::loadBooks()
         libBooks.append(task);
     }
 
-    qDebug("Books count %d", shaBooks.count());
-    qDebug("Saved count %d", libBooks.count());
-
     foreach (ShamelaUpdaterTask book, shaBooks) {
         if(libBooks.contains(book)) {
             libBooks.removeAll(book);
             shaBooks.removeAll(book);
         }
     }
-
-    qDebug("Rest: Sha=%d, Lib=%d", shaBooks.count(), libBooks.count());
 
     foreach (ShamelaUpdaterTask book, shaBooks) {
         addTask(book);
@@ -139,13 +157,10 @@ void ShamelaUpdater::loadBooks()
     foreach (ShamelaUpdaterTask book, libBooks) {
         addTask(book);
     }
-
-    qDebug("Task count: %d", m_tasks.count());
 }
 
 void ShamelaUpdater::addTask(ShamelaUpdaterTask task)
 {
-//    qDebug("Task: bookID=%d, Type=%s", task.bookID, (task.task==task.Add) ? "Add" : "Remove");
     foreach(ShamelaUpdaterTask t, m_tasks) {
         if((t.bookID == task.bookID || t.bookName == task.bookName)
                 && t.bookVersion != task.bookVersion) {
@@ -153,7 +168,6 @@ void ShamelaUpdater::addTask(ShamelaUpdaterTask task)
             task.task = ShamelaUpdaterTask::Update;
             m_tasks.append(task);
 
-            qDebug("Task: Update bookID: %d (new version)", task.bookID);
             return;
         }
     }
@@ -168,7 +182,7 @@ QList<QStandardItem *> ShamelaUpdater::getTaskItems()
     foreach(ShamelaUpdaterTask task, m_tasks) {
         QStandardItem *item = new QStandardItem();
         item->setText(task.bookName);
-        item->setData(false, Qt::UserRole);
+        item->setData(task.toString(), taskStringRole);
 
         switch(task.task) {
         case ShamelaUpdaterTask::Add:
@@ -200,7 +214,6 @@ QList<int> ShamelaUpdater::getBooksToAdd()
             list.insert(task.bookID);
     }
 
-    qDebug() << "to add:" << list;
     return list.toList();
 }
 
@@ -212,7 +225,15 @@ QList<int> ShamelaUpdater::getBooksToDelete()
         if(task.task == ShamelaUpdaterTask::Delete || task.task == ShamelaUpdaterTask::Update)
             list.insert(task.bookID);
     }
-    qDebug() << "to delete:" << list;
     return list.toList();
 }
 
+bool ShamelaUpdater::removeTask(ShamelaUpdaterTask task)
+{
+    if(!m_tasks.removeAll(task)) {
+        qDebug("Can't find this task!");
+        return false;
+    }
+
+    return true;
+}

@@ -5,6 +5,7 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 #include "indexingdialg.h"
+#include "shamelaselectbookdialog.h"
 
 #include <exception>
 #include <iostream>
@@ -59,13 +60,13 @@ void ShamelaUpdaterDialog::getUpdateBooks()
     m_updater.loadBooks();
     QList<QStandardItem *> items = m_updater.getTaskItems();
 
-    QStandardItemModel *model = new QStandardItemModel(ui->listView);
+    m_model = new QStandardItemModel(ui->listView);
 
     foreach (QStandardItem *item, items) {
-        model->appendRow(item);
+        m_model->appendRow(item);
     }
 
-    ui->listView->setModel(model);
+    ui->listView->setModel(m_model);
 }
 
 void ShamelaUpdaterDialog::startUpdate()
@@ -233,4 +234,60 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
         QMessageBox::warning(0, "Unkonw error when Indexing",
                              tr("Unknow error"));
     }
+}
+
+void ShamelaUpdaterDialog::on_toolAdd_clicked()
+{
+    ShamelaSelectBookDialog selectDialog(m_bookDb, this);
+    if(selectDialog.exec()) {
+        ShamelaUpdaterTask task;
+        task.bookID = selectDialog.selectedBookID;
+        task.bookVersion= selectDialog.selectedBookVersion;
+        task.bookName = selectDialog.selectedBookName;
+        task.task = ShamelaUpdaterTask::Update;
+
+        m_updater.addTask(task);
+        m_addedTasks.append(task);
+
+        QList<QStandardItem *> items = m_updater.getTaskItems();
+
+        m_model->clear();
+        foreach (QStandardItem *item, items) {
+            m_model->appendRow(item);
+        }
+    }
+}
+
+void ShamelaUpdaterDialog::on_toolDelete_clicked()
+{
+    if(ui->listView->selectionModel()->selectedIndexes().isEmpty()) {
+        QMessageBox::warning(this,
+                             windowTitle(),
+                             tr("لم تقم باختيار اي كتاب"));
+        return;
+    }
+
+    QModelIndex index = ui->listView->selectionModel()->selectedIndexes().first();
+
+    ShamelaUpdaterTask task;
+    task.fromString(index.data(ShamelaUpdater::taskStringRole).toString());
+
+    if(!m_addedTasks.contains(task)) {
+        QMessageBox::warning(this,
+                             windowTitle(),
+                             tr("لا يمكنك حذف الكتب التي تم التعرف عليها بشكل تلقائي"));
+        return;
+    }
+
+    if(m_updater.removeTask(task)) {
+        m_model->clear();
+
+        QList<QStandardItem *> items = m_updater.getTaskItems();
+
+        foreach (QStandardItem *item, items) {
+            m_model->appendRow(item);
+        }
+    }
+
+    m_addedTasks.removeOne(task);
 }

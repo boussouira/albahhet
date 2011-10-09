@@ -27,12 +27,13 @@ BookInfo *BooksDB::getBookInfo(int id)
 
     book = new BookInfo();
 
-    m_shamelaQuery->exec(QString("SELECT bk, Archive FROM 0bok WHERE bkid = %1").arg(id));
+    m_shamelaQuery->exec(QString("SELECT bk, Archive, oVer FROM 0bok WHERE bkid = %1").arg(id));
 
     if(m_shamelaQuery->next()) {
         book->setId(id);
         book->setArchive(m_shamelaQuery->value(1).toInt());
         book->setName(m_shamelaQuery->value(0).toString());
+        book->setBookVersion(m_shamelaQuery->value(2).toInt());
         book->genInfo(m_indexInfo);
 
         m_bookInfoHash.insert(id, book);
@@ -372,16 +373,43 @@ QStringList BooksDB::connections()
     return list;
 }
 
+QStandardItemModel *BooksDB::getSimpleBooksListModel()
+{
+    openIndexDB();
+    QStandardItemModel *model= new QStandardItemModel();
+
+    QSqlQuery query(m_indexDB);
+
+    query.prepare("SELECT shamelaID, bookName, bookInfo, authorName, authorDeath "
+                  "FROM books WHERE indexFLags = 1 ");
+
+    if(!query.exec())
+        qDebug() << query.lastError().text();
+
+    while(query.next()) {
+        QStandardItem *bookItem = new QStandardItem();
+        bookItem->setText(query.value(1).toString());
+        bookItem->setData(query.value(0).toInt(), idRole);
+        bookItem->setData(Book, typeRole);
+        bookItem->setToolTip(query.value(2).toString());
+
+        model->appendRow(bookItem);
+    }
+    return model;
+}
+
 QStandardItemModel *BooksDB::getBooksListModel()
 {
     openShamelaDB();
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
-QTime time;
-time.start();
+    QTime time;
+    time.start();
+
     if(!m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord"))
         qDebug() << m_shamelaQuery->lastError().text();
+
     while(m_shamelaQuery->next()) {
         item = new QStandardItem();
         item->setText(m_shamelaQuery->value(1).toString());

@@ -84,7 +84,7 @@ void QuranSearcher::search()
     }
 
     m_query = m_queryPareser->parse(QStringToTChar(m_queryText));
-    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
+//    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();

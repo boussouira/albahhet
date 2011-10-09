@@ -31,10 +31,14 @@ private:
     Ui::ShamelaUpdaterDialog *ui;
     BooksDB *m_bookDb;
     ShamelaUpdater m_updater;
+    QStandardItemModel *m_model;
+    QList<ShamelaUpdaterTask> m_addedTasks;
 
 private slots:
     void on_pushCancel_clicked();
     void on_pushNext_clicked();
+    void on_toolAdd_clicked();
+    void on_toolDelete_clicked();
 };
 
 #endif // SHAMELAUPDATERDIALOG_H
