@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
 
     clearLogFile();
-//    qInstallMsgHandler(myMessageOutput);
+    qInstallMsgHandler(myMessageOutput);
     qDebug("Starting the application");
 
     QTranslator translator;

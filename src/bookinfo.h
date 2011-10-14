@@ -18,6 +18,7 @@ public:
     int archive() { return m_archive; }
     int cat() { return m_cat; }
     int authorID() { return m_authorID; }
+    int bookVersion() { return m_bookVersion; }
     QString name() { return m_name; }
     QString path() { return m_path; }
     QString mainTable() { return m_mainTable; }
@@ -34,6 +35,7 @@ public:
     void setArchive(int archive);
     void setCat(int cat);
     void setAuthorID(int id);
+    void setBookVersion(int ver);
     void setName(const QString &name);
     void setPath(const QString &path);
     void setAuthorDeath(int dYear);
@@ -53,6 +55,7 @@ protected:
     int m_cat;
     int m_authorID;
     int m_authorDeath;
+    int m_bookVersion;
     TCHAR *m_idT;
     TCHAR *m_authorDeathT;
 };

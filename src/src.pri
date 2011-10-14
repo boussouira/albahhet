@@ -52,7 +52,11 @@ SOURCES += main.cpp \
     quranresult.cpp \
     quranindexerwidget.cpp \
     searchfield.cpp \
-    searchfieldsdialog.cpp
+    searchfieldsdialog.cpp \
+    shamelaupdater.cpp \
+    customchartokenizer.cpp \
+    shamelaselectbookdialog.cpp \
+    aboutdialog.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
@@ -95,7 +99,11 @@ HEADERS += mainwindow.h \
     quranresult.h \
     quranindexerwidget.h \
     searchfield.h \
-    searchfieldsdialog.h
+    searchfieldsdialog.h \
+    shamelaupdater.h \
+    customchartokenizer.h \
+    shamelaselectbookdialog.h \
+    aboutdialog.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \
@@ -109,6 +117,11 @@ FORMS += mainwindow.ui \
     shamelaindexerwidget.ui \
     quransearchwidget.ui \
     quranindexerwidget.ui \
-    searchfieldsdialog.ui
+    searchfieldsdialog.ui \
+    shamelaselectbookdialog.ui \
+    aboutdialog.ui
 
 RESOURCES += resources.qrc
+
+
+

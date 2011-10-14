@@ -6,6 +6,7 @@
 #include <qsqlquery.h>
 #include <qsqlerror.h>
 #include <qstandarditemmodel.h>
+#include <QTime>
 
 BooksDB::BooksDB()
 {
@@ -26,13 +27,15 @@ BookInfo *BooksDB::getBookInfo(int id)
 
     book = new BookInfo();
 
-    m_shamelaQuery->exec(QString("SELECT bk, Archive, betaka FROM 0bok WHERE bkid = %1").arg(id));
+    m_shamelaQuery->exec(QString("SELECT bk, Archive, betaka, oVer FROM 0bok WHERE bkid = %1").arg(id));
 
     if(m_shamelaQuery->next()) {
         book->setId(id);
         book->setArchive(m_shamelaQuery->value(1).toInt());
         book->setName(m_shamelaQuery->value(0).toString());
         book->setInfo(m_shamelaQuery->value(2).toString());
+        book->setBookVersion(m_shamelaQuery->value(3).toInt());
+
         book->genInfo(m_indexInfo);
 
         m_bookInfoHash.insert(id, book);
@@ -100,8 +103,12 @@ void BooksDB::openIndexDB()
 {
     if(!m_indexDB.isOpen()) {
         QString book = m_indexInfo->indexDbPath();
+        QString connName = QString("indexDb_%1").arg(m_indexInfo->id());
 
-        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", QString("indexDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_indexDB = QSqlDatabase::addDatabase("QSQLITE", connName);
         m_indexDB.setDatabaseName(book);
 
         if (!m_indexDB.open()) {
@@ -119,8 +126,12 @@ void BooksDB::openShamelaDB()
 {
     if(!m_shamelaDB.isOpen()) {
         QString book = m_indexInfo->shamelaMainDbPath();
+        QString connName = QString("shamelaBookDb_%1").arg(m_indexInfo->id());
 
-        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaBookDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_shamelaDB = QSqlDatabase::addDatabase("QODBC", connName);
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaDB.setDatabaseName(mdbpath);
 
@@ -139,8 +150,12 @@ void BooksDB::openShamelaSpecialDB()
 {
     if(!m_shamelaSpecialDB.isOpen()) {
         QString book = m_indexInfo->shamelaSpecialDbPath();
+        QString connName = QString("shamelaSpecialDb_%1").arg(m_indexInfo->id());
 
-        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", QString("shamelaSpecialDb_%1").arg(m_indexInfo->id()));
+        while(QSqlDatabase::contains(connName))
+            connName.append("_");
+
+        m_shamelaSpecialDB = QSqlDatabase::addDatabase("QODBC", connName);
         QString mdbpath = QString("DRIVER={Microsoft Access Driver (*.mdb)};FIL={MS Access};DBQ=%1").arg(book);
         m_shamelaSpecialDB.setDatabaseName(mdbpath);
 
@@ -250,35 +265,11 @@ void BooksDB::run()
     importBooksListFromShamela();
 }
 
-
-QList<int> BooksDB::getShamelaIds()
-{
-    openShamelaDB();
-
-    QList<int> shamelaIds;
-    m_shamelaQuery->exec("SELECT bkid FROM 0bok ORDER BY bkid");
-
-    while(m_shamelaQuery->next())
-        shamelaIds.append(m_shamelaQuery->value(0).toInt());
-
-    return shamelaIds;
-}
-
-QList<int> BooksDB::getSavedIds()
-{
-    openIndexDB();
-
-    QList<int> savedIds;
-    m_indexQuery->exec("SELECT shamelaID FROM books ORDER BY id");
-
-    while(m_indexQuery->next())
-        savedIds.append(m_indexQuery->value(0).toInt());
-
-    return savedIds;
-}
-
 QStringList BooksDB::addBooks(QList<int> shaIds)
 {
+    openIndexDB();
+    openShamelaDB();
+
     QStringList addedBooksName;
     QString whereIds;
 
@@ -335,6 +326,9 @@ QStringList BooksDB::addBooks(QList<int> shaIds)
 
 QStringList BooksDB::removeBooks(QList<int> savedIds)
 {
+    openIndexDB();
+    openShamelaDB();
+
     QStringList removedBooks;
     if(savedIds.count() <= 0)
         return removedBooks;
@@ -381,14 +375,43 @@ QStringList BooksDB::connections()
     return list;
 }
 
+QStandardItemModel *BooksDB::getSimpleBooksListModel()
+{
+    openIndexDB();
+    QStandardItemModel *model= new QStandardItemModel();
+
+    QSqlQuery query(m_indexDB);
+
+    query.prepare("SELECT shamelaID, bookName, bookInfo, authorName, authorDeath "
+                  "FROM books WHERE indexFLags = 1 ");
+
+    if(!query.exec())
+        qDebug() << query.lastError().text();
+
+    while(query.next()) {
+        QStandardItem *bookItem = new QStandardItem();
+        bookItem->setText(query.value(1).toString());
+        bookItem->setData(query.value(0).toInt(), idRole);
+        bookItem->setData(Book, typeRole);
+        bookItem->setToolTip(query.value(2).toString());
+
+        model->appendRow(bookItem);
+    }
+    return model;
+}
+
 QStandardItemModel *BooksDB::getBooksListModel()
 {
     openShamelaDB();
     QStandardItemModel *model= new QStandardItemModel();
     QStandardItem *item;
 
+    QTime time;
+    time.start();
+
     if(!m_shamelaQuery->exec("SELECT id, name FROM 0cat ORDER BY catord"))
         qDebug() << m_shamelaQuery->lastError().text();
+
     while(m_shamelaQuery->next()) {
         item = new QStandardItem();
         item->setText(m_shamelaQuery->value(1).toString());
@@ -406,6 +429,7 @@ QStandardItemModel *BooksDB::getBooksListModel()
                                      << tr("المؤلف")
                                      << tr("تاريخ الوفاة"));
 
+    qDebug("Load model take %d ms", time.elapsed());
     return model;
 }
 
@@ -422,7 +446,6 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         qDebug() << query.lastError().text();
 
     while(query.next()) {
-        int row = parentNode->rowCount();
         QStandardItem *bookItem = new QStandardItem();
         bookItem->setText(query.value(1).toString());
         bookItem->setData(query.value(0).toInt(), idRole);
@@ -438,9 +461,12 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         QStandardItem *authDeathItem = new QStandardItem();
         authDeathItem->setData(query.value(4).toInt(), Qt::DisplayRole);
 
-        parentNode->setChild(row, 0, bookItem);
-        parentNode->setChild(row, 1, authItem);
-        parentNode->setChild(row, 2, authDeathItem);
+        QList<QStandardItem*> items;
+        items << bookItem;
+        items << authItem;
+        items << authDeathItem;
+
+        parentNode->appendRow(items);
     }
 }
 

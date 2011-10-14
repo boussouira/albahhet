@@ -84,3 +84,8 @@ void BookInfo::setInfo(QString &info)
 {
     m_info = info;
 }
+
+void BookInfo::setBookVersion(int ver)
+{
+    m_bookVersion = ver;
+}

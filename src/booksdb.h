@@ -48,13 +48,12 @@ public:
     void loadSowarNames();
     QString getSoraName(int soraNumber);
 
-    QList<int> getShamelaIds();
-    QList<int> getSavedIds();
     QList<int> getAuthorBooks(int auth);
 
     QStringList addBooks(QList<int> shaIds);
     QStringList removeBooks(QList<int> savedIds);
 
+    QStandardItemModel *getSimpleBooksListModel();
     QStandardItemModel *getBooksListModel();
     void booksCat(QStandardItem *parentNode, int catID);
 

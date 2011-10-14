@@ -74,7 +74,7 @@ void ShamelaSearcher::search()
 
     m_query = m_searcher->rewrite(m_orignalQuery);
 //    qDebug() << "Search [Orig]:" << TCharToQString(m_orignalQuery->toString(PAGE_TEXT_FIELD));
-    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
+//    qDebug() << "Search for:" << TCharToQString(m_query->toString(PAGE_TEXT_FIELD));
 
     QTime time;
     time.start();
@@ -140,7 +140,7 @@ void ShamelaSearcher::fetech()
 
         if(!bookInfo) {
             qCritical("ShamelaSearcher::fetech: No book with id %d where found", bookID);
-            return;
+            continue;
         }
 
         QString connName = (bookInfo->archive()) ? QString("bid_%1").arg(bookInfo->archive()) :
@@ -219,8 +219,8 @@ void ShamelaSearcher::fetech()
                 qWarning("No result found for id %d book %d", entryID, bookID);
             }
         }
-        if(!bookInfo->archive())
-            QSqlDatabase::removeDatabase(connName);
+
+        QSqlDatabase::removeDatabase(connName);
 
         if(m_stopFeteching) {
             m_stopFeteching = false;
