@@ -1,7 +1,7 @@
 #include "arabictokenizer.h"
 #include "QDebug"
 
-ArabicTokenizer::ArabicTokenizer(Reader* in) : CustomCharTokenizer(in)
+ArabicTokenizer::ArabicTokenizer(Reader* in) : CharTokenizer(in)
 {
 }
 ArabicTokenizer::~ArabicTokenizer()
@@ -32,9 +32,6 @@ TCHAR ArabicTokenizer::normalize(const TCHAR chr) const
         c = 0x064A; // YEH
         return c;
     }
-
-    if( (0x064B <= chr && chr <=0x0653) || chr == 0x0640 )
-       return 0;
 
     if( chr >= 0xC0 && chr <= 0xFF ) {
         switch(chr) {
