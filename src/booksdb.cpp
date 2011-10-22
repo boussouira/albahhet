@@ -447,16 +447,16 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
 
     while(query.next()) {
         QStandardItem *bookItem = new QStandardItem();
-        bookItem->setText(query.value(1).toString());
+        bookItem->setText(query.value(1).toString().remove(QRegExp("[\\x064B-\\x0653]")));
         bookItem->setData(query.value(0).toInt(), idRole);
         bookItem->setData(Book, typeRole);
-        bookItem->setToolTip(query.value(2).toString());
+        bookItem->setToolTip(query.value(2).toString().remove(QRegExp("[\\x064B-\\x0653]")));
 
         bookItem->setCheckable(true);
         bookItem->setCheckState(Qt::Unchecked);
 
         QStandardItem *authItem = new QStandardItem();
-        authItem->setText(query.value(3).toString());
+        authItem->setText(query.value(3).toString().remove(QRegExp("[\\x064B-\\x0653]")));
 
         QStandardItem *authDeathItem = new QStandardItem();
         authDeathItem->setData(query.value(4).toInt(), Qt::DisplayRole);
