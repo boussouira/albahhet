@@ -44,6 +44,8 @@ void WebView::init()
                     "</head>"
                     "<body></body>"
                     "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\" />"
+                    "<script type=\"text/javascript\" src=\"%1/data/jquery.dimensions.js\" />"
+                    "<script type=\"text/javascript\" src=\"%1/data/jquery.tooltip.js\" />"
                     "<script type=\"text/javascript\" src=\"%1/data/%2\" />"
                     "</html>")
             .arg(appPath)

@@ -43,6 +43,9 @@
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
             <widget class="QToolButton" name="toolAdd">
+             <property name="toolTip">
+              <string>تحديث كتاب</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -63,6 +66,9 @@
            </item>
            <item>
             <widget class="QToolButton" name="toolDelete">
+             <property name="toolTip">
+              <string>حذف كتاب من لائحة التحديث</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>

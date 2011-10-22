@@ -26,10 +26,17 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_bookReader = new ShamelaBooksReader(this);
     m_webView = new WebView(IndexInfo::ShamelaIndex, this);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    ui->mainVerticalLayout->insertWidget(0, m_webView);
+    ui->widgetResult->layout()->addWidget(m_webView);
+
+    m_readerWebView = new WebView(IndexInfo::ShamelaIndex, this);
+    ui->widgetBookView->layout()->addWidget(m_readerWebView);
 
     ui->progressWidget->hide();
+    hideBookReader();
+
     connect(m_webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
+            SLOT(populateJavaScriptWindowObject()));
+    connect(m_readerWebView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
 }
 
@@ -71,6 +78,7 @@ void ShamelaResultWidget::clearResults()
 void ShamelaResultWidget::searchStarted()
 {
     m_webView->init();
+    m_readerWebView->init();
 
     showNavigationButton(false);
 
@@ -112,7 +120,7 @@ void ShamelaResultWidget::fetechFinnished()
         setPageCount(search->currentPage(), search->resultsCount());
     }
 
-    m_webView->execJS("handleEvents();");
+    m_webView->execJS("fetechFinnished();");
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressWidget->hide();
     showNavigationButton(true);
@@ -147,6 +155,9 @@ void ShamelaResultWidget::populateJavaScriptWindowObject()
 {
     m_webView->addObject("resultWidget", this);
     m_webView->addObject("bookReader", m_bookReader);
+
+    m_readerWebView->addObject("resultWidget", this);
+    m_readerWebView->addObject("bookReader", m_bookReader);
 }
 
 void ShamelaResultWidget::setPageCount(int current, int count)
@@ -194,6 +205,10 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
 
     if(!m_bookReader->open())
         qFatal("Can't open book");
+
+    m_readerWebView->execJS("startReading();");
+
+    showBookReader();
 }
 
 QString ShamelaResultWidget::baseUrl()
@@ -235,4 +250,23 @@ void ShamelaResultWidget::writeHtmlResult()
     QTextStream out(&file);
     out.setCodec("UTF-8");
     out << m_webView->html();
+}
+
+void ShamelaResultWidget::hideBookReader()
+{
+    QList<int> sizes;
+    sizes << 100;
+    sizes << 0;
+
+    ui->splitter->setSizes(sizes);
+}
+
+void ShamelaResultWidget::showBookReader()
+{
+    QList<int> sizes;
+
+    if(ui->splitter->sizes().at(1) == 0){
+        sizes << 100 << 100;
+        ui->splitter->setSizes(sizes);
+    }
 }

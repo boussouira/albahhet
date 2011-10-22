@@ -80,6 +80,7 @@ void ShamelaUpdaterDialog::startUpdate()
                              progressMax,
                              this);
     progress.setWindowModality(Qt::WindowModal);
+    progress.setWindowTitle(windowTitle());
     progress.show();
 
     QList<int> booksToAdd = m_updater.getBooksToAdd();

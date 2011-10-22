@@ -34,6 +34,8 @@ public slots:
     void openResult(int bookID, int resultID);
     QString baseUrl();
     void showNavigationButton(bool show);
+    void hideBookReader();
+    void showBookReader();
 
 protected slots:
     void searchStarted();
@@ -50,6 +52,7 @@ protected:
 
 protected:
     WebView *m_webView;
+    WebView *m_readerWebView;
     ShamelaSearcher *m_searcher;
     ShamelaBooksReader *m_bookReader;
     IndexInfo *m_indexInfo;

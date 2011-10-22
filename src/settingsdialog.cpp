@@ -25,6 +25,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     settings.beginGroup("BooksViewer");
     ui->checkHLFirstPage->setChecked(settings.value("highlightOnlyFirst", true).toBool());
+    ui->checkHighlightWithColor->setChecked(settings.value("highlightWithColor", true).toBool());
     QString fontString = settings.value("fontFamily", QWebSettings::globalSettings()->fontFamily(QWebSettings::StandardFont)).toString();
     int fontSize = settings.value("fontSize", QWebSettings::globalSettings()->fontSize(QWebSettings::DefaultFontSize)).toInt();
     settings.endGroup();
@@ -70,6 +71,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("fontFamily", ui->fontComboBox->currentFont().toString());
     settings.setValue("fontSize", ui->comboFontSize->currentText());
     settings.setValue("highlightOnlyFirst", ui->checkHLFirstPage->isChecked());
+    settings.setValue("highlightWithColor", ui->checkHighlightWithColor->isChecked());
     settings.endGroup();
 
     QWebSettings::globalSettings()->setFontFamily(QWebSettings::StandardFont, ui->fontComboBox->currentFont().toString());

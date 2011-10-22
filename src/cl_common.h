@@ -1,6 +1,9 @@
 #ifndef CL_COMMON_H
 #define CL_COMMON_H
 
+#include "common.h"
+
+#include <qsettings.h>
 #include <CLucene.h>
 #include <CLucene/StdHeader.h>
 
@@ -34,9 +37,23 @@ using namespace lucene::search::highlight;
 class SimpleCssFormatter : public Formatter {
 public:
     int numHighlights;
+    QList<QString> m_colors;
+    QHash<QString, QString> m_wordColor;
+    int m_colorIndex;
+    bool m_useColor;
 
     SimpleCssFormatter() {
         numHighlights = 0;
+        m_colorIndex = 0;
+
+        m_colors.append("#ffff63");
+        m_colors.append("#a5ffff");
+        m_colors.append("#ff9a9c");
+        m_colors.append("#9cff9c");
+        m_colors.append("#ef86fb");
+
+        QSettings settings;
+        m_useColor = settings.value("BooksViewer/highlightWithColor", true).toBool();
     }
 
     ~SimpleCssFormatter() {
@@ -48,13 +65,26 @@ public:
         }
         numHighlights++; //update stats used in assertions
 
-        int len = _tcslen(originalText) + 40;
-        TCHAR* ret = _CL_NEWARRAY(TCHAR, len + 1);
-        _tcscpy(ret, _T("<b style=\"background-color:#ffff63\">"));
-        _tcscat(ret, originalText);
-        _tcscat(ret, _T("</b>"));
+        QString word = TCharToQString(originalText);
+        QString color;
 
-        return ret;
+        if(m_useColor) {
+            QString cleanWord = TCharToQString(originalText).remove(QRegExp("[\\x064B-\\x0653\\x0640]"));
+
+            if(m_wordColor.contains(cleanWord)) {
+                color = m_wordColor.value(cleanWord);
+            } else {
+                color = m_colors.value(m_colorIndex, m_colors.at(0));
+                m_wordColor.insert(cleanWord, color);
+
+                m_colorIndex++;
+            }
+        } else {
+            color = m_colors.value(0);
+        }
+
+        QString formattedText = QString("<b style=\"background-color:%1\">%2</b>").arg(color).arg(word);
+        return QStringToTChar(formattedText);
     }
 };
 

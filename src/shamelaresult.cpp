@@ -45,9 +45,8 @@ QString ShamelaResult::toHtml()
                              "<span class=\"progSpanContainre\"></span>"
                              "</span>"
                              "</div>"
-                             "<p class=\"resultText\" bookid=\"%4\" rid=\"%5\" >%6</p>"
-                             "<p class=\"result_info\" bookid=\"b%4\"> كتاب: <span class=\"bookName\">%7</span>"
-                             "<label class=\"tooltip\" for=\"b%4\">%10</label>"
+                             "<p class=\"resultText\" bookid=\"%4\" rid=\"%5\">%6</p>"
+                             "<p class=\"result_info\" bookid=\"b%4\"> كتاب: <span class=\"bookName\" title=\"%10\">%7</span>"
                              "<span style=\"float: left;margin: 5px 0px\">الصفحة: <span style=\"margin-left: 7px;\">%8</span>  الجزء: <span>%9</span></span>"
                              "</p></div>")
                 .arg(m_bgColor)                 // backround class name (%1)
@@ -59,7 +58,7 @@ QString ShamelaResult::toHtml()
                 .arg(m_bookName)                // book name (%7)
                 .arg(m_page)                    // page (%8)
                 .arg(m_part)                    // part (%9)
-                .arg(m_info.replace('\"', '\'').simplified());// book info(%10)
+                .arg(m_info.replace('\"', '\'').replace(QRegExp("[\\r\\n]+"), " - "));// book info(%10)
 
 
         m_edited = false;

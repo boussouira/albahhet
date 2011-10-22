@@ -23,7 +23,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -455,6 +455,13 @@
         <widget class="QCheckBox" name="checkHLFirstPage">
          <property name="text">
           <string>تلوين الصفحة الاولى فقط عند استعراض نتيجة ما</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkHighlightWithColor">
+         <property name="text">
+          <string>تلوبن كلمات البحث بألوان مختلفة</string>
          </property>
         </widget>
        </item>
