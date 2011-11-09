@@ -84,6 +84,7 @@ private:
     int m_resultParPage;
     bool m_defautOpIsAnd;
     bool m_stopFeteching;
+    bool m_highlightAllPage;
     QHash<int, ShamelaResult*> m_resultsHash;
     SearchSort m_sortNum;
 };

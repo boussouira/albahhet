@@ -22,7 +22,6 @@ QuranIndexerWidget::QuranIndexerWidget(QWidget *parent) :
 
     m_indexInfo = new IndexInfo();
 //    m_nextButton->setText(tr("بدأ الفهرسة"));
-    qDebug("OOOOOO");
 }
 
 QuranIndexerWidget::~QuranIndexerWidget()

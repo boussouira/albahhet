@@ -30,6 +30,9 @@ ShamelaSearcher::ShamelaSearcher(QObject *parent) : QThread(parent)
     m_timeSearch = 0;
 
     m_sort = new Sort();
+
+    QSettings settings;
+    m_highlightAllPage = settings.value("BooksViewer/highlightAllPage", true).toBool();
 }
 
 ShamelaSearcher::~ShamelaSearcher()
@@ -112,17 +115,16 @@ void ShamelaSearcher::fetech()
 {
     emit startFeteching();
 
-    ArabicAnalyzer hl_analyzer;
-    QueryScorer scorer(m_query);
-    SimpleCssFormatter hl_formatter;
-    int maxNumFragmentsRequired = 30;
-    const TCHAR* fragmentSeparator = _T("...");
-
     int start = m_currentPage * m_resultParPage;
     int maxResult  =  (resultsCount() >= start+m_resultParPage)
                       ? (start+m_resultParPage) : resultsCount();
 
     bool whiteBG = false;
+
+    int maxNumFragments = m_highlightAllPage ? 10 : 5; // Fragment count
+    int fragmentSize = m_highlightAllPage ? 50000 : 100; // Fragment lenght
+    const TCHAR* fragmentSeparator = _T("...");
+
     for(int i=start; i < maxResult;i++){
 
         ShamelaResult *savedResult = m_resultsHash.value(i, 0);
@@ -190,30 +192,38 @@ void ShamelaSearcher::fetech()
                 result->setBgColor((whiteBG = !whiteBG) ? "whiteBG" : "grayBG");
 
                 /* Highlight the text */
+                ArabicAnalyzer hl_analyzer;
+                SpanHighlightScorer scorer( true );
+                SimpleCssFormatter hl_formatter;
+
                 Highlighter highlighter(&hl_formatter, &scorer);
-                SimpleFragmenter frag(20);
+                SimpleFragmenter frag(fragmentSize);
                 highlighter.setTextFragmenter(&frag);
+
+                if(m_highlightAllPage)
+                    pageText.replace(QRegExp("[\\r\\n]"),"<br/>");
 
                 clearShorts(pageText);
 
                 const TCHAR* text = QStringToTChar(pageText);
                 StringReader reader(text);
-                TokenStream* tokenStream = hl_analyzer.tokenStream(PAGE_TEXT_FIELD, &reader);
+                CachingTokenFilter tokenStream( hl_analyzer.tokenStream( PAGE_TEXT_FIELD, &reader ), true);
+                scorer.init( m_query, PAGE_TEXT_FIELD, &tokenStream );
+                tokenStream.reset();
 
                 TCHAR* hi_result = highlighter.getBestFragments(
-                        tokenStream,
+                        &tokenStream,
                         text,
-                        maxNumFragmentsRequired,
+                        maxNumFragments,
                         fragmentSeparator);
 
                 result->setSnippet(TCharToQString(hi_result));
 
                 _CLDELETE_CARRAY(hi_result)
-                _CLDELETE(tokenStream)
                 delete [] text;
                 /**/
 
-                        emit gotResult(result);
+                emit gotResult(result);
                 m_resultsHash.insert(i, result);
             } else {
                 qWarning("No result found for id %d book %d", entryID, bookID);

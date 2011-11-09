@@ -205,7 +205,7 @@ p, li { white-space: pre-wrap; }
      <widget class="QWidget" name="page_2">
       <property name="geometry">
        <rect>
-        <x>0</x>
+        <x>-17</x>
         <y>0</y>
         <width>613</width>
         <height>335</height>

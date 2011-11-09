@@ -26,6 +26,7 @@ function startReading() {
 
         parText.html(pTxt);
         updateInfoBar();
+        scroll(0, 0);
     }));
 
     parNav.append($('<img>', {'alt': 'الصفحة التالية',
@@ -36,13 +37,7 @@ function startReading() {
 
         parText.html(nTxt);
         updateInfoBar();
-    }));
-
-    parNav.append($('<img>', {'alt': 'اخفاء',
-                              'title': 'اخفاء',
-                              'src': baseUrl+'/data/images/delete.png',
-                              'class': 'creader'}).click(function() {
-        resultWidget.hideBookReader();
+        scroll(0, 0);
     }));
 
     var bookNameText = bookReader.bookName();

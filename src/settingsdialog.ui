@@ -23,7 +23,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -449,6 +449,13 @@
            </layout>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkShowAllPage">
+         <property name="text">
+          <string>عرض كامل الصفحة في نتائج البحث</string>
+         </property>
         </widget>
        </item>
        <item>

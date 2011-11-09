@@ -38,6 +38,10 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
             SLOT(populateJavaScriptWindowObject()));
     connect(m_readerWebView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
             SLOT(populateJavaScriptWindowObject()));
+
+    connect(ui->buttonHideBookView, SIGNAL(clicked()), SLOT(hideBookReader()));
+    connect(ui->buttonMaxBookView, SIGNAL(clicked()), SLOT(MaximizeBookReader()));
+    connect(ui->buttonMinBookView, SIGNAL(clicked()), SLOT(MinimizeBookReader()));
 }
 
 ShamelaResultWidget::~ShamelaResultWidget()
@@ -269,4 +273,22 @@ void ShamelaResultWidget::showBookReader()
         sizes << 100 << 100;
         ui->splitter->setSizes(sizes);
     }
+}
+
+void ShamelaResultWidget::MaximizeBookReader()
+{
+    QList<int> sizes;
+    sizes << 0;
+    sizes << 100;
+
+    ui->splitter->setSizes(sizes);
+}
+
+void ShamelaResultWidget::MinimizeBookReader()
+{
+    QList<int> sizes;
+    sizes << 100;
+    sizes << 100;
+
+    ui->splitter->setSizes(sizes);
 }

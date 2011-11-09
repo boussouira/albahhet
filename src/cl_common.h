@@ -24,6 +24,8 @@
 #include <CLucene/highlighter/TokenGroup.h>
 #include <CLucene/highlighter/SimpleHTMLFormatter.h>
 #include <CLucene/highlighter/SimpleFragmenter.h>
+#include <CLucene/highlighter/SpanHighlightScorer.h>
+#include <CLucene/analysis/CachingTokenFilter.h>
 
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -69,7 +71,8 @@ public:
         QString color;
 
         if(m_useColor) {
-            QString cleanWord = TCharToQString(originalText).remove(QRegExp("[\\x064B-\\x0653\\x0640]"));
+            QString cleanWord = TCharToQString(originalText).remove(QRegExp("[\\x064B-\\x0653\\x0640]"))
+                    .replace("[\\x0622\\x0623\\x0625]", "\\x0627");
 
             if(m_wordColor.contains(cleanWord)) {
                 color = m_wordColor.value(cleanWord);

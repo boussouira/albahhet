@@ -36,6 +36,8 @@ public slots:
     void showNavigationButton(bool show);
     void hideBookReader();
     void showBookReader();
+    void MaximizeBookReader();
+    void MinimizeBookReader();
 
 protected slots:
     void searchStarted();
