@@ -34,6 +34,7 @@ private:
     Ui::IndexesDialog *ui;
 
 private slots:
+    void on_treeWidget_itemSelectionChanged();
     void on_treeWidget_itemActivated(QTreeWidgetItem* item, int column);
     void on_pushOptimize_clicked();
     void on_pushUpDate_clicked();

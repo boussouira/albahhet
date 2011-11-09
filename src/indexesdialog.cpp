@@ -221,11 +221,13 @@ void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int colum
 {
     if(column != -1) {
         IndexInfo *indexInfo = m_indexesManager->indexInfo(item->data(0, Qt::UserRole).toInt());
-        ui->labelIndexName->setText(indexInfo->name());
-        ui->labelShaPath->setText(indexInfo->shamelaPath());
-        ui->labelIndexPath->setText(indexInfo->path());
+        if(indexInfo) {
+            ui->labelIndexName->setText(indexInfo->name());
+            ui->labelShaPath->setText(indexInfo->shamelaPath());
+            ui->labelIndexPath->setText(indexInfo->path());
 
-        ui->widgetIndexInfo->show();
+            ui->widgetIndexInfo->show();
+        }
     } else {
         ui->widgetIndexInfo->hide();
     }
@@ -234,4 +236,9 @@ void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int colum
 void IndexesDialog::setIndexesManager(IndexesManager *manager)
 {
     m_indexesManager = manager;
+}
+
+void IndexesDialog::on_treeWidget_itemSelectionChanged()
+{
+    on_treeWidget_itemActivated(ui->treeWidget->currentItem(), ui->treeWidget->currentColumn());
 }
