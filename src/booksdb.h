@@ -55,6 +55,7 @@ public:
 
     QStandardItemModel *getSimpleBooksListModel();
     QStandardItemModel *getBooksListModel();
+    int getBooksCount();
     void booksCat(QStandardItem *parentNode, int catID);
 
     int getAuthorDeath(int authorID);

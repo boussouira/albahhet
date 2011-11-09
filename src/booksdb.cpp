@@ -421,7 +421,10 @@ QStandardItemModel *BooksDB::getBooksListModel()
 
         booksCat(item, m_shamelaQuery->value(0).toInt());
 
-        model->appendRow(item);
+        QStandardItem *catBooksItem = new QStandardItem();
+        catBooksItem->setData(item->rowCount(), Qt::DisplayRole);
+
+        model->appendRow(QList<QStandardItem*>() << item << catBooksItem);
     }
 
     model->setHorizontalHeaderLabels(QStringList()
@@ -431,6 +434,22 @@ QStandardItemModel *BooksDB::getBooksListModel()
 
     qDebug("Load model take %d ms", time.elapsed());
     return model;
+}
+
+int BooksDB::getBooksCount()
+{
+    openIndexDB();
+    QSqlQuery query(m_indexDB);
+
+    query.prepare("SELECT count(*) FROM books WHERE indexFLags = 1");
+    if(!query.exec())
+        qDebug() << query.lastError().text();
+
+    if(query.next()) {
+        return query.value(0).toInt();
+    }
+
+    return 0;
 }
 
 void BooksDB::booksCat(QStandardItem *parentNode, int catID)

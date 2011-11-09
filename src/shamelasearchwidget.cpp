@@ -317,6 +317,10 @@ void ShamelaSearchWidget::indexChanged()
     m_filterHandler->setShamelaModels(m_shaModel);
     ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
 
+    ui->toolBox->setItemText(0, tr("مجال البحث (الكتب: %1 - الأقسام: %2)")
+                             .arg(m_booksDB->getBooksCount())
+                             .arg(booksModel->rowCount()));
+
     progress.setValue(progress.maximum());
 
     connect(booksModel, SIGNAL(itemChanged(QStandardItem*)), SLOT(itemChanged(QStandardItem*)));
