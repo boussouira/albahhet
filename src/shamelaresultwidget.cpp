@@ -31,6 +31,9 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_readerWebView = new WebView(IndexInfo::ShamelaIndex, this);
     ui->widgetBookView->layout()->addWidget(m_readerWebView);
 
+    m_webView->init();
+    m_readerWebView->init();
+
     ui->progressWidget->hide();
     hideBookReader();
 
@@ -81,9 +84,6 @@ void ShamelaResultWidget::clearResults()
 
 void ShamelaResultWidget::searchStarted()
 {
-    m_webView->init();
-    m_readerWebView->init();
-
     showNavigationButton(false);
 
     ui->progressBar->setMaximum(0);
