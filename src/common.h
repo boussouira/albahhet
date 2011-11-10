@@ -9,7 +9,7 @@
 #include "booksdb.h"
 
 #define APP_VERSION 0x010200
-#define APP_VERSION_STR QObject::tr("1.2.0" " - " "اصدار تجريبي 2")
+#define APP_VERSION_STR QObject::tr("1.2")
 #define APP_NAME QObject::tr("الباحث الشامل")
 
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
