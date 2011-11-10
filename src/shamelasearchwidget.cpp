@@ -55,6 +55,13 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(search()));
     connect(ui->lineFilter, SIGNAL(textChanged(QString)), ui->treeViewBooks, SLOT(expandAll()));
     connect(m_filterHandler, SIGNAL(clearText()), ui->lineFilter, SLOT(clear()));
+
+    connect(ui->pushSelectAll, SIGNAL(clicked()), SLOT(selectAllBooks()));
+    connect(ui->pushUnSelectAll, SIGNAL(clicked()), SLOT(unSelectAllBooks()));
+    connect(ui->pushSelectVisible, SIGNAL(clicked()), SLOT(selectVisibleBooks()));
+    connect(ui->pushUnselectVisible, SIGNAL(clicked()), SLOT(unSelectVisibleBooks()));
+    connect(ui->pushExpandTree, SIGNAL(clicked()), SLOT(expandFilterView()));
+    connect(ui->pushCollapseTree, SIGNAL(clicked()), SLOT(collapseFilterView()));
 }
 
 ShamelaSearchWidget::~ShamelaSearchWidget()
