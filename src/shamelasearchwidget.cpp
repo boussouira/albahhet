@@ -85,18 +85,15 @@ void ShamelaSearchWidget::loadSettings()
         m_resultParPage = 10;
 
     if(settings.value("Search/saveSearchOptions", false).toBool()) {
-        SearchSort sort = (SearchSort)settings.value("Search/sortBy", Relvance).toInt();
-
-        if      (sort == Relvance)       ui->radioSortRelvance->setChecked(true);
-        else if (sort == BookRelvance)   ui->radioSortBookRelv->setChecked(true);
-        else if (sort == BookPage)       ui->radioSortBookPage->setChecked(true);
-        else if (sort == DeathRelvance)  ui->radioSortDeathRelv->setChecked(true);
-        else if (sort == DeathBookPage)  ui->radioSortDeathBook->setChecked(true);
+        int sort = settings.value("Search/sortBy", Relvance).toInt();
+        ui->comboSortBy->setCurrentIndex(sort);
 
         int searchIn = settings.value("Search/searchIn", 0).toInt();
-        if      (searchIn == 0)     ui->radioSearchText->setChecked(true);
-        else if (searchIn == 1)     ui->radioSearchFN->setChecked(true);
-        else if (searchIn == 2)     ui->radioSearchBoth->setChecked(true);
+        ui->comboSearchIn->setCurrentIndex(searchIn);
+
+        ui->checkQueryMust->setChecked(settings.value("Search/checkQueryMust", false).toBool());
+        ui->checkQueryShould->setChecked(settings.value("Search/checkQueryShould", false).toBool());
+        ui->checkQueryShouldNot->setChecked(settings.value("Search/checkQueryShouldNot", false).toBool());
     }
 }
 
@@ -114,21 +111,15 @@ void ShamelaSearchWidget::saveSettings()
     settings.setValue("useTabs", m_useMultiTab);
 
     if(settings.value("Search/saveSearchOptions", false).toBool()) {
-        SearchSort sort = Relvance;
-        if      (ui->radioSortRelvance->isChecked())  sort = Relvance;
-        else if (ui->radioSortBookRelv->isChecked())  sort = BookRelvance;
-        else if (ui->radioSortBookPage->isChecked())  sort = BookPage;
-        else if (ui->radioSortDeathRelv->isChecked()) sort = DeathRelvance;
-        else if (ui->radioSortDeathBook->isChecked()) sort = DeathBookPage;
-
+        int sort = ui->comboSortBy->currentIndex();
         settings.setValue("Search/sortBy", sort);
 
-        int searchIn = 0;
-        if      (ui->radioSearchText->isChecked())  searchIn = 0;
-        else if (ui->radioSearchFN->isChecked())    searchIn = 1;
-        else if (ui->radioSearchBoth->isChecked())  searchIn = 2;
-
+        int searchIn = ui->comboSearchIn->currentIndex();
         settings.setValue("Search/searchIn", searchIn);
+
+        settings.setValue("Search/checkQueryMust", ui->checkQueryMust->isChecked());
+        settings.setValue("Search/checkQueryShould", ui->checkQueryShould->isChecked());
+        settings.setValue("Search/checkQueryShouldNot", ui->checkQueryShouldNot->isChecked());
     }
 }
 
@@ -162,9 +153,9 @@ void ShamelaSearchWidget::search()
     Query *filterQuery = 0;
     QueryParser *queryPareser;
 
-    if(ui->radioSearchText->isChecked()) {
+    if(ui->comboSearchIn->currentIndex() == 1) {
         queryPareser = new QueryParser(PAGE_TEXT_FIELD, &analyzer);
-    } else if(ui->radioSearchFN->isChecked()) {
+    } else if(ui->comboSearchIn->currentIndex() == 2) {
         queryPareser = new QueryParser(FOOT_NOTE_FIELD, &analyzer);
     } else {
         //BoostMap *boosts = new BoostMap();
@@ -261,13 +252,7 @@ void ShamelaSearchWidget::search()
     m_searcher->setQuery(q);
 
     m_searcher->setResultsPeerPage(m_resultParPage);
-
-    if      (ui->radioSortRelvance->isChecked())  m_searcher->setSortNum(Relvance);
-    else if (ui->radioSortBookRelv->isChecked())  m_searcher->setSortNum(BookRelvance);
-    else if (ui->radioSortBookPage->isChecked())  m_searcher->setSortNum(BookPage);
-    else if (ui->radioSortDeathRelv->isChecked()) m_searcher->setSortNum(DeathRelvance);
-    else if (ui->radioSortDeathBook->isChecked()) m_searcher->setSortNum(DeathBookPage);
-    else m_searcher->setSortNum(Relvance);
+    m_searcher->setSortNum((SearchSort)ui->comboSortBy->currentIndex());
 
     ShamelaResultWidget *widget;
     int index=1;
@@ -357,7 +342,7 @@ void ShamelaSearchWidget::indexChanged()
     m_filterHandler->setShamelaModels(m_shaModel);
     ui->treeViewBooks->setModel(m_filterHandler->getFilterModel());
 
-    ui->toolBox->setItemText(0, tr("مجال البحث (الكتب: %1 - الأقسام: %2)")
+    ui->groupSearchFilter->setTitle(tr("مجال البحث (الكتب: %1 - الأقسام: %2)")
                              .arg(m_booksDB->getBooksCount())
                              .arg(booksModel->rowCount()));
 

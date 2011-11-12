@@ -45,12 +45,12 @@ void WebView::init()
                      "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>"
                      "<link href=\"%1/data/default.css\" rel=\"stylesheet\" type=\"text/css\"/>"
                      "</head>"
-                     "<body></body>"
+                     "<body><div id=\"searchResult\"></div>"
                      "<script type=\"text/javascript\" src=\"%1/data/jquery-1.4.2.min.js\"></script>"
                      "<script type=\"text/javascript\" src=\"%1/data/jquery.dimensions.js\"></script>"
                      "<script type=\"text/javascript\" src=\"%1/data/jquery.tooltip.js\"></script>"
                      "<script type=\"text/javascript\" src=\"%1/data/%2\"></script>"
-                     "</html>")
+                     "</body></html>")
              .arg(appPath)
              .arg(jsFile);
 

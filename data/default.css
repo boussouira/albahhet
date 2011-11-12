@@ -169,5 +169,10 @@ body {
     background-color: #eee;
     padding: 5px;
     word-wrap: normal;
-    max-width: 400px;
+    max-width: 600px;
+}
+
+#tooltip h3{
+    margin:0;
+    padding:2px;
 }

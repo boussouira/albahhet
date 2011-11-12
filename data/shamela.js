@@ -57,7 +57,7 @@ function startReading() {
     r.append(pageHead);
     r.append(parText);
 
-    $('body').html(r);
+    $('#searchResult').html(r);
 }
 
 function updateLinks(nextUrl, prevUrl) {
@@ -66,7 +66,7 @@ function updateLinks(nextUrl, prevUrl) {
 }
 
 function updateInfoBar() {
-    var infoBar = $('body').find('.bLocation');
+    var infoBar = $('#searchResult').find('.bLocation');
     var infoText = ' (' + 'الصفحة: ' + bookReader.currentPage() + ' - ' + 'الجزء: ' + bookReader.currentPart() + ')';
 
     infoBar.text(infoText);
@@ -77,15 +77,15 @@ function setStatusText(str) {
 }
 
 function addResult(str) {
-    $('body').append($(str));
+    $('#searchResult').append($(str));
 }
 
 function searchStarted() {
-    $('body').html($('<p>', {text: "جاري البحث...", 'class': 'statusDiv'}));
+    $('#searchResult').html($('<p>', {text: "جاري البحث...", 'class': 'statusDiv'}));
 }
 
 function searchFinnished() {
-    $('body').html('');
+    $('#searchResult').html('');
 }
 
 function fetechFinnished() {
@@ -96,7 +96,7 @@ function fetechFinnished() {
 function setupToolTip() {
     $('.bookName').tooltip({
         track: true,
-        delay: 0,
+        delay: 800,
         showURL: false,
         showBody: " - ",
         extraClass: "pretty",
@@ -109,7 +109,7 @@ function setupToolTip() {
 
 function fetechStarted() {
     if(clearBody == true) {
-        $('body').html('');
+        $('#searchResult').html('');
     } else {
         clearBody = true;
     }
@@ -119,13 +119,13 @@ function setSearchTime(time) {
     var sec = time / 1000;
     var str = 'ثم البحث خلال ' + sec + ' ثانية';
 
-    $('body').html($('<p>', {'text': str, 'class': 'statusDiv'}));
+    $('#searchResult').html($('<p>', {'text': str, 'class': 'statusDiv'}));
     clearBody = false;
 }
 
 function noResultFound() {
     var str = 'لم يتم العثور على ما يطابق بحثك';
-    $('body').html($('<p>', {'text': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
+    $('#searchResult').html($('<p>', {'text': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
 }
 
 function searchException(text, desc) {
@@ -137,5 +137,5 @@ function searchException(text, desc) {
         str +=  '<br />' + desc;
     }
 
-    $('body').html($('<p>', {'html': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
+    $('#searchResult').html($('<p>', {'html': str, 'class': 'statusDiv'}).css('background-color', '#FBDCDC'));
 }
