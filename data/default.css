@@ -102,16 +102,22 @@ body {
     background-color:#ffebeb;
     border: 1px solid #ffc5c5;
     color:black;
-    margin-top:30px;
+    margin-top:5px;
     padding:10px;
 }
 
 .pageNav {
+    -webkit-border-radius:10px;
+    background-color: #FFF;
     color:#8C8A8C;
     float:left;
     margin:0;
     padding:2px 10px;
     text-align:center;
+    border:1px solid #ccc;
+    position: fixed;
+    left: 10px;
+    top: 5px;
 }
 
 .pageNav img {
@@ -148,15 +154,10 @@ body {
 }
 
 .pageHead {
-    -webkit-border-radius: 10px;
     background-color: #FFFFFF;
-    border: 1px solid #CCCCCC;
     left: 0;
-    margin: 0 12px;
+    margin: 0 5px;
     padding: 3px 5px;
-    position: fixed;
-    right: 0;
-    top: 0;
 }
 
 #tooltip {
