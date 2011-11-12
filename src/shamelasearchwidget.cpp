@@ -83,6 +83,21 @@ void ShamelaSearchWidget::loadSettings()
 
     if(m_resultParPage <= 0)
         m_resultParPage = 10;
+
+    if(settings.value("Search/saveSearchOptions", false).toBool()) {
+        SearchSort sort = (SearchSort)settings.value("Search/sortBy", Relvance).toInt();
+
+        if      (sort == Relvance)       ui->radioSortRelvance->setChecked(true);
+        else if (sort == BookRelvance)   ui->radioSortBookRelv->setChecked(true);
+        else if (sort == BookPage)       ui->radioSortBookPage->setChecked(true);
+        else if (sort == DeathRelvance)  ui->radioSortDeathRelv->setChecked(true);
+        else if (sort == DeathBookPage)  ui->radioSortDeathBook->setChecked(true);
+
+        int searchIn = settings.value("Search/searchIn", 0).toInt();
+        if      (searchIn == 0)     ui->radioSearchText->setChecked(true);
+        else if (searchIn == 1)     ui->radioSearchFN->setChecked(true);
+        else if (searchIn == 2)     ui->radioSearchBoth->setChecked(true);
+    }
 }
 
 void ShamelaSearchWidget::saveSettings()
@@ -97,6 +112,24 @@ void ShamelaSearchWidget::saveSettings()
 
     settings.setValue("resultPeerPage", m_resultParPage);
     settings.setValue("useTabs", m_useMultiTab);
+
+    if(settings.value("Search/saveSearchOptions", false).toBool()) {
+        SearchSort sort = Relvance;
+        if      (ui->radioSortRelvance->isChecked())  sort = Relvance;
+        else if (ui->radioSortBookRelv->isChecked())  sort = BookRelvance;
+        else if (ui->radioSortBookPage->isChecked())  sort = BookPage;
+        else if (ui->radioSortDeathRelv->isChecked()) sort = DeathRelvance;
+        else if (ui->radioSortDeathBook->isChecked()) sort = DeathBookPage;
+
+        settings.setValue("Search/sortBy", sort);
+
+        int searchIn = 0;
+        if      (ui->radioSearchText->isChecked())  searchIn = 0;
+        else if (ui->radioSearchFN->isChecked())    searchIn = 1;
+        else if (ui->radioSearchBoth->isChecked())  searchIn = 2;
+
+        settings.setValue("Search/searchIn", searchIn);
+    }
 }
 
 void ShamelaSearchWidget::search()
