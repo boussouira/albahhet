@@ -224,6 +224,9 @@
          </item>
          <item>
           <widget class="QToolButton" name="buttonMinBookView">
+           <property name="toolTip">
+            <string>تصغير نافذة تصفح الكتاب</string>
+           </property>
            <property name="text">
             <string>...</string>
            </property>
@@ -237,6 +240,9 @@
          </item>
          <item>
           <widget class="QToolButton" name="buttonMaxBookView">
+           <property name="toolTip">
+            <string>تكبير نافذة تصفح الكتاب</string>
+           </property>
            <property name="text">
             <string>...</string>
            </property>
@@ -250,6 +256,9 @@
          </item>
          <item>
           <widget class="QToolButton" name="buttonHideBookView">
+           <property name="toolTip">
+            <string>اخفاء نافذة تصفح الكتاب</string>
+           </property>
            <property name="text">
             <string>...</string>
            </property>

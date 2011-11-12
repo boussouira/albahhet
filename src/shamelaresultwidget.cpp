@@ -31,9 +31,6 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     m_readerWebView = new WebView(IndexInfo::ShamelaIndex, this);
     ui->widgetBookView->layout()->addWidget(m_readerWebView);
 
-    m_webView->init();
-    m_readerWebView->init();
-
     ui->progressWidget->hide();
     hideBookReader();
 
@@ -72,6 +69,9 @@ void ShamelaResultWidget::setShamelaSearch(ShamelaSearcher *s)
 
 void ShamelaResultWidget::doSearch()
 {
+    m_webView->init();
+    m_readerWebView->init();
+
     m_searcher->start();
 }
 

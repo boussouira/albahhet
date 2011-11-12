@@ -22,6 +22,7 @@ public slots:
 protected:
     QWebFrame *m_frame;
     IndexInfo::IndexType m_indexType;
+    QString m_html;
 };
 
 #endif // KWEBVIEW_H
