@@ -361,11 +361,6 @@ QPushButton{border: 1px solid rgb(173, 173, 173);padding:2px;}</string>
        </item>
        <item>
         <property name="text">
-         <string>وفاة المؤلف ثم التطابق</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>وفاة المؤلف ثم الكتاب</string>
         </property>
        </item>
@@ -412,13 +407,6 @@ QPushButton{border: 1px solid rgb(173, 173, 173);padding:2px;}</string>
   <zorder>groupBox</zorder>
   <zorder>pushSearch</zorder>
   <zorder>groupSearchFilter</zorder>
-  <zorder>label_5</zorder>
-  <zorder>label_6</zorder>
-  <zorder>comboSearchIn</zorder>
-  <zorder>comboSortBy</zorder>
-  <zorder>horizontalSpacer_2</zorder>
-  <zorder>horizontalSpacer_3</zorder>
-  <zorder>groupBox_2</zorder>
  </widget>
  <customwidgets>
   <customwidget>
