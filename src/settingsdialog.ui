@@ -259,6 +259,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkShowSearchTools">
+         <property name="text">
+          <string>اظهار ازرار البحث</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

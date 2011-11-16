@@ -81,6 +81,8 @@ void ShamelaSearchWidget::loadSettings()
     m_resultParPage = settings.value("resultPeerPage", 10).toInt();
     m_useMultiTab = settings.value("useTabs", true).toBool();
 
+    ui->widgetSearchTools->setVisible(settings.value("Search/showSearchTools", false).toBool());
+
     if(m_resultParPage <= 0)
         m_resultParPage = 10;
 
