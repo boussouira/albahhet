@@ -34,7 +34,7 @@ bool ShamelaFilterProxyModel::filterAcceptsRowItself(int source_row, const QMode
 {
     if(filterKeyColumn() == 2) {
         QModelIndex index = sourceModel()->index(source_row, 2, source_parent);
-        int deathYear = index.data().toInt();
+        int deathYear = index.data(BooksDB::authorDeathRole).toInt();
 
 //        qDebug("%d <= %d <= %d", m_fromYear, deathYear, m_toYear);
         return (deathYear && m_fromYear <= deathYear && deathYear <= m_toYear);

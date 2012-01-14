@@ -350,6 +350,8 @@ void ShamelaSearchWidget::indexChanged()
     progress.setValue(progress.maximum());
 
     connect(booksModel, SIGNAL(itemChanged(QStandardItem*)), SLOT(itemChanged(QStandardItem*)));
+    connect(ui->treeViewBooks->header(),
+            SIGNAL(sortIndicatorChanged(int,Qt::SortOrder)), SLOT(sortChanged(int,Qt::SortOrder)));
 }
 
 void ShamelaSearchWidget::on_lineFilter_textChanged(QString text)
@@ -361,6 +363,14 @@ void ShamelaSearchWidget::on_lineFilter_textChanged(QString text)
         m_filterHandler->setFilterText("");
         ui->treeViewBooks->collapseAll();
     }
+}
+
+void ShamelaSearchWidget::sortChanged(int logicalIndex, Qt::SortOrder)
+{
+    if(logicalIndex != 2)
+        m_filterHandler->getFilterModel()->setSortRole(Qt::DisplayRole);
+    else
+        m_filterHandler->getFilterModel()->setSortRole(BooksDB::authorDeathRole);
 }
 
 void ShamelaSearchWidget::clearLineText()

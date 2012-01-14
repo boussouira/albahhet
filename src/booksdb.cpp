@@ -478,7 +478,8 @@ void BooksDB::booksCat(QStandardItem *parentNode, int catID)
         authItem->setText(query.value(3).toString().remove(QRegExp("[\\x064B-\\x0653]")));
 
         QStandardItem *authDeathItem = new QStandardItem();
-        authDeathItem->setData(query.value(4).toInt(), Qt::DisplayRole);
+        authDeathItem->setText(hijriYear(query.value(4).toInt()));
+        authDeathItem->setData(query.value(4).toInt(), authorDeathRole);
 
         QList<QStandardItem*> items;
         items << bookItem;

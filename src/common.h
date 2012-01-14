@@ -41,6 +41,11 @@ quint64 getDirSize(const QString &path);
 QString getSizeString(quint64 size);
 QString getTimeString(int milsec, bool html=true);
 
+QString hijriYear(int hYear);
+
+int hijriToGregorian(int hYear);
+int gregorianToHijri(int gYear);
+
 #define PROGRESS_DIALOG_STEP(text)     progress.setValue(progress.value()+1); \
                                 progress.setLabelText(tr("جاري " text "..."));
 

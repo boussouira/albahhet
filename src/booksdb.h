@@ -67,6 +67,7 @@ public:
 
     static const int idRole = Qt::UserRole + 2;
     static const int typeRole = Qt::UserRole + 3;
+    static const int authorDeathRole = Qt::UserRole + 4;
     static const int Categorie = 1;
     static const int Book = 2;
 

@@ -51,6 +51,7 @@ public slots:
 
 protected slots:
     void on_lineFilter_textChanged(QString text);
+    void sortChanged(int logicalIndex, Qt::SortOrder);
     void itemChanged(QStandardItem *item);
 
 protected:
