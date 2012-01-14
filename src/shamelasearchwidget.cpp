@@ -53,7 +53,6 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     connect(ui->lineQueryShould, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->lineQueryShouldNot, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(search()));
-    connect(ui->lineFilter, SIGNAL(textChanged(QString)), ui->treeViewBooks, SLOT(expandAll()));
     connect(m_filterHandler, SIGNAL(clearText()), ui->lineFilter, SLOT(clear()));
 
     connect(ui->pushSelectAll, SIGNAL(clicked()), SLOT(selectAllBooks()));
@@ -355,7 +354,13 @@ void ShamelaSearchWidget::indexChanged()
 
 void ShamelaSearchWidget::on_lineFilter_textChanged(QString text)
 {
-    m_filterHandler->setFilterText(text);
+    if(text.size() > 2) {
+        m_filterHandler->setFilterText(text);
+        ui->treeViewBooks->expandAll();
+    } else {
+        m_filterHandler->setFilterText("");
+        ui->treeViewBooks->collapseAll();
+    }
 }
 
 void ShamelaSearchWidget::clearLineText()
