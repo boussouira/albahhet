@@ -1,156 +1,158 @@
 a {
     text-decoration: none;
-    color:#000000;
+    color: #000000;
 }
 
 a:hover {
-    color:#000000;
+    color: #000000;
 }
 
 body {
     direction: rtl;
-    margin: 0pt;
+    margin: 0;
     padding: 2px;
 }
 
 .result {
-    -webkit-border-radius:10px;
-    margin:5px 5px 10px 5px;
-    padding:5px 0px;
+    background-image: -moz-linear-gradient(#FFFFFF, #FFFFFF, #FFFBDD);
+    background-image: -webkit-linear-gradient(#FFFFFF, #FFFFFF, #FFFBDD);
+    border: 1px solid #DEDCDC;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 0 3px 2px #EDEBEB;
+    margin: 5px 5px 10px;
+    padding: 5px;
 }
 
 .whiteBG {
-    background-color:#feffed;
-    border:1px solid #666800;
 }
 
 .grayBG {
-    background-color:#fff9f5;
-    border:1px solid #520000;
 }
 
 .result h3 {
-    margin:0px 5px 5px 5px;
-    font-size:18px;
-    color:rgb(0, 68, 255);
-    display:inline-block;
+    color: #595959;
+    display: inline-block;
+    font-size: 18px;
+    margin: 0 5px 5px;
 }
 
 .result p.resultText {
-    margin:0px;
-    padding:5px;
-    display:block;
-    cursor:pointer;
+    cursor: pointer;
+    display: block;
+    font-size: 1.1em;
+    margin: 0;
+    padding: 15px 5px;
 }
 
 .result .result_info {
-    padding:0px 10px;
-    margin:5px 0px;
+    margin: 5px 0;
+    padding: 0 10px;
 }
 
 .result .result_head {
-    margin:0px;
-    margin-bottom:15px;
-    padding:0px;
-    border-bottom:1px dotted #ccc;
+    background-image: -moz-linear-gradient(#FFF6F5, #FFF0CC);
+    background-image: -webkit-linear-gradient(#FFF6F5, #FFF0CC);
+    border-bottom: 1px solid #FFD7A3;
+    border-radius: 5px 5px 5px 5px;
+    margin: 0;
+    padding: 8px 0 0;
 }
 
 .currentResult {
-    font-weight:bold;
-    margin:0px;
-    padding:10px;
+    font-weight: bold;
+    margin: 0;
+    padding: 10px;
 }
 
 .bookName {
-    margin-left:7px;
-    color:green;
-    font-weight:bold
+    color: #257893;
+    font-weight: bold;
+    margin-left: 7px;
 }
 
 .progSpan {
+    background-color: #C8F8C4;
     float: left;
-    height: 10px;
-    background-color: rgb(167, 239, 170);
-    margin:0px 5px;
-    margin-top:5px;
+    height: 15px;
+    margin: 5px 5px 0;
 }
 
 .progSpanContainre {
+    border: 1px solid #C5C1C1;
     float: left;
-    height: 9px;
+    height: 14px;
     width: 99px;
-    border:1px solid #999999;
 }
 
 .prev {
-    font-style:oblique;
-    float:right;
+    float: right;
+    font-style: oblique;
 }
 
 .next {
-    font-style:oblique;
-    float:right;
+    float: right;
+    font-style: oblique;
 }
 
 .creader {
-    font-style:oblique;
-    float:left;
+    float: left;
+    font-style: oblique;
 }
 
 .parText {
-    -webkit-border-radius:10px;
-    background-color:#ffebeb;
-    border: 1px solid #ffc5c5;
-    color:black;
-    margin-top:5px;
-    padding:10px;
+    background-color: #FFEBEB;
+    border: 1px solid #FFC5C5;
+    border-radius: 10px 10px 10px 10px;
+    color: black;
+    margin-top: 5px;
+    padding: 10px;
 }
 
 .pageNav {
-    -webkit-border-radius:10px;
-    background-color: #FFF;
-    color:#8C8A8C;
-    float:left;
-    margin:0;
-    padding:2px 10px;
-    text-align:center;
-    border:1px solid #ccc;
-    position: fixed;
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 10px 10px 10px 10px;
+    color: #8C8A8C;
+    float: left;
     left: 10px;
+    margin: 0;
+    padding: 2px 10px;
+    position: fixed;
+    text-align: center;
     top: 5px;
 }
 
 .pageNav img {
-    padding:0 5px;
+    padding: 0 5px;
 }
 
 .pageNav img:hover {
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .bookNameDiv {
-    float:right;
-    padding:2px 10px;
+    float: right;
+    padding: 2px 10px;
 }
 
 .bName {
-    float:right;
+    float: right;
 }
 
 .bLocation {
 }
 
 .clearDiv {
-    clear:both;
+    clear: both;
 }
 
 .statusDiv {
-    -webkit-border-radius:10px;
-    background-color:#F8F6F1;
-    border:1px solid #E0E0F7;
-    margin:10px 5px;
-    padding:5px 15px;
-    text-align:center;
+    background-color: #FBFBF0;
+    border: 1px solid #E0E0E0;
+    box-shadow: 0 0 3px 2px #EDEBEB;
+    margin: 10px 5px;
+    padding: 5px 15px;
+    text-align: center;
 }
 
 .pageHead {
@@ -161,18 +163,19 @@ body {
 }
 
 #tooltip {
-    -webkit-border-radius: 10px;
-    font-size:0.8em;
-    position: absolute;
-    z-index: 3000;
-    border: 1px solid #111;
-    background-color: #eee;
-    padding: 5px;
-    word-wrap: normal;
+    background-color: #EEEEEE;
+    border: 1px solid #111111;
+    border-radius: 10px 10px 10px 10px;
+    font-size: 0.8em;
     max-width: 600px;
+    padding: 5px;
+    position: absolute;
+    word-wrap: normal;
+    z-index: 3000;
 }
 
-#tooltip h3{
-    margin:0;
-    padding:2px;
+#tooltip h3 {
+    margin: 0;
+    padding: 2px;
 }
+
