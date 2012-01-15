@@ -404,7 +404,6 @@ QStandardItemModel *BooksDB::getBooksListModel()
 {
     openShamelaDB();
     QStandardItemModel *model= new QStandardItemModel();
-    QStandardItem *item;
 
     QTime time;
     time.start();
@@ -413,7 +412,7 @@ QStandardItemModel *BooksDB::getBooksListModel()
         qDebug() << m_shamelaQuery->lastError().text();
 
     while(m_shamelaQuery->next()) {
-        item = new QStandardItem();
+        QStandardItem *item = new QStandardItem();
         item->setText(m_shamelaQuery->value(1).toString());
         item->setData(m_shamelaQuery->value(0).toInt(), idRole);
         item->setData(Categorie, typeRole);
@@ -421,10 +420,7 @@ QStandardItemModel *BooksDB::getBooksListModel()
 
         booksCat(item, m_shamelaQuery->value(0).toInt());
 
-        QStandardItem *catBooksItem = new QStandardItem();
-        catBooksItem->setData(item->rowCount(), Qt::DisplayRole);
-
-        model->appendRow(QList<QStandardItem*>() << item << catBooksItem);
+        model->appendRow(item);
     }
 
     model->setHorizontalHeaderLabels(QStringList()
