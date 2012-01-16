@@ -9,6 +9,11 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui->setupUi(this);
 
     ui->labelVersion->setText(APP_VERSION_STR);
+#ifdef GITCHANGENUMBER
+    ui->labelRevision->setText(QString("git: %1 (rev: %2)").arg(GITVERSION).arg(GITCHANGENUMBER));
+#else
+    ui->labelRevision->hide();
+#endif
 }
 
 AboutDialog::~AboutDialog()

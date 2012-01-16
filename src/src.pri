@@ -1,6 +1,7 @@
 QT += core \
     gui \
     sql \
+    network \
     webkit \
     xml
 
@@ -56,7 +57,9 @@ SOURCES += main.cpp \
     shamelaupdater.cpp \
     customchartokenizer.cpp \
     shamelaselectbookdialog.cpp \
-    aboutdialog.cpp
+    aboutdialog.cpp \
+    updatechecker.cpp \
+    updatedialog.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
@@ -103,7 +106,9 @@ HEADERS += mainwindow.h \
     shamelaupdater.h \
     customchartokenizer.h \
     shamelaselectbookdialog.h \
-    aboutdialog.h
+    aboutdialog.h \
+    updatechecker.h \
+    updatedialog.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \
@@ -119,7 +124,8 @@ FORMS += mainwindow.ui \
     quranindexerwidget.ui \
     searchfieldsdialog.ui \
     shamelaselectbookdialog.ui \
-    aboutdialog.ui
+    aboutdialog.ui \
+    updatedialog.ui
 
 RESOURCES += resources.qrc
 

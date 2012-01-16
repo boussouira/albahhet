@@ -69,6 +69,7 @@
     </property>
     <addaction name="actionLogDialog"/>
     <addaction name="separator"/>
+    <addaction name="actionUpdate"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menu_4">
@@ -167,6 +168,11 @@
   <action name="actionEditField">
    <property name="text">
     <string>تعديل مجالات البحث...</string>
+   </property>
+  </action>
+  <action name="actionUpdate">
+   <property name="text">
+    <string>ترقية البرنامج</string>
    </property>
   </action>
  </widget>

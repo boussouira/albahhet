@@ -18,6 +18,15 @@ exists(../../clucene) {
     CLUCENE_BUILD_PATH = $$(CLUCENE_BUILD_PATH)
  }
 
+exists(../.git/HEAD) {
+    GITVERSION = $$system(git log -n1 --pretty=format:%h)
+    !isEmpty(GITVERSION) {
+        GITCHANGENUMBER = $$system(git log --pretty=format:%h | wc -l)
+        DEFINES += GITVERSION=\"\\\"$$GITVERSION\\\"\"
+        DEFINES += GITCHANGENUMBER=\"\\\"$$GITCHANGENUMBER\\\"\"
+    }
+}
+
 win32 {
     win32-msvc* {
         CONFIG(debug, debug|release) {

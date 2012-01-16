@@ -4,6 +4,7 @@
 #include <qmainwindow.h>
 #include <qhash.h>
 #include "indexesmanager.h"
+#include "updatechecker.h"
 
 namespace Ui {
     class MainWindow;
@@ -45,6 +46,8 @@ protected slots:
     void saveSelectedField();
     void searchfieldSelected();
     void searchfieldsDialog();
+    void showSettingsDialog();
+    void checkFinnished();
 
 protected:
     IndexesManager *m_indexesManager;
@@ -54,11 +57,9 @@ protected:
     IndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
     SearchField *m_searchFields;
+    UpdateChecker *m_updateChecker;
     bool m_showNewIndexMsg;
     Ui::MainWindow *ui;
-
-private slots:
-    void showSettingsDialog();
 };
 
 #endif // MAINWINDOW_H

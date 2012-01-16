@@ -71,6 +71,9 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QLabel" name="labelVersion">
+           <property name="layoutDirection">
+            <enum>Qt::RightToLeft</enum>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -93,6 +96,19 @@ p, li { white-space: pre-wrap; }
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelRevision">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

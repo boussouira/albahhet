@@ -13,6 +13,7 @@
 #include "searchfield.h"
 #include "searchfieldsdialog.h"
 #include "aboutdialog.h"
+#include "updatedialog.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -44,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     hideHelpButton(m_logDialog);
 
     m_searchFields = new SearchField();
+    m_updateChecker = new UpdateChecker(this);
 
     loadSettings();
 
@@ -55,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLogDialog, SIGNAL(triggered()), SLOT(showLogDialog()));
     connect(ui->actionSaveSelectedField, SIGNAL(triggered()), SLOT(saveSelectedField()));
     connect(ui->actionEditField, SIGNAL(triggered()), SLOT(searchfieldsDialog()));
+    connect(ui->actionUpdate, SIGNAL(triggered()), m_updateChecker, SLOT(startCheck()));
+    connect(m_updateChecker, SIGNAL(checkFinished()), SLOT(checkFinnished()));
 }
 
 MainWindow::~MainWindow()
@@ -472,4 +476,26 @@ void MainWindow::searchfieldsDialog()
     dialog.exec();
 
     loadSearchFields();
+}
+
+void MainWindow::checkFinnished()
+{
+    UpdateInfo *info = m_updateChecker->result();
+
+    if(!info) {
+        if(!m_updateChecker->hasError) {
+            QMessageBox::information(this,
+                                     tr("تحديث البرنامج"),
+                                     tr("لا يوجد تحديث للبرنامج، انت تستخدم اخر اصدار"));
+        } else {
+            QMessageBox::information(this,
+                                     tr("تحديث البرنامج"),
+                                     tr("حدث خطأ اثناء البحث عن التحديث:" "\n")
+                                     + m_updateChecker->errorString);
+        }
+    } else {
+        UpdateDialog dialog(this);
+        dialog.setDownloadUrl(info);
+        dialog.exec();
+    }
 }
