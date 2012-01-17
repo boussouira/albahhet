@@ -23,6 +23,7 @@ class UpdateChecker : public QObject
     Q_OBJECT
 public:
     UpdateChecker(QObject *parent = 0);
+    ~UpdateChecker();
 
     UpdateInfo *result();
 
@@ -47,6 +48,7 @@ protected:
     QNetworkAccessManager m_qnam;
     QNetworkReply *m_reply;
     UpdateInfo *m_result;
+    QList<UpdateInfo*> m_results;
 };
 
 #endif // UPDATECHECKER_H

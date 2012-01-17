@@ -9,6 +9,12 @@ UpdateChecker::UpdateChecker(QObject *parent) :
     hasError = false;
 }
 
+UpdateChecker::~UpdateChecker()
+{
+    qDeleteAll(m_results);
+    m_results.clear();
+}
+
 void UpdateChecker::startCheck()
 {
     m_result = 0;
@@ -119,4 +125,6 @@ void UpdateChecker::parse(QString updateXML)
 
         e = e.nextSiblingElement();
     }
+
+    m_results.append(m_result);
 }
