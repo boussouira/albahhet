@@ -48,6 +48,7 @@ protected slots:
     void searchfieldsDialog();
     void showSettingsDialog();
     void checkFinnished();
+    void autoUpdateCheck();
 
 protected:
     IndexesManager *m_indexesManager;

@@ -91,7 +91,14 @@ void MainWindow::saveSettings()
 void MainWindow::loadSettings()
 {
     QSettings settings;
+
     m_showNewIndexMsg = settings.value("showNewIndexMsg", true).toBool();
+    if(settings.value("Update/autoCheck", true).toBool()) {
+        uint current = QDateTime::currentDateTime().toTime_t();
+        uint lastCheck = settings.value("Update/lastCheck", 0).toUInt();
+        if(current - lastCheck > 43200)
+            QTimer::singleShot(30000, this, SLOT(autoUpdateCheck()));
+    }
 
     settings.beginGroup("MainWindow");
     resize(settings.value("size", size()).toSize());
@@ -483,19 +490,29 @@ void MainWindow::checkFinnished()
     UpdateInfo *info = m_updateChecker->result();
 
     if(!info) {
-        if(!m_updateChecker->hasError) {
-            QMessageBox::information(this,
-                                     tr("تحديث البرنامج"),
-                                     tr("لا يوجد تحديث للبرنامج، انت تستخدم اخر اصدار"));
+        if(m_updateChecker->autoCheck) {
+            QSettings settings;
+            settings.setValue("Update/lastCheck", QDateTime::currentDateTime().toTime_t());
         } else {
-            QMessageBox::information(this,
-                                     tr("تحديث البرنامج"),
-                                     tr("حدث خطأ اثناء البحث عن التحديث:" "\n")
-                                     + m_updateChecker->errorString);
+            if(m_updateChecker->hasError) {
+                QMessageBox::information(this,
+                                         tr("تحديث البرنامج"),
+                                         tr("حدث خطأ اثناء البحث عن التحديث:" "\n")
+                                         + m_updateChecker->errorString);
+            } else {
+                QMessageBox::information(this,
+                                         tr("تحديث البرنامج"),
+                                         tr("لا يوجد تحديث للبرنامج، انت تستخدم اخر اصدار"));
+            }
         }
     } else {
         UpdateDialog dialog(this);
         dialog.setDownloadUrl(info);
         dialog.exec();
     }
+}
+
+void MainWindow::autoUpdateCheck()
+{
+    m_updateChecker->startCheck(true);
 }

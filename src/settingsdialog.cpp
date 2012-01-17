@@ -21,6 +21,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
     ui->checkSaveSearchOptions->setChecked(settings.value("Search/saveSearchOptions", false).toBool());
     ui->checkShowSearchTools->setChecked(settings.value("Search/showSearchTools", false).toBool());
+    ui->checkAutoUpdate->setChecked(settings.value("Update/autoCheck", true).toBool());
     ui->spinThreadCount->setValue(settings.value("threadCount", QThread::idealThreadCount()).toInt());
     ui->spinThreadCount->setMinimum(1);
     ui->spinThreadCount->setMaximum(QThread::idealThreadCount()*2);
@@ -71,6 +72,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("ramSize", ui->comboBox->itemData(ui->comboBox->currentIndex()));
     settings.setValue("Search/saveSearchOptions", ui->checkSaveSearchOptions->isChecked());
     settings.setValue("Search/showSearchTools", ui->checkShowSearchTools->isChecked());
+    settings.setValue("Update/autoCheck", ui->checkAutoUpdate->isChecked());
 
     settings.beginGroup("BooksViewer");
     settings.setValue("fontFamily", ui->fontComboBox->currentFont().toString());

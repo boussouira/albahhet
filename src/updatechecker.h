@@ -29,9 +29,10 @@ public:
 
     QString errorString;
     bool hasError;
+    bool autoCheck;
 
 public slots:
-    void startCheck();
+    void startCheck(bool autoUpdateCheck=false);
 
 private slots:
     void startRequest(QUrl url);

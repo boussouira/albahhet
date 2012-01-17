@@ -7,6 +7,7 @@ UpdateChecker::UpdateChecker(QObject *parent) :
     QObject(parent)
 {
     hasError = false;
+    autoCheck = false;
 }
 
 UpdateChecker::~UpdateChecker()
@@ -15,10 +16,11 @@ UpdateChecker::~UpdateChecker()
     m_results.clear();
 }
 
-void UpdateChecker::startCheck()
+void UpdateChecker::startCheck(bool autoUpdateCheck)
 {
     m_result = 0;
     m_replayText.clear();
+    autoCheck = autoUpdateCheck;
 
 #ifdef GITCHANGENUMBER
     QUrl url(QString("http://albahhet.sourceforge.net/cms/index.php/updater/check/%1").arg(GITCHANGENUMBER));
@@ -46,18 +48,6 @@ void UpdateChecker::startRequest(QUrl url)
 
 void UpdateChecker::httpFinished()
 {
-    /*
-    parse("<?xml version='1.0' encoding='UTF-8'?>\
-          <update>\
-              <revision>555</revision>\
-              <version num=\"1561\">1.2.4</version>\
-              <download>http://google.com</download>\
-              <changelog>casf\n \
-              vs</changelog>\
-          </update>");
-    emit checkFinished();
-    */
-
     QVariant redirectionTarget = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     if (m_reply->error()) {
         errorString = m_reply->errorString();
