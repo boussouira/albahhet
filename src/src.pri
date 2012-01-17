@@ -59,7 +59,8 @@ SOURCES += main.cpp \
     shamelaselectbookdialog.cpp \
     aboutdialog.cpp \
     updatechecker.cpp \
-    updatedialog.cpp
+    updatedialog.cpp \
+    wordtypefilter.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
@@ -108,7 +109,8 @@ HEADERS += mainwindow.h \
     shamelaselectbookdialog.h \
     aboutdialog.h \
     updatechecker.h \
-    updatedialog.h
+    updatedialog.h \
+    wordtypefilter.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \
