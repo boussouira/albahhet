@@ -110,7 +110,8 @@ HEADERS += mainwindow.h \
     aboutdialog.h \
     updatechecker.h \
     updatedialog.h \
-    wordtypefilter.h
+    wordtypefilter.h \
+    app_version.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \

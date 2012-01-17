@@ -8,10 +8,6 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define APP_VERSION 0x010203
-#define APP_VERSION_STR QObject::tr("1.2.3")
-#define APP_NAME QObject::tr("الباحث الشامل")
-
 #define TCHAR_TO_QSTRING(s)     TCharToQString(s)
 #define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
 

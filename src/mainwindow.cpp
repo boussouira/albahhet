@@ -14,6 +14,7 @@
 #include "searchfieldsdialog.h"
 #include "aboutdialog.h"
 #include "updatedialog.h"
+#include "app_version.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
