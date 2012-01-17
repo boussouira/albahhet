@@ -8,6 +8,8 @@ function handleEvents() {
         var bookID = p.attr('bookid');
         var resultID = p.attr('rid');
 
+        scroll(d.position().left, d.position().top);
+
         resultWidget.openResult(bookID, resultID);
     });
 }
