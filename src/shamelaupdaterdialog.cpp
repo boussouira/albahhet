@@ -215,7 +215,7 @@ void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
         writer->setRAMBufferSizeMB(ramSize);
 
         for(int i=0; i<ids.count(); i++) {
-            Term *term = new Term(QStringToTChar(QString::number(ids.at(i))), BOOK_ID_FIELD);
+            Term *term = new Term(BOOK_ID_FIELD, QStringToTChar(QString::number(ids.at(i))));
             writer->deleteDocuments(term);
 //            _CLDECDELETE(term);
         }
