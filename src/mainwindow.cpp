@@ -106,7 +106,7 @@ void MainWindow::loadSettings()
     move(settings.value("pos", pos()).toPoint());
 
     if(settings.value("maximized", true).toBool())
-        showMaximized();
+        setWindowState(windowState() | Qt::WindowMaximized);
 
     settings.endGroup();
 }

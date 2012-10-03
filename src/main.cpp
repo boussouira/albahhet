@@ -9,6 +9,8 @@
 #include <qdatetime.h>
 #include <qsettings.h>
 #include <qmessagebox.h>
+#include <qsplashscreen.h>
+#include <QPixmap>
 
 #ifdef Q_OS_WIN
     #include <Windows.h>
@@ -85,23 +87,31 @@ int main(int argc, char *argv[])
     translator.load("qt_ar", ":/");
     app.installTranslator(&translator);
 
+    QSplashScreen splash;
+    splash.setPixmap(QPixmap(":/data/images/splash.png"));
+    splash.show();
     QSettings settings;
     SettingsChecker check;
 
-    if(settings.value("checkIndexes", true).toBool())
+    if(settings.value("checkIndexes", true).toBool()) {
+        splash.showMessage(QObject::tr("جاري فحص الفهارس..."));
         check.checkIndexes();
+    }
 
 #ifdef Q_OS_WIN
     useArabicKeyboardLayout();
 #endif
 
     MainWindow w;
-    w.show();
 
+    splash.showMessage(QObject::tr("جاري تحميل الفهرس..."));
     w.loadIndexesList();
     w.haveIndexesCheck();
 
     QObject::connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()));
+
+    splash.finish(&w);
+    w.show();
 
      return app.exec();
 }

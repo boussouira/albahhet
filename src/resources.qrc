@@ -18,5 +18,6 @@
         <file>../data/images/refresh.png</file>
         <file>../data/images/plus.png</file>
         <file>../data/images/kuran.png</file>
+        <file>../data/images/splash.png</file>
     </qresource>
 </RCC>
