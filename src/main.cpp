@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
     QSplashScreen splash;
     splash.setPixmap(QPixmap(":/data/images/splash.png"));
     splash.show();
+
     QSettings settings;
     SettingsChecker check;
 

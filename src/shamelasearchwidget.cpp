@@ -17,6 +17,30 @@
 #include <qabstractitemmodel.h>
 #include <qmenu.h>
 
+Query *parse(QueryParser *queryPareser, const QString &text, bool andOperator)
+{
+    if(text.isEmpty())
+        return 0;
+
+    queryPareser->setDefaultOperator(andOperator ? QueryParser::AND_OPERATOR
+                                                 : QueryParser::OR_OPERATOR);
+
+    Query *query = 0;
+    wchar_t *queryText = QStringToTChar(text);
+    try {
+        query = queryPareser->parse(queryText);
+    } catch(CLuceneError &) {
+        free(queryText);
+
+        queryText = QueryParser::escape(QSTRING_TO_TCHAR(text));
+        query = queryPareser->parse(queryText);
+
+        free(queryText);
+    }
+
+    return query;
+}
+
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     AbstractSearchWidget(parent),
     ui(new Ui::ShamelaSearchWidget)
@@ -173,35 +197,21 @@ void ShamelaSearchWidget::search()
 
     try {
         if(!mustQureyStr.isEmpty()) {
-            if(ui->checkQueryMust->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(mustQureyStr));
-            q->add(mq, BooleanClause::MUST);
-
+            Query *mq = parse(queryPareser, mustQureyStr, ui->checkQueryMust->isChecked());
+            if(mq)
+                q->add(mq, BooleanClause::MUST);
         }
 
         if(!shouldQureyStr.isEmpty()) {
-            if(ui->checkQueryShould->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(shouldQureyStr));
-            q->add(mq, BooleanClause::SHOULD);
-
+            Query *mq = parse(queryPareser, shouldQureyStr, ui->checkQueryShould->isChecked());
+            if(mq)
+                q->add(mq, BooleanClause::SHOULD);
         }
 
         if(!shouldNotQureyStr.isEmpty()) {
-            if(ui->checkQueryShouldNot->isChecked())
-                queryPareser->setDefaultOperator(QueryParser::AND_OPERATOR);
-            else
-                queryPareser->setDefaultOperator(QueryParser::OR_OPERATOR);
-
-            Query *mq = queryPareser->parse(QStringToTChar(shouldNotQureyStr));
-            q->add(mq, BooleanClause::MUST_NOT);
+            Query *mq = parse(queryPareser, shouldNotQureyStr, ui->checkQueryShouldNot->isChecked());
+            if(mq)
+                q->add(mq, BooleanClause::MUST_NOT);
         }
 
         qDebug() << "Search:" << TCharToQString(q->toString(PAGE_TEXT_FIELD));
