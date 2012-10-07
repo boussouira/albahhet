@@ -204,6 +204,8 @@ void MainWindow::selectIndex(QAction *action)
 
         m_tabWidget->setEnabled(haveIndex);
         ui->actionIndexInfo->setEnabled(haveIndex);
+
+        m_supportDialog.startCheck();
     } else {
         qFatal("No index with id %d", action->data().toInt());
     }

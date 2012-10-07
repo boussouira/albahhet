@@ -5,6 +5,7 @@
 #include <qhash.h>
 #include "indexesmanager.h"
 #include "updatechecker.h"
+#include "supportdialog.h"
 
 namespace Ui {
     class MainWindow;
@@ -59,6 +60,7 @@ protected:
     BooksDB *m_booksDB;
     SearchField *m_searchFields;
     UpdateChecker *m_updateChecker;
+    SupportDialog m_supportDialog;
     bool m_showNewIndexMsg;
     Ui::MainWindow *ui;
 };
