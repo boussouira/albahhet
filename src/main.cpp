@@ -87,11 +87,14 @@ int main(int argc, char *argv[])
     translator.load("qt_ar", ":/");
     app.installTranslator(&translator);
 
+    QSettings settings;
+
     QSplashScreen splash;
     splash.setPixmap(QPixmap(":/data/images/splash.png"));
-    splash.show();
 
-    QSettings settings;
+    if(settings.value("showSplash", true).toBool())
+        splash.show();
+
     SettingsChecker check;
 
     if(settings.value("checkIndexes", true).toBool()) {

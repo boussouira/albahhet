@@ -19,6 +19,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->checkScanIndexes->setChecked(settings.value("checkIndexes", true).toBool());
     ui->checkShowNewIndex->setChecked(settings.value("showNewIndexMsg", true).toBool());
     ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
+    ui->checkShowSplash->setChecked(settings.value("showSplash", true).toBool());
     ui->checkSaveSearchOptions->setChecked(settings.value("Search/saveSearchOptions", false).toBool());
     ui->checkShowSearchTools->setChecked(settings.value("Search/showSearchTools", false).toBool());
     ui->checkAutoUpdate->setChecked(settings.value("Update/autoCheck", true).toBool());
@@ -69,6 +70,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("showNewIndexMsg", ui->checkShowNewIndex->isChecked());
     settings.setValue("threadCount", ui->spinThreadCount->value());
     settings.setValue("optimizeIndex", ui->checkOptimizeIndex->isChecked());
+    settings.setValue("showSplash", ui->checkShowSplash->isChecked());
     settings.setValue("ramSize", ui->comboBox->itemData(ui->comboBox->currentIndex()));
     settings.setValue("Search/saveSearchOptions", ui->checkSaveSearchOptions->isChecked());
     settings.setValue("Search/showSearchTools", ui->checkShowSearchTools->isChecked());
