@@ -96,6 +96,11 @@ void SupportDialog::parse(QString updateXML)
         if(mid.size() && link.size() && !settings.contains(mid)) {
             m_mid = mid;
             ui->webView->setUrl(link);
+
+            if(e.hasAttribute("w") && e.hasAttribute("h"))
+                ui->webView->resize(e.attribute("w").toInt(),
+                                    e.attribute("h").toInt());
+
             setWindowTitle(wTitle);
 
             break;
