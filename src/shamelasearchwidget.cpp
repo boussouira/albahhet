@@ -17,6 +17,8 @@
 #include <qevent.h>
 #include <qabstractitemmodel.h>
 #include <qmenu.h>
+#include <qnetworkaccessmanager.h>
+#include <qnetworkrequest.h>
 
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     AbstractSearchWidget(parent),
@@ -26,6 +28,7 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
 
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
+    m_nam = new QNetworkAccessManager(this);
 
     SelectedFilterWidget *selected = new SelectedFilterWidget(this);
     selected->hide();
@@ -148,7 +151,7 @@ void ShamelaSearchWidget::search()
     ShamelaSearcher *m_searcher = new ShamelaSearcher;
     m_searcher->setBooksDb(m_booksDB);
     m_searcher->setIndexInfo(m_currentIndex);
-    m_searcher->setQueryString(m_searchQuery);
+    m_searcher->setQueryString(ui->searchQueryWidget->searchQueryStr(true));
     m_searcher->setQuery(q);
 
     m_searcher->setResultsPeerPage(m_resultParPage);
@@ -176,6 +179,13 @@ void ShamelaSearchWidget::search()
     m_tabWidget->setTabText(index, title);
 
     widget->doSearch();
+
+    // Send query to the server
+    QUrl url("http://albahhet.sourceforge.net/bahhet.php");
+    url.addQueryItem("query", ui->searchQueryWidget->searchQueryStr());
+    url.addQueryItem("uid", userId());
+
+    m_nam->get(QNetworkRequest(url));
 }
 
 Query *ShamelaSearchWidget::getBooksListQuery()

@@ -15,6 +15,7 @@ class BooksDB;
 class ShamelaModels;
 class SearchFilterHandler;
 class TabWidget;
+class QNetworkAccessManager;
 
 class ShamelaSearchWidget : public AbstractSearchWidget
 {
@@ -61,6 +62,7 @@ protected:
     ShamelaModels *m_shaModel;
     SearchFilterHandler *m_filterHandler;
     QString m_searchQuery;
+    QNetworkAccessManager *m_nam;
     int m_resultParPage;
     int m_searchCount;
     bool m_useMultiTab;

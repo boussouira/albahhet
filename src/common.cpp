@@ -1,6 +1,8 @@
 #include "common.h"
 #include <qstringlist.h>
 #include <QTime>
+#include <qsettings.h>
+#include <quuid.h>
 
 TCHAR* QStringToTChar(const QString &str)
 {
@@ -186,4 +188,16 @@ int hijriToGregorian(int hYear)
 int gregorianToHijri(int gYear)
 {
     return  (gYear - 622) + ((gYear - 622) / 32);
+}
+
+QString userId()
+{
+    QSettings settings;
+    settings.beginGroup("info");
+
+    if(!settings.contains("uid")) {
+        settings.setValue("uid", QUuid::createUuid().toString());
+    }
+
+    return settings.value("uid").toString();
 }

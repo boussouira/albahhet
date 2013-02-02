@@ -37,6 +37,8 @@ public:
     void loadSearchQuery();
     void saveSearchQuery();
 
+    QString searchQueryStr(bool clean=false);
+
 protected:
     void updateSearchWidget();
     lucene::search::Query *defaultQuery(lucene::queryParser::QueryParser *queryPareser);
@@ -57,6 +59,7 @@ private:
     QStringListModel *m_completerModel;
     QCompleter *m_completer;
     bool m_advancedSearch;
+    QString m_searchQuery;
 };
 
 #endif // SEARCHQUERYWIDGET_H

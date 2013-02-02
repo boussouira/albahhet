@@ -156,6 +156,18 @@ void SearchQueryWidget::saveSearchQuery()
 {
 }
 
+QString SearchQueryWidget::searchQueryStr(bool clean)
+{
+    QString str = m_searchQuery;
+    if(clean && str.size() > 2) {
+        str.remove(0, 1);
+        str.remove(str.size()-1, 1);
+        str.replace("][", " ");
+    }
+
+    return str;
+}
+
 Query *SearchQueryWidget::defaultQuery(QueryParser *queryPareser)
 {
     QString qureyStr = ui->lineDefaultQuery->text().trimmed();
@@ -166,6 +178,8 @@ Query *SearchQueryWidget::defaultQuery(QueryParser *queryPareser)
                                  tr("لم تدخل أي كلمة ليتم البحث عنها"));
             return 0;
     }
+
+    m_searchQuery = QString("[%1]").arg(qureyStr);
 
     return parse(queryPareser,
                  qureyStr,
@@ -223,6 +237,12 @@ Query *SearchQueryWidget::advancedQuery(QueryParser *queryPareser)
 
     if(withoutQuery)
         query->add(withoutQuery, BooleanClause::MUST_NOT);
+
+    m_searchQuery = QString("[%1][%2][%3][%4]")
+            .arg(ui->lineAllWordsQuery->text().trimmed())
+            .arg(ui->lineAnyWordQuery->text().trimmed())
+            .arg(ui->lineExactQuery->text().trimmed())
+            .arg(ui->lineWithoutQuery->text().trimmed());
 
     return query;
 }
