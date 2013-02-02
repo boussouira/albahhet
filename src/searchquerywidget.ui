@@ -163,6 +163,17 @@
    <header>filterlineedit.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>lineDefaultQuery</tabstop>
+  <tabstop>lineAllWordsQuery</tabstop>
+  <tabstop>lineAnyWordQuery</tabstop>
+  <tabstop>lineExactQuery</tabstop>
+  <tabstop>lineWithoutQuery</tabstop>
+  <tabstop>checkDefaultQuery</tabstop>
+  <tabstop>spinExactQuerySlop</tabstop>
+  <tabstop>checkWithoutQuery</tabstop>
+  <tabstop>toolAdvancedSearch</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
