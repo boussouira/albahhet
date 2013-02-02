@@ -32,7 +32,7 @@ Query *parse(QueryParser *queryPareser, const QString &text, bool andOperator)
     } catch(CLuceneError &) {
         free(queryText);
 
-        queryText = QueryParser::escape(QSTRING_TO_TCHAR(text));
+        queryText = QueryParser::escape(QStringToTChar(text));
         query = queryPareser->parse(queryText);
 
         free(queryText);
@@ -397,7 +397,7 @@ void ShamelaSearchWidget::clearSpecialChar()
     FancyLineEdit *edit = qobject_cast<FancyLineEdit*>(sender()->parent());
 
     if(edit) {
-        TCHAR *lineText = QueryParser::escape(QSTRING_TO_TCHAR(edit->text()));
+        TCHAR *lineText = QueryParser::escape(QStringToTChar(edit->text()));
         edit->setText(QString::fromWCharArray(lineText));
 
         free(lineText);

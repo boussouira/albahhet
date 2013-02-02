@@ -81,20 +81,20 @@ void ShamelaIndexer::indexBook(BookInfo *book)
 
         while(shaQuery.next())
         {
-            doc.add( *_CLNEW Field(PAGE_ID_FIELD, QSTRING_TO_TCHAR(shaQuery.value(0).toString()), storeAndNoToken));
+            doc.add( *_CLNEW Field(PAGE_ID_FIELD, QStringToTChar(shaQuery.value(0).toString()), storeAndNoToken, false));
             doc.add( *_CLNEW Field(BOOK_ID_FIELD, book->idT(), storeAndNoToken));
             doc.add( *_CLNEW Field(AUTHOR_DEATH_FIELD, book->authorDeathT(), tokenAndNoStore));
 
             QString text = shaQuery.value(1).toString();
             if(!text.contains("__________")) {
-                doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(text), tokenAndNoStore));
+                doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QStringToTChar(text), tokenAndNoStore, false));
             } else {
                 QStringList texts = text.split("__________", QString::SkipEmptyParts);
                 if(texts.count() == 2) {
-                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(texts.first()), tokenAndNoStore));
-                    doc.add( *_CLNEW Field(FOOT_NOTE_FIELD, QSTRING_TO_TCHAR(texts.last()), tokenAndNoStore));
+                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QStringToTChar(texts.first()), tokenAndNoStore, false));
+                    doc.add( *_CLNEW Field(FOOT_NOTE_FIELD, QStringToTChar(texts.last()), tokenAndNoStore, false));
                 } else {
-                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QSTRING_TO_TCHAR(text), tokenAndNoStore));
+                    doc.add( *_CLNEW Field(PAGE_TEXT_FIELD, QStringToTChar(text), tokenAndNoStore, false));
                 }
             }
 

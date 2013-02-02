@@ -8,9 +8,6 @@
 #include "indexinfo.h"
 #include "booksdb.h"
 
-#define TCHAR_TO_QSTRING(s)     TCharToQString(s)
-#define QSTRING_TO_TCHAR(s)     (TCHAR*)s.utf16()
-
 #define LOG_FILE QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).filePath("session.txt")
 
 enum PULRAL{

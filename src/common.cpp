@@ -4,7 +4,7 @@
 
 TCHAR* QStringToTChar(const QString &str)
 {
-    TCHAR *string = new TCHAR[str.length()+1];
+    TCHAR *string = (TCHAR*) malloc((str.length()+1) * sizeof(TCHAR));
     str.toWCharArray(string);
     string[str.length()] = 0;
 
