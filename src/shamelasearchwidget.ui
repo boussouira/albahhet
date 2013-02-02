@@ -27,98 +27,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p dir='rtl' style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;عبارات &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;يجب&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; ان تكون في النتائج:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QCheckBox" name="checkQueryMust">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>كل العبارات</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p dir='rtl' style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;عبارات &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;قد&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; تكون في النتائج:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p dir='rtl' style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;عبارات&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; يجب ان لا تكون&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; في النتائج:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="FancyLineEdit" name="lineQueryShouldNot">
-          <property name="pixmap" stdset="0">
-           <pixmap resource="resources.qrc">:/data/images/clear.png</pixmap>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QCheckBox" name="checkQueryShouldNot">
-          <property name="text">
-           <string>كل العبارات</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="FancyLineEdit" name="lineQueryMust">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="pixmap" stdset="0">
-           <pixmap resource="resources.qrc">:/data/images/clear.png</pixmap>
-          </property>
-          <property name="extraPadding" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QCheckBox" name="checkQueryShould">
-          <property name="text">
-           <string>كل العبارات</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="FancyLineEdit" name="lineQueryShould">
-          <property name="pixmap" stdset="0">
-           <pixmap resource="resources.qrc">:/data/images/clear.png</pixmap>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="SearchQueryWidget" name="searchQueryWidget" native="true"/>
       </item>
      </layout>
     </widget>
@@ -161,7 +70,7 @@ p, li { white-space: pre-wrap; }
          </widget>
         </item>
         <item>
-         <widget class="FancyLineEdit" name="lineFilter">
+         <widget class="FilterLineEdit" name="lineFilter">
           <property name="pixmap" stdset="0">
            <pixmap resource="resources.qrc">:/data/images/magnifier.png</pixmap>
           </property>
@@ -410,9 +319,15 @@ QPushButton{border: 1px solid rgb(173, 173, 173);padding:2px;}</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FancyLineEdit</class>
+   <class>SearchQueryWidget</class>
+   <extends>QWidget</extends>
+   <header>searchquerywidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FilterLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>fancylineedit.h</header>
+   <header>filterlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

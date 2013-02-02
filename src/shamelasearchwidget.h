@@ -34,7 +34,6 @@ public:
 protected:
     void closeEvent(QCloseEvent *e);
     Query *getBooksListQuery();
-    void setupCleanMenu();
 
 public slots:
     void search();

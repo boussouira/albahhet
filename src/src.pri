@@ -61,7 +61,9 @@ SOURCES += main.cpp \
     updatechecker.cpp \
     updatedialog.cpp \
     wordtypefilter.cpp \
-    supportdialog.cpp
+    supportdialog.cpp \
+    searchquerywidget.cpp \
+    filterlineedit.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
@@ -113,7 +115,9 @@ HEADERS += mainwindow.h \
     updatedialog.h \
     wordtypefilter.h \
     app_version.h \
-    supportdialog.h
+    supportdialog.h \
+    searchquerywidget.h \
+    filterlineedit.h
 
 FORMS += mainwindow.ui \
     indexingdialg.ui \
@@ -131,7 +135,8 @@ FORMS += mainwindow.ui \
     shamelaselectbookdialog.ui \
     aboutdialog.ui \
     updatedialog.ui \
-    supportdialog.ui
+    supportdialog.ui \
+    searchquerywidget.ui
 
 RESOURCES += resources.qrc
 

@@ -9,6 +9,7 @@
 #include "searchfilterhandler.h"
 #include "shamelafilterproxymodel.h"
 #include "selectedfilterwidget.h"
+#include "searchquerywidget.h"
 
 #include <qmessagebox.h>
 #include <qsettings.h>
@@ -17,40 +18,11 @@
 #include <qabstractitemmodel.h>
 #include <qmenu.h>
 
-Query *parse(QueryParser *queryPareser, const QString &text, bool andOperator)
-{
-    if(text.isEmpty())
-        return 0;
-
-    queryPareser->setDefaultOperator(andOperator ? QueryParser::AND_OPERATOR
-                                                 : QueryParser::OR_OPERATOR);
-
-    Query *query = 0;
-    wchar_t *queryText = QStringToTChar(text);
-    try {
-        query = queryPareser->parse(queryText);
-    } catch(CLuceneError &) {
-        free(queryText);
-
-        queryText = QueryParser::escape(QStringToTChar(text));
-        query = queryPareser->parse(queryText);
-
-        free(queryText);
-    }
-
-    return query;
-}
-
 ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     AbstractSearchWidget(parent),
     ui(new Ui::ShamelaSearchWidget)
 {
     ui->setupUi(this);
-
-    forceRTL(ui->lineQueryMust);
-    forceRTL(ui->lineQueryShould);
-    forceRTL(ui->lineQueryShouldNot);
-    forceRTL(ui->lineFilter);
 
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
@@ -61,22 +33,14 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     m_filterHandler->setSelectedFilterWidget(selected);
 
     if(m_filterHandler->getFilterLineMenu())
-        ui->lineFilter->setMenu(m_filterHandler->getFilterLineMenu());
+        ui->lineFilter->setFilterMenu(m_filterHandler->getFilterLineMenu());
     m_searchCount = 0;
     m_proccessItemChange = true;
 
     loadSettings();
-    setupCleanMenu();
 
-    QSettings settings;
-    ui->lineQueryMust->setText(settings.value("lastQueryMust").toString());
-    ui->lineQueryShould->setText(settings.value("lastQueryShould").toString());
-    ui->lineQueryShouldNot->setText(settings.value("lastQueryShouldNot").toString());
-
-    connect(ui->lineQueryMust, SIGNAL(returnPressed()), SLOT(search()));
-    connect(ui->lineQueryShould, SIGNAL(returnPressed()), SLOT(search()));
-    connect(ui->lineQueryShouldNot, SIGNAL(returnPressed()), SLOT(search()));
     connect(ui->pushSearch, SIGNAL(clicked()), SLOT(search()));
+    connect(ui->searchQueryWidget, SIGNAL(search()), SLOT(search()));
     connect(m_filterHandler, SIGNAL(clearText()), ui->lineFilter, SLOT(clear()));
 
     connect(ui->pushSelectAll, SIGNAL(clicked()), SLOT(selectAllBooks()));
@@ -115,11 +79,9 @@ void ShamelaSearchWidget::loadSettings()
 
         int searchIn = settings.value("Search/searchIn", 0).toInt();
         ui->comboSearchIn->setCurrentIndex(searchIn);
-
-        ui->checkQueryMust->setChecked(settings.value("Search/checkQueryMust", false).toBool());
-        ui->checkQueryShould->setChecked(settings.value("Search/checkQueryShould", false).toBool());
-        ui->checkQueryShouldNot->setChecked(settings.value("Search/checkQueryShouldNot", false).toBool());
     }
+
+    ui->searchQueryWidget->loadSettings();
 }
 
 void ShamelaSearchWidget::saveSettings()
@@ -127,10 +89,6 @@ void ShamelaSearchWidget::saveSettings()
     qDebug("Save settings");
 
     QSettings settings;
-
-    settings.setValue("lastQueryMust", ui->lineQueryMust->text());
-    settings.setValue("lastQueryShould", ui->lineQueryShould->text());
-    settings.setValue("lastQueryShouldNot", ui->lineQueryShouldNot->text());
 
     settings.setValue("resultPeerPage", m_resultParPage);
     settings.setValue("useTabs", m_useMultiTab);
@@ -141,38 +99,13 @@ void ShamelaSearchWidget::saveSettings()
 
         int searchIn = ui->comboSearchIn->currentIndex();
         settings.setValue("Search/searchIn", searchIn);
-
-        settings.setValue("Search/checkQueryMust", ui->checkQueryMust->isChecked());
-        settings.setValue("Search/checkQueryShould", ui->checkQueryShould->isChecked());
-        settings.setValue("Search/checkQueryShouldNot", ui->checkQueryShouldNot->isChecked());
     }
+
+    ui->searchQueryWidget->saveSettings();
 }
 
 void ShamelaSearchWidget::search()
 {
-
-    if(ui->lineQueryMust->text().isEmpty()){
-        if(!ui->lineQueryShould->text().isEmpty()){
-            ui->lineQueryMust->setText(ui->lineQueryShould->text());
-            ui->lineQueryShould->clear();
-        } else {
-            QMessageBox::warning(this,
-                                 tr("البحث"),
-                                 tr("يجب ملء حقل العبارات التي يجب ان تظهر في النتائج"));
-            return;
-        }
-    }
-
-    QString mustQureyStr = ui->lineQueryMust->text();
-    QString shouldQureyStr = ui->lineQueryShould->text();
-    QString shouldNotQureyStr = ui->lineQueryShouldNot->text();
-
-    normaliseSearchString(mustQureyStr);
-    normaliseSearchString(shouldQureyStr);
-    normaliseSearchString(shouldNotQureyStr);
-
-    m_searchQuery = mustQureyStr + " " + shouldQureyStr;
-
     ArabicAnalyzer analyzer;
     BooleanQuery *q = new BooleanQuery;
     Query *filterQuery = 0;
@@ -193,69 +126,25 @@ void ShamelaSearchWidget::search()
 
     queryPareser->setAllowLeadingWildcard(true);
 
+    Query *searchQuery = ui->searchQueryWidget->searchQuery(queryPareser);
+    if(!searchQuery)
+        return;
+
+    q->add(searchQuery, BooleanClause::MUST);
+
     m_shaModel->generateLists();
 
-    try {
-        if(!mustQureyStr.isEmpty()) {
-            Query *mq = parse(queryPareser, mustQureyStr, ui->checkQueryMust->isChecked());
-            if(mq)
-                q->add(mq, BooleanClause::MUST);
-        }
+    // Filtering
+    bool required = m_shaModel->selectedBooksCount() <= m_shaModel->unSelectBooksCount();
+    bool prohibited = !required;
 
-        if(!shouldQureyStr.isEmpty()) {
-            Query *mq = parse(queryPareser, shouldQureyStr, ui->checkQueryShould->isChecked());
-            if(mq)
-                q->add(mq, BooleanClause::SHOULD);
-        }
+    filterQuery = getBooksListQuery();
 
-        if(!shouldNotQureyStr.isEmpty()) {
-            Query *mq = parse(queryPareser, shouldNotQureyStr, ui->checkQueryShouldNot->isChecked());
-            if(mq)
-                q->add(mq, BooleanClause::MUST_NOT);
-        }
-
-        qDebug() << "Search:" << TCharToQString(q->toString(PAGE_TEXT_FIELD));
-
-        // Filtering
-        bool required = m_shaModel->selectedBooksCount() <= m_shaModel->unSelectBooksCount();
-        bool prohibited = !required;
-
-        filterQuery = getBooksListQuery();
-
-        if(filterQuery) {
-            filterQuery->setBoost(0.0);
-            q->add(filterQuery, required, prohibited);
-        }
-
-    } catch(CLuceneError &e) {
-        if(e.number() == CL_ERR_Parse)
-            QMessageBox::warning(this,
-                                 tr("خطأ في استعلام البحث"),
-                                 tr("هنالك خطأ في احدى حقول البحث"
-                                    "\n"
-                                    "تأكد من حذف الأقواس و المعقوفات وغيرها،"
-                                    " ويمكنك فعل ذلك من خلال زر التنظيف الموجود يسار حقل البحث، بعد الضغط على هذا الزر اعد البحث"
-                                    "\n"
-                                    "او تأكد من أنك تستخدمها بشكل صحيح"));
-        else
-            QMessageBox::warning(0,
-                                 "CLucene Query error",
-                                 tr("code: %1\nError: %2").arg(e.number()).arg(e.what()));
-
-        _CLDELETE(q);
-        _CLDELETE(queryPareser);
-
-        return;
+    if(filterQuery) {
+        filterQuery->setBoost(0.0);
+        q->add(filterQuery, required, prohibited);
     }
-    catch(...) {
-        QMessageBox::warning(0,
-                             "CLucene Query error",
-                             tr("Unknow error"));
-        _CLDELETE(q);
-        _CLDELETE(queryPareser);
 
-        return;
-    }
     ShamelaSearcher *m_searcher = new ShamelaSearcher;
     m_searcher->setBooksDb(m_booksDB);
     m_searcher->setIndexInfo(m_currentIndex);
@@ -268,8 +157,8 @@ void ShamelaSearchWidget::search()
     ShamelaResultWidget *widget;
     int index=1;
     QString title = tr("%1 (%2)")
-                    .arg(m_currentIndex->name())
-                    .arg(++m_searchCount);
+            .arg(m_currentIndex->name())
+            .arg(++m_searchCount);
 
     if(m_useMultiTab || m_tabWidget->count() < 2) {
         widget = new ShamelaResultWidget(this);
@@ -288,7 +177,6 @@ void ShamelaSearchWidget::search()
 
     widget->doSearch();
 }
-
 
 Query *ShamelaSearchWidget::getBooksListQuery()
 {
@@ -401,28 +289,6 @@ void ShamelaSearchWidget::clearSpecialChar()
         edit->setText(QString::fromWCharArray(lineText));
 
         free(lineText);
-    }
-}
-
-void ShamelaSearchWidget::setupCleanMenu()
-{
-    QList<FancyLineEdit*> lines;
-    lines << ui->lineQueryMust;
-    lines << ui->lineQueryShould;
-    lines << ui->lineQueryShouldNot;
-
-    foreach(FancyLineEdit *line, lines) {
-        QMenu *menu = new QMenu(line);
-        QAction *clearTextAct = new QAction(tr("مسح النص"), line);
-        QAction *clearSpecialCharAct = new QAction(tr("ابطال مفعول الاقواس وغيرها"), line);
-
-        menu->addAction(clearTextAct);
-        menu->addAction(clearSpecialCharAct);
-
-        connect(clearTextAct, SIGNAL(triggered()), SLOT(clearLineText()));
-        connect(clearSpecialCharAct, SIGNAL(triggered()), SLOT(clearSpecialChar()));
-
-        line->setMenu(menu);
     }
 }
 
