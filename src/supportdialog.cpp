@@ -1,5 +1,7 @@
 #include "supportdialog.h"
 #include "ui_supportdialog.h"
+#include "networkrequest.h"
+
 #include <qmessagebox.h>
 #include <qdebug.h>
 #include <qdom.h>
@@ -25,7 +27,7 @@ void SupportDialog::startCheck()
 
 void SupportDialog::startRequest(QUrl url)
 {
-    m_reply = m_qnam.get(QNetworkRequest(url));
+    m_reply = m_qnam.get(NetworkRequest(url));
     connect(m_reply, SIGNAL(finished()), SLOT(httpFinished()));
     connect(m_reply, SIGNAL(readyRead()), SLOT(httpReadyRead()));
     connect(m_reply, SIGNAL(error(QNetworkReply::NetworkError)),

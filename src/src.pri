@@ -63,6 +63,7 @@ SOURCES += main.cpp \
     wordtypefilter.cpp \
     supportdialog.cpp \
     searchquerywidget.cpp \
+    networkrequest.cpp \
     filterlineedit.cpp
 
 HEADERS += mainwindow.h \
@@ -117,6 +118,7 @@ HEADERS += mainwindow.h \
     app_version.h \
     supportdialog.h \
     searchquerywidget.h \
+    networkrequest.h \
     filterlineedit.h
 
 FORMS += mainwindow.ui \

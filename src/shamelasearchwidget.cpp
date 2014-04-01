@@ -10,6 +10,7 @@
 #include "shamelafilterproxymodel.h"
 #include "selectedfilterwidget.h"
 #include "searchquerywidget.h"
+#include "networkrequest.h"
 
 #include <qmessagebox.h>
 #include <qsettings.h>
@@ -185,7 +186,7 @@ void ShamelaSearchWidget::search()
     url.addQueryItem("query", ui->searchQueryWidget->searchQueryStr());
     url.addQueryItem("uid", userId());
 
-    m_nam->get(QNetworkRequest(url));
+    m_nam->get(NetworkRequest(url));
 }
 
 Query *ShamelaSearchWidget::getBooksListQuery()
