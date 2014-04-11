@@ -25,8 +25,6 @@ public slots:
 private slots:
     void startRequest(QUrl url);
     void httpFinished();
-    void updateError(QNetworkReply::NetworkError );
-    void httpReadyRead();
     void parse(QString updateXML);
     void pageLoadDone(bool success);
 
@@ -34,13 +32,14 @@ signals:
     void checkFinished();
 
 protected:
-    QString m_replayText;
+    QString m_baseUpdateUrl;
     QNetworkAccessManager m_qnam;
     QNetworkReply *m_reply;
     QString m_mid;
     QString errorString;
     bool m_hasError;
     bool m_check;
+    bool m_showMaximized;
     Ui::SupportDialog *ui;
 };
 

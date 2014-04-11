@@ -37,15 +37,13 @@ public slots:
 private slots:
     void startRequest(QUrl url);
     void httpFinished();
-    void updateError(QNetworkReply::NetworkError );
-    void httpReadyRead();
     void parse(QString updateXML);
 
 signals:
     void checkFinished();
 
 protected:
-    QString m_replayText;
+    QString m_baseUpdateUrl;
     QNetworkAccessManager m_qnam;
     QNetworkReply *m_reply;
     UpdateInfo *m_result;

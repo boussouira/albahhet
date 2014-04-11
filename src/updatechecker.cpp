@@ -4,12 +4,19 @@
 #include <qmessagebox.h>
 #include <qdebug.h>
 #include <qdom.h>
+#include <QSettings>
+
+#define DEFAULT_BASE_URL "http://albahhet.sourceforge.net/cms/index.php/updater/check/{GIT_REVISION}"
 
 UpdateChecker::UpdateChecker(QObject *parent) :
     QObject(parent)
 {
     hasError = false;
     autoCheck = false;
+
+    QSettings settings;
+    m_baseUpdateUrl = settings.value("Update/baseUrl",
+                                     DEFAULT_BASE_URL).toString();
 }
 
 UpdateChecker::~UpdateChecker()
@@ -21,14 +28,13 @@ UpdateChecker::~UpdateChecker()
 void UpdateChecker::startCheck(bool autoUpdateCheck)
 {
     m_result = 0;
-    m_replayText.clear();
     autoCheck = autoUpdateCheck;
 
 #ifdef GITCHANGENUMBER
-    QUrl url(QString("http://albahhet.sourceforge.net/cms/index.php/updater/check/%1").arg(GITCHANGENUMBER));
-    qDebug() << "Check:" << url.toString();
+     QString url = QString(m_baseUpdateUrl).replace("{GIT_REVISION}", GITCHANGENUMBER);
+    qDebug() << "Check:" << url;
 
-    startRequest(url);
+    startRequest(QUrl(url));
 #else
     qWarning("Can't check for update without Git change number");
 #endif
@@ -43,9 +49,6 @@ void UpdateChecker::startRequest(QUrl url)
 {
     m_reply = m_qnam.get(NetworkRequest(url));
     connect(m_reply, SIGNAL(finished()), SLOT(httpFinished()));
-    connect(m_reply, SIGNAL(readyRead()), SLOT(httpReadyRead()));
-    connect(m_reply, SIGNAL(error(QNetworkReply::NetworkError)),
-            SLOT(updateError(QNetworkReply::NetworkError)));
 }
 
 void UpdateChecker::httpFinished()
@@ -57,15 +60,15 @@ void UpdateChecker::httpFinished()
 
         emit checkFinished();
     } else if (!redirectionTarget.isNull()) {
-            QUrl url = url.resolved(redirectionTarget.toUrl());
-            m_reply->deleteLater();
-            m_replayText.clear();
+        qDebug() << "UpdateChecker::httpFinished" << "Redirect to"
+                 << redirectionTarget.toUrl().toString();
 
-            startRequest(url);
-            return;
+        startRequest(m_reply->url().resolved(redirectionTarget.toUrl()));
     } else {
-        if(m_replayText.size() > 10)
-            parse(m_replayText);
+        QString replayText = QString::fromUtf8(m_reply->readAll());
+
+        if(replayText.size() > 10)
+            parse(replayText);
 
         hasError = false;
         emit checkFinished();
@@ -73,21 +76,6 @@ void UpdateChecker::httpFinished()
 
     m_reply->deleteLater();
     m_reply = 0;
-}
-
-void UpdateChecker::updateError(QNetworkReply::NetworkError)
-{
-    errorString = m_reply->errorString();
-    hasError = true;
-}
-
-void UpdateChecker::httpReadyRead()
-{
-    // this slot gets called every time the QNetworkReply has new data.
-    // We read all of its new data and write it into the file.
-    // That way we use less RAM than when reading it at the finished()
-    // signal of the QNetworkReply
-    m_replayText.append(QString::fromUtf8(m_reply->readAll()));
 }
 
 void UpdateChecker::parse(QString updateXML)
@@ -119,4 +107,8 @@ void UpdateChecker::parse(QString updateXML)
     }
 
     m_results.append(m_result);
+#ifdef GITCHANGENUMBER
+    if(m_result->revision <= QString(GITCHANGENUMBER).toInt())
+        m_result = 0;
+#endif
 }

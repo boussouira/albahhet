@@ -1,11 +1,15 @@
 #include "supportdialog.h"
 #include "ui_supportdialog.h"
 #include "networkrequest.h"
+#include "common.h"
 
 #include <qmessagebox.h>
 #include <qdebug.h>
 #include <qdom.h>
-#include <QSettings>
+#include <qsettings.h>
+#include <qcryptographichash.h>
+
+#define DEFAULT_BASE_URL "https://dl.dropbox.com/s/mjjxktc3jvnkfq7/albahhet-messages.xml?dl=1"
 
 SupportDialog::SupportDialog(QWidget *parent) :
     QDialog(parent),
@@ -14,6 +18,11 @@ SupportDialog::SupportDialog(QWidget *parent) :
     ui->setupUi(this);
 
     m_check = true;
+    m_showMaximized = false;
+
+    QSettings settings;
+    m_baseUpdateUrl = settings.value("SupportDialog/baseUrl",
+                                     DEFAULT_BASE_URL).toString();
 
     connect(ui->webView, SIGNAL(loadFinished(bool)), SLOT(pageLoadDone(bool)));
 }
@@ -22,16 +31,13 @@ SupportDialog::SupportDialog(QWidget *parent) :
 void SupportDialog::startCheck()
 {
     if(m_check)
-        startRequest(QUrl("https://dl.dropbox.com/s/mjjxktc3jvnkfq7/albahhet-messages.xml?dl=1"));
+        startRequest(QUrl(m_baseUpdateUrl));
 }
 
 void SupportDialog::startRequest(QUrl url)
 {
     m_reply = m_qnam.get(NetworkRequest(url));
     connect(m_reply, SIGNAL(finished()), SLOT(httpFinished()));
-    connect(m_reply, SIGNAL(readyRead()), SLOT(httpReadyRead()));
-    connect(m_reply, SIGNAL(error(QNetworkReply::NetworkError)),
-            SLOT(updateError(QNetworkReply::NetworkError)));
 }
 
 void SupportDialog::httpFinished()
@@ -41,17 +47,21 @@ void SupportDialog::httpFinished()
         errorString = m_reply->errorString();
         m_hasError = true;
 
+        qDebug() << "SupportDialog::httpFinished" << "Error:" << errorString
+                 <<"Code" << m_reply->error();
         emit checkFinished();
     } else if (!redirectionTarget.isNull()) {
-            QUrl url = url.resolved(redirectionTarget.toUrl());
-            m_reply->deleteLater();
-            m_replayText.clear();
+//        qDebug() << "SupportDialog::httpFinished" << "Redirect to"
+//                 << redirectionTarget.toUrl().toString();
 
-            startRequest(url);
-            return;
+        startRequest(m_reply->url().resolved(redirectionTarget.toUrl()));
     } else {
-        if(m_replayText.size() > 10)
-            parse(m_replayText);
+        QString replayText = QString::fromUtf8(m_reply->readAll());
+
+        if(replayText.size() > 10) {
+//            qDebug() << "SupportDialog::httpFinished" << "Replay:" << replayText;
+            parse(replayText);
+        }
 
         m_hasError = false;
         emit checkFinished();
@@ -59,21 +69,6 @@ void SupportDialog::httpFinished()
 
     m_reply->deleteLater();
     m_reply = 0;
-}
-
-void SupportDialog::updateError(QNetworkReply::NetworkError)
-{
-    errorString = m_reply->errorString();
-    m_hasError = true;
-}
-
-void SupportDialog::httpReadyRead()
-{
-    // this slot gets called every time the QNetworkReply has new data.
-    // We read all of its new data and write it into the file.
-    // That way we use less RAM than when reading it at the finished()
-    // signal of the QNetworkReply
-    m_replayText.append(QString::fromUtf8(m_reply->readAll()));
 }
 
 void SupportDialog::parse(QString updateXML)
@@ -88,22 +83,41 @@ void SupportDialog::parse(QString updateXML)
     QDomElement e = root.firstChildElement();
 
     QSettings settings;
-    settings.beginGroup("Messages");
 
     while(!e.isNull()) {
         QString mid = e.attribute("id");
         QString link = e.attribute("url");
         QString wTitle = e.attribute("title", windowTitle());
 
-        if(mid.size() && link.size() && !settings.contains(mid)) {
+        if(mid.size() && (mid.compare("always", Qt::CaseInsensitive)==0
+                || !settings.contains(QString("Messages/%1").arg(mid)))) {
+
+            if(e.hasAttribute("update-url"))
+                settings.setValue("Update/baseUrl", e.attribute("update-url"));
+
+            if(e.hasAttribute("support-url"))
+                settings.setValue("SupportDialog/baseUrl", e.attribute("support-url"));
+
+            if(e.hasAttribute("user-agent"))
+                settings.setValue("NetworkRequest/userAgent", e.attribute("user-agent"));
+
+            if (e.hasAttribute("ignore")) {
+                e = e.nextSiblingElement();
+                continue;
+            }
+
             m_mid = mid;
-            ui->webView->setUrl(link);
 
             if(e.hasAttribute("w") && e.hasAttribute("h"))
-                ui->webView->resize(e.attribute("w").toInt(),
-                                    e.attribute("h").toInt());
+                resize(e.attribute("w").toInt(),
+                       e.attribute("h").toInt());
+
+            m_showMaximized = (e.hasAttribute("maximized")
+                               && e.attribute("maximized").compare("true", Qt::CaseInsensitive)==0);
 
             setWindowTitle(wTitle);
+
+            ui->webView->setUrl(link);
 
             break;
         }
@@ -121,7 +135,12 @@ void SupportDialog::pageLoadDone(bool success)
             settings.setValue(m_mid, true);
         }
 
-        show();
+        if(m_showMaximized) {
+            setWindowState(windowState() | Qt::WindowMaximized);
+        }
+
+        disconnect(ui->webView, SIGNAL(loadFinished(bool)), this, SLOT(pageLoadDone(bool)));
+        exec();
     }
 
     m_check = false;
