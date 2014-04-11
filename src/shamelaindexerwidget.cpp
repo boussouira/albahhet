@@ -13,6 +13,7 @@
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qpushbutton.h>
+#include <Windows.h>
 
 ShamelaIndexerWidget::ShamelaIndexerWidget(QWidget *parent) :
     AbstractIndexingWidget(parent),
@@ -143,6 +144,10 @@ void ShamelaIndexerWidget::startIndexing()
 {
     qDebug("Start indexing...");
 
+    if(SetThreadExecutionState(ES_SYSTEM_REQUIRED|ES_CONTINUOUS) == NULL) {
+        qWarning("Error when preventing system from going to hibernate mode");
+    }
+
     m_cancelButton->hide();
     m_nextButton->setText(tr("ايقاف الفهرسة"));
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
@@ -254,6 +259,8 @@ void ShamelaIndexerWidget::doneIndexing()
         _CLLDELETE(m_writer);
 
         saveIndexInfo(elpasedMsec, optimizeTime);
+
+        SetThreadExecutionState(ES_CONTINUOUS);
 
         if(ui->checkShutDown->isChecked())
             shutDown();
