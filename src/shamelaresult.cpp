@@ -47,7 +47,7 @@ QString ShamelaResult::toHtml()
                                    "</div>"
                                    "<p class='resultText' bookid='%4' rid='%5'>%6</p>"
                                    "<p class='result_info' bookid='b%4'> كتاب: <span class='bookName' title='%10'>%7</span>"
-                                   "<span style=''>"
+                                   "<span class='shamela_tools'>"
                                         "<span class='shamela_open'><img src='qrc:/data/images/shamela.png' /></span>"
                                         "<span class='viewer_open'><img src='qrc:/data/images/shamela-viewer.png' /></span>"
                                    "</span>"
