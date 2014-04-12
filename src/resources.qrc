@@ -19,5 +19,7 @@
         <file>../data/images/plus.png</file>
         <file>../data/images/kuran.png</file>
         <file>../data/images/splash.png</file>
+        <file>../data/images/shamela.png</file>
+        <file>../data/images/shamela-viewer.png</file>
     </qresource>
 </RCC>

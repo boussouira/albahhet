@@ -32,6 +32,9 @@ public:
 
 public slots:
     void openResult(int bookID, int resultID);
+    void openInShamela(int bookID, int pageID);
+    void openInViewer(int bookID, int pageID);
+
     QString baseUrl();
     void showNavigationButton(bool show);
     void hideBookReader();
@@ -51,6 +54,7 @@ protected slots:
 protected:
     void setPageCount(int current, int count);
     void buttonStat(int currentPage, int pageCount);
+    void showNewShamelaVersionMessage();
 
 protected:
     WebView *m_webView;

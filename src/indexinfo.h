@@ -49,6 +49,10 @@ public:
     QString shamelaSpecialDbPath();
     bool isShamelaPath(QString path);
 
+    QString shamelaBinPath();
+    QString shamelaAppPath();
+    QString viewerAppPath();
+
     QString indexDbName();
     QString indexDbPath();
 

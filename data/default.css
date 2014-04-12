@@ -179,3 +179,9 @@ body {
     padding: 2px;
 }
 
+.viewer_open img, .shamela_open img {
+    cursor: pointer;
+    width: 25px;
+    height: 25px;
+    margin-left: 10px;
+}

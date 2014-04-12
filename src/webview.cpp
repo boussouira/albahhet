@@ -20,6 +20,7 @@ WebView::WebView(IndexInfo::IndexType indexType, QWidget *parent) : QWebView(par
 
     pageAction(QWebPage::Copy)->setShortcut(QKeySequence::Copy);
 
+    //QWebSettings::globalSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     QWebSettings::globalSettings()->setFontFamily(QWebSettings::StandardFont, font.family());
     QWebSettings::globalSettings()->setFontSize(QWebSettings::DefaultFontSize, fontSize);
 }
@@ -31,7 +32,7 @@ void WebView::setIndexType(IndexInfo::IndexType indexType)
 
 void WebView::init()
 {
-    QString appPath(QString("file:///%1").arg(qApp->applicationDirPath()));
+    QString appPath = QUrl::fromLocalFile(qApp->applicationDirPath()).toString();
     QString jsFile;
 
     if(m_indexType == IndexInfo::ShamelaIndex)

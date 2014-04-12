@@ -36,6 +36,9 @@ public slots:
     int currentPage();
     int currentPart();
 
+    void openInShamela();
+    void openInViewer();
+
 protected:
     QSqlDatabase m_bookDB;
     QtHighLighter m_textHighlighter;

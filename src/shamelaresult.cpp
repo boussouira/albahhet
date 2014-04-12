@@ -38,17 +38,22 @@ QString ShamelaResult::bookInfo()
 QString ShamelaResult::toHtml()
 {
     if(m_edited) {
-        m_html = QObject::tr("<div class=\"result %1\">"
-                             "<div class=\"result_head\">"
-                             "<h3>%2</h3>"
-                             "<span class=\"progSpan\" style=\"width: %3px;\">"
-                             "<span class=\"progSpanContainre\"></span>"
-                             "</span>"
-                             "</div>"
-                             "<p class=\"resultText\" bookid=\"%4\" rid=\"%5\">%6</p>"
-                             "<p class=\"result_info\" bookid=\"b%4\"> كتاب: <span class=\"bookName\" title=\"%10\">%7</span>"
-                             "<span style=\"float: left;margin: 5px 0px\">الصفحة: <span style=\"margin-left: 7px;\">%8</span>  الجزء: <span>%9</span></span>"
-                             "</p></div>")
+        m_html = QString::fromUtf8("<div class='result %1' bookid='%4' rid='%5' pid='%11'>"
+                                   "<div class='result_head'>"
+                                   "<h3>%2</h3>"
+                                   "<span class='progSpan' style='width: %3px;'>"
+                                   "<span class='progSpanContainre'></span>"
+                                   "</span>"
+                                   "</div>"
+                                   "<p class='resultText' bookid='%4' rid='%5'>%6</p>"
+                                   "<p class='result_info' bookid='b%4'> كتاب: <span class='bookName' title='%10'>%7</span>"
+                                   "<span style=''>"
+                                        "<span class='shamela_open'><img src='qrc:/data/images/shamela.png' /></span>"
+                                        "<span class='viewer_open'><img src='qrc:/data/images/shamela-viewer.png' /></span>"
+                                   "</span>"
+                                   "<span style='float: left;margin: 5px 0px'>الصفحة: <span style='margin-left: 7px;'>%8</span>  الجزء: <span>%9</span></span>"
+                                   "</p></div>")
+                .replace('\'', '"')
                 .arg(m_bgColor)                 // backround class name (%1)
                 .arg(m_title)                   // bab (%2)
                 .arg(m_score)                   // score (%3)
@@ -58,8 +63,8 @@ QString ShamelaResult::toHtml()
                 .arg(m_bookName)                // book name (%7)
                 .arg(m_page)                    // page (%8)
                 .arg(m_part)                    // part (%9)
-                .arg(m_info.replace('\"', '\'').replace(QRegExp("[\\r\\n]+"), " - "));// book info(%10)
-
+                .arg(m_info.replace('\"', '\'').replace(QRegExp("[\\r\\n]+"), " - ")) // book info(%10)
+                .arg(m_pageID); // Page Id (%11)
 
         m_edited = false;
     }

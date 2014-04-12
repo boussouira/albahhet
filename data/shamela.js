@@ -2,15 +2,31 @@
 var clearBody = false;
 
 function handleEvents() {
+
     $('.result p.resultText').click(function() {
-        var d = $(this).parent('.result');
-        var p = d.find('p.resultText');
-        var bookID = p.attr('bookid');
-        var resultID = p.attr('rid');
+        var d = $(this).parents('.result');
+        var bookID = d.attr('bookid');
+        var resultID = d.attr('rid');
 
         scroll(d.position().left, d.position().top);
 
         resultWidget.openResult(bookID, resultID);
+    });
+
+    $('.shamela_open').click(function(){
+        var d = $(this).parents('.result');
+        var bookID = d.attr('bookid');
+        var pageID = d.attr('pid');
+
+        resultWidget.openInShamela(bookID, pageID);
+    });
+
+    $('.viewer_open').click(function(){
+        var d = $(this).parents('.result');
+        var bookID = d.attr('bookid');
+        var pageID = d.attr('pid');
+
+        resultWidget.openInViewer(bookID, pageID);
     });
 }
 
@@ -23,6 +39,7 @@ function startReading() {
     parNav.append($('<img>', {'alt': 'الصفحة السابقة',
                               'title': 'الصفحة السابقة',
                               'src': baseUrl+'/data/images/go-next2.png',
+                              'style': 'padding-right: 15px;',
                               'class': 'prev'}).click(function() {
         var pTxt = bookReader.prevPage();
 
@@ -41,6 +58,22 @@ function startReading() {
         updateInfoBar();
         scroll(0, 0);
     }));
+
+    parNav.prepend($('<img>', {'alt': 'تصفح الكتاب في العاض',
+                        'title': 'تصفح الكتاب في العاض',
+                        'src': baseUrl+'/data/images/shamela-viewer.png',
+                        'style' : 'width:15px;height:15px;padding-left: 15px; border-left: 1px solid #ccc;',
+                        'class': 'next'}).click(function() {
+                            bookReader.openInViewer();
+                        }));
+
+    parNav.prepend($('<img>', {'alt': 'تصفح الكتاب في الشاملة',
+                        'title': 'تصفح الكتاب في الشاملة',
+                        'src': baseUrl+'/data/images/shamela.png',
+                        'style' : 'width:15px;height:15px',
+                        'class': 'next'}).click(function() {
+                            bookReader.openInShamela();
+                        }));
 
     var bookNameText = bookReader.bookName();
 

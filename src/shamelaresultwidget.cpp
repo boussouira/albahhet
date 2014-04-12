@@ -15,6 +15,7 @@
 #include <qdebug.h>
 #include <qmessagebox.h>
 #include <qevent.h>
+#include <QProcess>
 
 ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
     QWidget(parent),
@@ -188,6 +189,22 @@ void ShamelaResultWidget::buttonStat(int currentPage, int pageCount)
     ui->buttonGoLast->setEnabled(next);
 }
 
+void ShamelaResultWidget::showNewShamelaVersionMessage()
+{
+    QSettings settings;
+    if(settings.value("showNewShamelaVersionMessage", 0).toInt() >= 2)
+        return;
+
+    QMessageBox::information(this,
+                             tr("فتح في الشاملة"),
+                             tr("لكي تقوم بتصفح الكتاب في الشاملة يجب أن تنصب الاصدار 3.55 أو ما فوقه من المكتبة الشاملة" "\n"
+                                "يمكنك تحميل اخر اصدار من موقع المكتبة الشاملة" "\n"
+                                "http://shamela.ws"));
+
+    settings.setValue("showNewShamelaVersionMessage",
+                      settings.value("showNewShamelaVersionMessage", 0).toInt()+1);
+}
+
 void ShamelaResultWidget::openResult(int bookID, int resultID)
 {
     m_bookReader->close();
@@ -215,9 +232,35 @@ void ShamelaResultWidget::openResult(int bookID, int resultID)
     showBookReader();
 }
 
+void ShamelaResultWidget::openInShamela(int bookID, int pageID)
+{
+    showNewShamelaVersionMessage();
+
+    QStringList arguments;
+    arguments << QString("-b%1").arg(bookID)
+              << QString("-p%1").arg(pageID);
+
+    QProcess *myProcess = new QProcess(this);
+    myProcess->start(m_indexInfo->shamelaAppPath(), arguments);
+}
+
+void ShamelaResultWidget::openInViewer(int bookID, int pageID)
+{
+    showNewShamelaVersionMessage();
+
+    QStringList arguments;
+    arguments << QDir::toNativeSeparators(m_indexInfo->shamelaMainDbPath())
+              << QString("-b%1").arg(bookID)
+              << QString("-p%1").arg(pageID);
+
+    QProcess *myProcess = new QProcess(this);
+    myProcess->setWorkingDirectory(m_indexInfo->shamelaBinPath());
+    myProcess->start(m_indexInfo->viewerAppPath(), arguments);
+}
+
 QString ShamelaResultWidget::baseUrl()
 {
-    return QString("file:///%1").arg(qApp->applicationDirPath());
+    return QUrl::fromLocalFile(qApp->applicationDirPath()).toString();
 }
 
 void ShamelaResultWidget::showNavigationButton(bool show)

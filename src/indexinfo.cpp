@@ -93,6 +93,27 @@ bool IndexInfo::isShamelaPath(QString path)
     return false;
 }
 
+QString IndexInfo::shamelaBinPath()
+{
+    QDir dir(shamelaPath());
+    dir.cd("bin");
+    return dir.absolutePath();
+}
+
+QString IndexInfo::shamelaAppPath()
+{
+    QDir dir(shamelaPath());
+    dir.cd("bin");
+    return dir.filePath("shamela.exe");
+}
+
+QString IndexInfo::viewerAppPath()
+{
+    QDir dir(shamelaPath());
+    dir.cd("bin");
+    return dir.filePath("viewer.exe");
+}
+
 QString IndexInfo::indexDbName()
 {
     return QString("book_index.db");

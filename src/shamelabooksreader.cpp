@@ -1,5 +1,6 @@
 #include "shamelabooksreader.h"
 #include "common.h"
+#include "shamelaresultwidget.h"
 #include <qvariant.h>
 
 ShamelaBooksReader::ShamelaBooksReader(QObject *parent) : QObject(parent)
@@ -109,6 +110,25 @@ int ShamelaBooksReader::currentPage()
 int ShamelaBooksReader::currentPart()
 {
     return m_currentPart;
+}
+
+void ShamelaBooksReader::openInShamela()
+{
+    ShamelaResultWidget *resultWidget = qobject_cast<ShamelaResultWidget*>(parent());
+    if(!resultWidget)
+        return;
+
+    resultWidget->openInShamela(m_shamelaResult->bookId(), m_currentID);
+}
+
+void ShamelaBooksReader::openInViewer()
+{
+    ShamelaResultWidget *resultWidget = qobject_cast<ShamelaResultWidget*>(parent());
+    if(!resultWidget)
+        return;
+
+    resultWidget->openInViewer(m_shamelaResult->bookId(), m_currentID);
+
 }
 
 void ShamelaBooksReader::close()
