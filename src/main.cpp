@@ -103,7 +103,9 @@ int main(int argc, char *argv[])
     }
 
 #ifdef Q_OS_WIN
-    useArabicKeyboardLayout();
+    if(settings.value("ChangeKeyboard", false).toBool()) {
+        useArabicKeyboardLayout();
+    }
 #endif
 
     MainWindow w;

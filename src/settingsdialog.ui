@@ -38,6 +38,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkChangeKeyboard">
+         <property name="text">
+          <string>تغيير لغة لوحة المفاتيح الى العربية عند تشغيل البرنامج</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="checkShowNewIndex">
          <property name="text">
           <string>عرض رسالة انشاء فهرس جديد</string>

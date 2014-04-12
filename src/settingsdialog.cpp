@@ -17,6 +17,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->spinResultPeerPage->setValue(settings.value("resultPeerPage", 10).toInt());
     ui->checkOpenNewTab->setChecked(settings.value("useTabs", true).toBool());
     ui->checkScanIndexes->setChecked(settings.value("checkIndexes", true).toBool());
+    ui->checkChangeKeyboard->setChecked(settings.value("ChangeKeyboard", false).toBool());
     ui->checkShowNewIndex->setChecked(settings.value("showNewIndexMsg", true).toBool());
     ui->checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
     ui->checkShowSplash->setChecked(settings.value("showSplash", true).toBool());
@@ -67,6 +68,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("resultPeerPage", ui->spinResultPeerPage->value());
     settings.setValue("useTabs", ui->checkOpenNewTab->isChecked());
     settings.setValue("checkIndexes", ui->checkScanIndexes->isChecked());
+    settings.setValue("ChangeKeyboard", ui->checkChangeKeyboard->isChecked());
     settings.setValue("showNewIndexMsg", ui->checkShowNewIndex->isChecked());
     settings.setValue("threadCount", ui->spinThreadCount->value());
     settings.setValue("optimizeIndex", ui->checkOptimizeIndex->isChecked());
