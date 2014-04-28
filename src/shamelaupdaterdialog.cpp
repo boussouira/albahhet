@@ -4,8 +4,9 @@
 #include "cl_common.h"
 #include "indexinfo.h"
 #include "booksdb.h"
-#include "indexingdialg.h"
 #include "shamelaselectbookdialog.h"
+#include "arabicanalyzer.h"
+#include "shamelaindexer.h"
 
 #include <exception>
 #include <iostream>

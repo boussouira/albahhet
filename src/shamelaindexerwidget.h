@@ -1,47 +1,54 @@
 #ifndef SHAMELAINDEXERWIDGET_H
 #define SHAMELAINDEXERWIDGET_H
 
-#include "abstractindexingwidget.h"
+#include <qwizard.h>
+#include "indexwidgetbase.h"
 
-namespace Ui {
-    class ShamelaIndexerWidget;
-}
-class IndexInfo;
-
-class ShamelaIndexerWidget : public AbstractIndexingWidget
-{
+class ShamelaIndexerWidget : public IndexWidgetBase {
     Q_OBJECT
 
 public:
-    ShamelaIndexerWidget(QWidget *parent = 0);
-    ~ShamelaIndexerWidget();
-    QString indexTypeName();
+    enum Pages {
+        Page_SelectShamelaPage,
+        Page_SelectBooksPage,
+        Page_BooksIndexingPage,
+        Page_DoneIndexingPage,
+    };
+
+public:
+    ShamelaIndexerWidget(QWidget *parent);
+
+    QString id();
+    QString title();
+    QString description();
+
+    QList<QWizardPage*> pages();
+
+    IndexInfo *indexInfo() const;
+    BooksDB *bookDB() const;
+    int booksCount() const;
+    int indexedBooksCount() const;
+    int indexingTime() const;
+    int optimizeIndexTime() const;
+
+    void setBooksCount(int booksCount);
+    void setIndexedBooksCount(int indexedBooksCount);
+    void setIndexingTime(int indexingTime);
+    void setOptimizeIndexTime(int optimizeIndexTime);
+
+    void saveIndexInfo();
+
+    bool cancel();
 
 protected:
-    void readPaths();
-    void checkIndex();
-    void showBooks();
-    void startIndexing();
-    void stopIndexing();
-    void saveIndexInfo(int indexingTime=0, int opimizingTime=0);
-
-public slots:
-    void nextStep();
-    void addBook(const QString &);
-    void doneIndexing();
-    void indexingError();
-
-private slots:
-    void on_buttonSelectIndexPath_clicked();
-    void on_buttonSelectShamela_clicked();
-    void on_label_2_linkActivated(QString);
-
-private:
     IndexInfo *m_indexInfo;
-    Ui::ShamelaIndexerWidget *ui;
+    BooksDB *m_bookDB;
+    QList<QWizardPage*> m_pages;
     int m_booksCount;
-    int m_indexedBooks;
-    int m_threadCount;
+    int m_indexedBooksCount;
+    int m_indexingTime;
+    int m_optimizeIndexTime;
 };
+
 
 #endif // SHAMELAINDEXERWIDGET_H

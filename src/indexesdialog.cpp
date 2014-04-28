@@ -4,9 +4,11 @@
 #include "cl_common.h"
 #include "indexinfo.h"
 #include "booksdb.h"
-#include "indexingdialg.h"
 #include "shamelaupdaterdialog.h"
 #include "indexesmanager.h"
+#include "arabicanalyzer.h"
+#include "indexoptimizer.h"
+
 #include <qsettings.h>
 #include <qmessagebox.h>
 #include <qinputdialog.h>
@@ -14,14 +16,16 @@
 #include <qdir.h>
 #include <assert.h>
 #include <QTime>
+#include <QProgressBar>
 
 IndexesDialog::IndexesDialog(IndexesManager *manager, QWidget *parent) :
     m_indexesManager(manager),
     QDialog(parent),
-    ui(new Ui::IndexesDialog)
+    ui(new Ui::IndexesDialog),
+    m_optimizeProgressdialog(0)
 {
     ui->setupUi(this);
-    hideHelpButton(this);
+    hideWindowButtons(this);
 
     loadIndexesList();
     ui->widgetIndexInfo->hide();
@@ -54,6 +58,19 @@ void IndexesDialog::loadIndexesList()
 
         ui->treeWidget->addTopLevelItems(itemList);
     }
+}
+
+void IndexesDialog::indexOptimizeDone()
+{
+    IndexOptimizer *optimizer = qobject_cast<IndexOptimizer*>(sender());
+    if(!optimizer)
+        return;
+
+    m_optimizeProgressdialog->close();
+
+    QMessageBox::information(this,
+                             tr("ضغط فهرس"),
+                             tr("ثم ضغط الفهرس بنجاح خلال %1").arg(getTimeString(optimizer->optimizeTime())));
 }
 
 void IndexesDialog::on_pushEdit_clicked()
@@ -118,13 +135,6 @@ void IndexesDialog::on_pushUpDate_clicked()
     if(items.count() > 0) {
         IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
 
-        if(indexInfo->type() == IndexInfo::QuranIndex) {
-            QMessageBox::warning(this,
-                                 tr("تحديث الفهرس"),
-                                 tr("هذا الفهرس لا يقبل التحديث"));
-            return;
-        }
-
         BooksDB *bookDb = new BooksDB();
         bookDb->setIndexInfo(indexInfo);
 
@@ -152,26 +162,26 @@ void IndexesDialog::on_pushOptimize_clicked()
                              tr("ضغط فهرس"),
                              tr("هل تريد ضغط فهرس <strong>%1</strong>؟"
                                     "<br>"
-                                    "هذه العملية قد تأخذ بعض الوقت وقد يتجمد البرنامج قليلا.")
+                                    "هذه العملية قد تأخذ بعض الوقت.")
                              .arg(indexInfo->name()),
                              QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
         if(rep == QMessageBox::Yes){
-            QProgressDialog progress(tr("جاري ضغط فهرس %1...").arg(indexInfo->name()),
-                                     QString(),
-                                     0,
-                                     1,
-                                     this);
-            progress.setWindowModality(Qt::WindowModal);
-            progress.setMinimumDuration(0);
+            m_optimizeProgressdialog = new QProgressDialog(tr("جاري ضغط فهرس %1...").arg(indexInfo->name()),
+                                                            QString(), 0, 1, this);
+            m_optimizeProgressdialog->setWindowModality(Qt::WindowModal);
+
+            QProgressBar *bar = new QProgressBar(m_optimizeProgressdialog);
+            bar->setAlignment(Qt::AlignCenter);
+
+            m_optimizeProgressdialog->setBar(bar);
+            m_optimizeProgressdialog->setMaximum(0);
+
+            hideWindowButtons(m_optimizeProgressdialog, true, true);
 
             optimizeIndex(indexInfo);
 
-            progress.setValue(1);
-
-            QMessageBox::information(this,
-                                     tr("ضغط فهرس"),
-                                     tr("ثم ضغط الفهرس بنجاح"));
+            m_optimizeProgressdialog->exec();
         }
 
     } else {
@@ -183,9 +193,9 @@ void IndexesDialog::on_pushOptimize_clicked()
 
 void IndexesDialog::optimizeIndex(IndexInfo *info)
 {
+
     IndexWriter *writer = 0;
     QDir dir;
-    QTime time;
     ArabicAnalyzer *analyzer = new ArabicAnalyzer();
     QSettings settings;
 
@@ -207,14 +217,13 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     writer->setUseCompoundFile(false);
     writer->setRAMBufferSizeMB(settings.value("ramSize", 100).toInt());
 
-    time.start();
+    IndexOptimizer *optimizer = new IndexOptimizer(this);
+    optimizer->setIndexWriter(writer);
+    optimizer->setDeleteIndexWriter(true);
 
-    writer->optimize(MAX_SEGMENT);
-    writer->close();
+    connect(optimizer, SIGNAL(finished()), SLOT(indexOptimizeDone()));
 
-    qDebug("Optimzed in %d ms", time.elapsed());
-
-    _CLDELETE(writer);
+    optimizer->start();
 }
 
 void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int column)

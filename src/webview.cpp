@@ -37,8 +37,6 @@ void WebView::init()
 
     if(m_indexType == IndexInfo::ShamelaIndex)
         jsFile = "shamela.js";
-    else if(m_indexType == IndexInfo::QuranIndex)
-        jsFile = "quran.js";
     else
         qFatal("Unknow index type");
 

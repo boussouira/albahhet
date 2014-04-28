@@ -10,7 +10,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
-    hideHelpButton(this);
+    hideWindowButtons(this);
 
     QSettings settings;
 

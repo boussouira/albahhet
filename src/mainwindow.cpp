@@ -2,19 +2,18 @@
 #include "ui_mainwindow.h"
 
 #include "common.h"
-#include "indexingdialg.h"
 #include "settingsdialog.h"
 #include "indexesdialog.h"
 #include "logdialog.h"
 #include "tabwidget.h"
 #include "abstractsearchwidget.h"
 #include "shamelasearchwidget.h"
-#include "quransearchwidget.h"
 #include "searchfield.h"
 #include "searchfieldsdialog.h"
 #include "aboutdialog.h"
 #include "updatedialog.h"
 #include "app_version.h"
+#include "createindexdialog.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -43,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_logDialog = new LogDialog(this);
     m_logDialog->hide();
-    hideHelpButton(m_logDialog);
+    hideWindowButtons(m_logDialog);
 
     m_searchFields = new SearchField();
     m_updateChecker = new UpdateChecker(this);
@@ -236,8 +235,6 @@ void MainWindow::indexChanged()
 
     if(m_currentIndex->type() == IndexInfo::ShamelaIndex)
         m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
-    else if(m_currentIndex->type() == IndexInfo::QuranIndex)
-        m_searchWidget = new QuranSearchWidget(m_tabWidget);
     else
         qFatal("Unknow index type");
 
@@ -362,8 +359,9 @@ void MainWindow::closeEvent(QCloseEvent *e)
 
 void MainWindow::newIndex()
 {
-    IndexingDialg indexDialog(this);
-    indexDialog.setIndexesManager(m_indexesManager);
+    CreateIndexDialog indexDialog(m_indexesManager, this);
+    hideWindowButtons(&indexDialog);
+
     connect(&indexDialog, SIGNAL(indexCreated()), SLOT(updateIndexesMenu()));
 
     indexDialog.exec();
@@ -423,7 +421,7 @@ void MainWindow::showStatistic()
         }
 
         QDialog *dialog = new QDialog(this);
-        hideHelpButton(dialog);
+        hideWindowButtons(dialog);
 
         QVBoxLayout *layout = new QVBoxLayout();
         QLabel *label = new QLabel(tr("معلومات حول الفهرس:"), dialog);

@@ -12,6 +12,7 @@ class IndexInfo;
 class BooksDB;
 class QTreeWidgetItem;
 class IndexesManager;
+class QProgressDialog;
 
 class IndexesDialog : public QDialog
 {
@@ -25,13 +26,10 @@ public:
 
 protected slots:
     void loadIndexesList();
+    void indexOptimizeDone();
 
 signals:
     void indexesChanged();
-
-private:
-    IndexesManager *m_indexesManager;
-    Ui::IndexesDialog *ui;
 
 private slots:
     void on_treeWidget_itemSelectionChanged();
@@ -40,6 +38,11 @@ private slots:
     void on_pushUpDate_clicked();
     void on_pushDelete_clicked();
     void on_pushEdit_clicked();
+
+private:
+    IndexesManager *m_indexesManager;
+    Ui::IndexesDialog *ui;
+    QProgressDialog *m_optimizeProgressdialog;
 };
 
 #endif // INDEXESDIALOG_H

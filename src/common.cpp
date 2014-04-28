@@ -66,11 +66,21 @@ void normaliseSearchString(QString &text)
     text.replace(QObject::tr("؟"), "?");
 }
 
-void hideHelpButton(QWidget *w)
+void hideWindowButtons(QWidget *w, bool helpButton, bool closeButton)
 {
     Qt::WindowFlags flags = w->windowFlags();
-    flags |= Qt::WindowContextHelpButtonHint;
-    flags ^= Qt::WindowContextHelpButtonHint;
+
+    if(helpButton) {
+        flags |= Qt::WindowContextHelpButtonHint;
+        flags ^= Qt::WindowContextHelpButtonHint;
+    }
+
+    if(closeButton) {
+        flags |= Qt::CustomizeWindowHint;
+
+        flags |= Qt::WindowCloseButtonHint;
+        flags ^= Qt::WindowCloseButtonHint;
+    }
 
     w->setWindowFlags(flags);
 }

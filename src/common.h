@@ -24,7 +24,7 @@ QString arPlural(int count, PULRAL word, bool html=false);
 
 void normaliseSearchString(QString &text);
 
-void hideHelpButton(QWidget *w);
+void hideWindowButtons(QWidget *w, bool helpButton=true, bool closeButton=false);
 void clearShorts(QString &str);
 void forceRTL(QWidget *widget);
 

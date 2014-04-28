@@ -15,7 +15,6 @@ INCLUDEPATH += $$PWD
 SOURCES += main.cpp \
     mainwindow.cpp \
     arabicanalyzer.cpp \
-    indexingdialg.cpp \
     shamelaindexer.cpp \
     booksdb.cpp \
     indexinfo.cpp \
@@ -45,13 +44,7 @@ SOURCES += main.cpp \
     selectedfilterwidget.cpp \
     indexesmanager.cpp \
     shamelaindexerwidget.cpp \
-    abstractindexingwidget.cpp \
-    quranindexer.cpp \
     abstractsearchwidget.cpp \
-    quransearchwidget.cpp \
-    quransearcher.cpp \
-    quranresult.cpp \
-    quranindexerwidget.cpp \
     searchfield.cpp \
     searchfieldsdialog.cpp \
     shamelaupdater.cpp \
@@ -64,11 +57,15 @@ SOURCES += main.cpp \
     supportdialog.cpp \
     searchquerywidget.cpp \
     networkrequest.cpp \
-    filterlineedit.cpp
+    filterlineedit.cpp \
+    createindexdialog.cpp \
+    filechooserwidget.cpp \
+    indexoptimizer.cpp \
+    shamelaindexerpages.cpp \
+    indexwidgetbase.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
-    indexingdialg.h \
     shamelaindexer.h \
     common.h \
     booksdb.h \
@@ -99,13 +96,7 @@ HEADERS += mainwindow.h \
     selectedfilterwidget.h \
     indexesmanager.h \
     shamelaindexerwidget.h \
-    abstractindexingwidget.h \
-    quranindexer.h \
     abstractsearchwidget.h \
-    quransearchwidget.h \
-    quransearcher.h \
-    quranresult.h \
-    quranindexerwidget.h \
     searchfield.h \
     searchfieldsdialog.h \
     shamelaupdater.h \
@@ -119,10 +110,14 @@ HEADERS += mainwindow.h \
     supportdialog.h \
     searchquerywidget.h \
     networkrequest.h \
-    filterlineedit.h
+    filterlineedit.h \
+    createindexdialog.h \
+    filechooserwidget.h \
+    indexoptimizer.h \
+    shamelaindexerpages.h \
+    indexwidgetbase.h
 
 FORMS += mainwindow.ui \
-    indexingdialg.ui \
     shamelaresultwidget.ui \
     settingsdialog.ui \
     indexesdialog.ui \
@@ -130,9 +125,6 @@ FORMS += mainwindow.ui \
     logdialog.ui \
     shamelasearchwidget.ui \
     selectedfilterwidget.ui \
-    shamelaindexerwidget.ui \
-    quransearchwidget.ui \
-    quranindexerwidget.ui \
     searchfieldsdialog.ui \
     shamelaselectbookdialog.ui \
     aboutdialog.ui \
