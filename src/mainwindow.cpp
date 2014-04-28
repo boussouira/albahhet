@@ -25,6 +25,8 @@
 #include <qmessagebox.h>
 #include <qinputdialog.h>
 
+static MainWindow *_instance = 0;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -49,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     loadSettings();
 
+    _instance = this;
+
     connect(ui->actionNewIndex, SIGNAL(triggered()), SLOT(newIndex()));
     connect(ui->actionIndexInfo, SIGNAL(triggered()), SLOT(showStatistic()));
     connect(ui->actionSearchSettings, SIGNAL(triggered()), SLOT(showSettingsDialog()));
@@ -69,6 +73,11 @@ MainWindow::~MainWindow()
     delete m_tabWidget;
     delete m_indexesManager;
     delete ui;
+}
+
+MainWindow *MainWindow::instance()
+{
+    return _instance;
 }
 
 void MainWindow::saveSettings()

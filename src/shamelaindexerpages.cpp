@@ -270,6 +270,7 @@ bool BooksIndexingPage::cancel()
                                     QMessageBox::No);
     if(rep==QMessageBox::Yes){
         m_progressBar->setMaximum(0);
+        m_parent->setApplicationProgressVisible(true, true);
         m_parent->bookDB()->clear();
     }
 
@@ -285,6 +286,11 @@ void BooksIndexingPage::startIndexing()
     m_progressBar->setMinimum(0);
     m_progressBar->setMaximum(m_parent->booksCount());
     m_progressBar->setValue(0);
+
+    m_parent->initInternal();
+    m_parent->setApplicationProgressVisible(true);
+    m_parent->setApplicationProgressRange(0, m_parent->booksCount());
+    m_parent->setApplicationProgressValue(0);
 
     //ui->labelStartIndexing->setText(tr("بدأ الفهرسة على الساعة %1").arg(QDateTime::currentDateTime().toString("hh:mm")));
 
@@ -333,6 +339,7 @@ void BooksIndexingPage::startIndexing()
 void BooksIndexingPage::addBook(const QString &)
 {
     m_progressBar->setValue(++m_indexedBooks);
+    m_parent->setApplicationProgressValue(m_indexedBooks);
 }
 
 void BooksIndexingPage::indexThreadFinished()
@@ -356,6 +363,7 @@ void BooksIndexingPage::indexThreadFinished()
 
     // Show infinity progress bar
     m_progressBar->setMaximum(0);
+    m_parent->setApplicationProgressVisible(true, true);
 
     m_optimizer = new IndexOptimizer(this);
     m_optimizer->setIndexWriter(m_parent->indexWriter());
@@ -369,9 +377,9 @@ void BooksIndexingPage::indexThreadFinished()
         QGroupBox *groupBox = qobject_cast<QGroupBox*>(m_progressBar->parent());
         if(groupBox)
             groupBox->setTitle(tr("ضغط الفهرس"));
-
-        m_checkOptimizeIndex->setEnabled(false);
     }
+
+    m_checkOptimizeIndex->setEnabled(false);
 
     m_optimizer->start();
 }
@@ -396,6 +404,9 @@ void BooksIndexingPage::indexingDone()
     m_parent->enableHibernateMode(true);
 
     wizard()->setOption(QWizard::NoCancelButton);
+
+    m_parent->setApplicationProgressVisible(false);
+    m_parent->cleanup();
 
     m_done = true;
     emit completeChanged();

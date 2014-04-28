@@ -41,6 +41,13 @@ public:
 
     void setIndexesManager(IndexesManager *indexesManager);
 
+    // For windows 7 task bar
+    void initInternal();
+    void cleanup();
+    void setApplicationProgressRange(int min, int max);
+    void setApplicationProgressValue(int value);
+    void setApplicationProgressVisible(bool visible, bool indeterminated=false);
+
 signals:
     void indexCreated();
 
