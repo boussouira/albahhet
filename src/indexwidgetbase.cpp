@@ -74,6 +74,11 @@ void IndexWidgetBase::setIndexesManager(IndexesManager *indexesManager)
     m_indexesManager = indexesManager;
 }
 
+void IndexWidgetBase::setIndexWriter(IndexWriter *writer)
+{
+    m_writer = writer;
+}
+
 void IndexWidgetBase::initInternal()
 {
 #ifdef WINDOWS_PROGRESS_BAR

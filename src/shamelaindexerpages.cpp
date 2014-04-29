@@ -325,7 +325,7 @@ void BooksIndexingPage::startIndexing()
         indexThread->setBookDB(m_parent->bookDB());
         indexThread->setWirter(m_parent->indexWriter());
 
-        BookProgressWidget *progress = new BookProgressWidget(this);
+        BookProgressWidget *progress = new BookProgressWidget(true, this);
         m_bookProgressList.append(progress);
         m_bookNameBox->addWidget(progress);
 
@@ -368,6 +368,7 @@ void BooksIndexingPage::indexThreadFinished()
     m_optimizer = new IndexOptimizer(this);
     m_optimizer->setIndexWriter(m_parent->indexWriter());
     m_optimizer->setOptimizeIndex(m_checkOptimizeIndex->isChecked());
+    m_optimizer->setCloseIndex(true);
 
     connect(m_optimizer, SIGNAL(finished()), SLOT(indexingDone()));
 
@@ -396,8 +397,8 @@ void BooksIndexingPage::indexingDone()
     if(m_optimizer && m_optimizer->optimizeIndex())
         m_parent->setOptimizeIndexTime(m_optimizer->optimizeTime());
 
-    // The index optimizer thread will close the index writer
-    m_parent->closeIndexWriter(false);
+    // The index optimizer thread will close and delete the index writer
+    m_parent->setIndexWriter(0);
 
     m_parent->saveIndexInfo();
 

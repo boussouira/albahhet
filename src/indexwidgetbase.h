@@ -40,6 +40,7 @@ public:
     lucene::index::IndexWriter *indexWriter() const;
 
     void setIndexesManager(IndexesManager *indexesManager);
+    void setIndexWriter(lucene::index::IndexWriter *writer);
 
     // For windows 7 task bar
     void initInternal();
