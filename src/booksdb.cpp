@@ -228,7 +228,7 @@ void BooksDB::importBooksListFromShamela()
 
     m_indexDB.transaction();
 
-    m_shamelaQuery->exec("SELECT Bk, bkid, cat, authno, Archive, betaka, oVer FROM 0bok");
+    m_shamelaQuery->exec("SELECT Bk, bkid, cat, authno, Archive, betaka, oVer FROM 0bok ORDER BY Archive, Max ASC");
     while(m_shamelaQuery->next()) {
         int archive = m_shamelaQuery->value(4).toInt();
         ShamelaAuthorInfo* auth = getAuthorInfo(m_shamelaQuery->value(3).toInt());
