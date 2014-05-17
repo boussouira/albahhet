@@ -46,7 +46,7 @@ win32 {
         CLUCENE_LIBS_PATH = $$CLUCENE_BUILD_PATH/bin
     }
 
-    LIBS += -luser32
+    LIBS += -luser32 -lole32
     RC_FILE = win_rc.rc
 }
 
