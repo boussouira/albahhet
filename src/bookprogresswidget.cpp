@@ -7,33 +7,77 @@
 #include <qtoolbutton.h>
 #include <qgroupbox.h>
 
-BookProgressWidget::BookProgressWidget(QWidget *parent) : QWidget(parent)
+BookProgressWidget::BookProgressWidget(bool progressBar, QWidget *parent) :
+    QWidget(parent),
+    m_showProgress(progressBar),
+    m_changeLabelHeight(true)
 {
-    QVBoxLayout *verticalLayout_2;
-    QGroupBox *groupBox;
-    QVBoxLayout *verticalLayout;
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setSpacing(0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    verticalLayout_2 = new QVBoxLayout(this);
-    verticalLayout_2->setSpacing(0);
-    verticalLayout_2->setContentsMargins(0, 0, 0, 0);
+    QGroupBox *groupBox = new QGroupBox(this);
 
-    groupBox = new QGroupBox(this);
-    verticalLayout = new QVBoxLayout(groupBox);
     m_label = new QLabel(groupBox);
 
-    QSizePolicy sizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-    sizePolicy.setHorizontalStretch(0);
-    sizePolicy.setVerticalStretch(0);
-    sizePolicy.setHeightForWidth(m_label->sizePolicy().hasHeightForWidth());
+    m_progressBar = new QProgressBar(this);
+    m_progressBar->setAlignment(Qt::AlignCenter);
+    m_progressBar->setTextVisible(false);
+    m_progressBar->setVisible(false);
+    m_progressBar->setMinimumWidth(100);
+    m_progressBar->setMaximumWidth(100);
 
-    m_label->setSizePolicy(sizePolicy);
+    QHBoxLayout *boxLayout = new QHBoxLayout(groupBox);
+    boxLayout->addWidget(m_label);
+    boxLayout->addStretch();
+    boxLayout->addWidget(m_progressBar);
 
-    verticalLayout->addWidget(m_label);
-    verticalLayout_2->addWidget(groupBox);
+    layout->addWidget(groupBox);
 
+    if(progressBar) {
+        m_timer.setInterval(5000);
+        m_timer.setSingleShot(true);
+        connect(&m_timer, SIGNAL(timeout()), SLOT(progressInterval()));
+    }
 }
 
 void BookProgressWidget::setName(QString name)
 {
     m_label->setText(name);
+
+    if(m_showProgress) {
+        m_progressBar->setValue(0);
+        m_progressBar->hide();
+
+        m_timer.start();
+    }
+}
+
+void BookProgressWidget::setTotalProgress(int total)
+{
+    if(m_showProgress) {
+        m_progressBar->setValue(0);
+        m_progressBar->setMaximum(total);
+    }
+}
+
+void BookProgressWidget::setProgress(int progress)
+{
+    if(m_showProgress) {
+        m_progressBar->setValue(progress);
+    }
+}
+
+void BookProgressWidget::progressInterval()
+{
+    if(m_showProgress) {
+        m_progressBar->show();
+
+        if(m_changeLabelHeight) {
+            m_label->setMinimumHeight(m_progressBar->height());
+            m_label->setMaximumHeight(m_progressBar->height());
+
+            m_changeLabelHeight = false;
+        }
+    }
 }

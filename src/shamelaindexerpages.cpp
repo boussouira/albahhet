@@ -301,6 +301,7 @@ void BooksIndexingPage::startIndexing()
 
     m_threadCount = settings.value("threadCount", QThread::idealThreadCount()).toInt();
     m_checkOptimizeIndex->setChecked(settings.value("optimizeIndex", false).toBool());
+    bool showBookIndexProgress = true;
 
     if(!dir.exists(m_parent->indexInfo()->indexPath()))
         dir.mkdir(m_parent->indexInfo()->indexPath());
@@ -329,8 +330,13 @@ void BooksIndexingPage::startIndexing()
         m_bookProgressList.append(progress);
         m_bookNameBox->addWidget(progress);
 
-        connect(indexThread, SIGNAL(currentBookName(QString)),
-                progress, SLOT(setName(QString)));
+        connect(indexThread, SIGNAL(currentBookName(QString)), progress, SLOT(setName(QString)));
+        connect(indexThread, SIGNAL(finished()), progress, SLOT(hide()));
+
+        if(showBookIndexProgress) {
+            connect(indexThread, SIGNAL(currentBookMax(int)), progress, SLOT(setTotalProgress(int)));
+            connect(indexThread, SIGNAL(currentBookProgress(int)), progress, SLOT(setProgress(int)));
+        }
 
         indexThread->start();
     }
@@ -347,10 +353,6 @@ void BooksIndexingPage::indexThreadFinished()
     if(--m_threadCount > 0) {
         // One or more thread is still indexing
         return;
-    }
-
-    foreach(BookProgressWidget *w, m_bookProgressList) {
-        w->hide();
     }
 
     m_progressBar->setMaximum(m_indexedBooks);

@@ -72,12 +72,23 @@ void ShamelaIndexer::indexBook(BookInfo *book)
             return;
         }
 
+
         QSqlQuery shaQuery(mdbDB);
+        shaQuery.exec(QString("SELECT MAX(id) FROM %1").arg(book->mainTable()));
+
+        int totalPages = 0;
+        if(shaQuery.next()) {
+            totalPages = shaQuery.value(0).toInt();
+            emit currentBookMax(totalPages);
+        }
+
         shaQuery.exec(QString("SELECT id, nass FROM %1 ORDER BY id ").arg(book->mainTable()));
 
         Document doc;
         int tokenAndNoStore = Field::STORE_NO | Field::INDEX_TOKENIZED;
         int storeAndNoToken = Field::STORE_YES | Field::INDEX_UNTOKENIZED;
+        int indexedPages = 0;
+        int updateProgressAt = qMax(500, totalPages / 10);
 
         while(shaQuery.next())
         {
@@ -100,6 +111,14 @@ void ShamelaIndexer::indexBook(BookInfo *book)
 
             m_writer->addDocument(&doc);
             doc.clear();
+
+            if(indexedPages >= updateProgressAt) {
+                emit currentBookProgress(shaQuery.value(0).toInt());
+                indexedPages = 0;
+            } else {
+                indexedPages++;
+            }
+
         }
 
         m_indexedBooks.insert(book->id());
