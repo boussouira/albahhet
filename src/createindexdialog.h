@@ -22,6 +22,7 @@ public:
 
 protected:
     void init();
+    void keyPressEvent(QKeyEvent *e);
 
 public slots:
     void cancel();

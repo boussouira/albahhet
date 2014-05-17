@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 #include <qpushbutton.h>
 #include <qradiobutton.h>
+#include <qevent.h>
 
 enum {
     IndexWidgetId = 10
@@ -100,6 +101,12 @@ void CreateIndexDialog::init()
     addPage(m_selectionPage);
     addPage(new QWizardPage(this));
 
+}
+
+void CreateIndexDialog::keyPressEvent(QKeyEvent *e)
+{
+    if(e->key() != Qt::Key_Escape)
+        QDialog::keyPressEvent(e);
 }
 
 //int CreateIndexDialog::nextId() const
