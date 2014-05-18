@@ -9,7 +9,7 @@
 #include <qdebug.h>
 
 class BookInfo;
-class IndexInfo;
+class ShamelaIndexInfo;
 class QStandardItem;
 class QStandardItemModel;
 
@@ -33,8 +33,8 @@ public:
     ~BooksDB();
     BookInfo *getBookInfo(int id);
     BookInfo *next();
-    void setIndexInfo(IndexInfo* info);
-    IndexInfo *indexInfo() { return m_indexInfo; }
+    void setIndexInfo(ShamelaIndexInfo* info);
+    ShamelaIndexInfo *indexInfo() { return m_indexInfo; }
     void openIndexDB();
     void openShamelaDB();
     void openShamelaSpecialDB();
@@ -72,7 +72,7 @@ public:
     static const int Book = 2;
 
 protected:
-    IndexInfo* m_indexInfo;
+    ShamelaIndexInfo* m_indexInfo;
     QSqlDatabase m_indexDB;
     QSqlDatabase m_shamelaDB;
     QSqlDatabase m_shamelaSpecialDB;

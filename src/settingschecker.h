@@ -2,6 +2,7 @@
 #define SETTINGSCHECKER_H
 
 #include "common.h"
+#include "shamelaindexinfo.h"
 #include <qsettings.h>
 
 class SettingsChecker
@@ -9,7 +10,7 @@ class SettingsChecker
 public:
     SettingsChecker();
     void checkIndexes();
-    bool checkIndex(IndexInfo *index);
+    bool checkIndex(IndexInfoBase *index);
     void update();
     void updateToXml();
     void indexingConfig();

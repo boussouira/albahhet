@@ -2,6 +2,7 @@
 #define INDEXESMANAGER_H
 
 #include "common.h"
+#include "indexinfobase.h"
 #include <QtXml>
 #include <qsettings.h>
 
@@ -11,13 +12,11 @@ public:
     IndexesManager();
     ~IndexesManager();
     int count();
-    void add(IndexInfo *index);
-    void add(QSettings &settings, QString name);
-    void remove(IndexInfo *index);
-    void update(IndexInfo *index);
-    void setIndexName(IndexInfo *index, QString name);
-    IndexInfo *indexInfo(int indexID);
-    QList<IndexInfo*> list();
+    void add(IndexInfoBase *index);
+    void remove(IndexInfoBase *index);
+    void setIndexName(IndexInfoBase *index, QString name);
+    IndexInfoBase *indexInfo(int indexID);
+    QList<IndexInfoBase*> list();
     bool nameExists(QString name);
     bool idExists(int id);
     void clear();
@@ -26,14 +25,15 @@ protected:
     void generateIndexesList();
     void createFile();
     void checkFile();
+    void update(IndexInfoBase *index);
     void save();
 
 protected:
     QDomDocument m_doc;
     QDomElement m_rootElement;
     QString m_path;
-    QList<IndexInfo*> m_list;
-    QHash<int, IndexInfo*> m_indexInfoMap;
+    QList<IndexInfoBase*> m_list;
+    QHash<int, IndexInfoBase*> m_indexInfoMap;
 };
 
 #endif // INDEXESMANAGER_H

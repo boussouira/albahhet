@@ -1,7 +1,7 @@
 #include "booksdb.h"
 #include "common.h"
 #include "bookinfo.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include <qvariant.h>
 #include <qsqlquery.h>
 #include <qsqlerror.h>
@@ -93,7 +93,7 @@ void BooksDB::setBookIndexed(QSet<int> books)
     m_indexDB.commit();
 }
 
-void BooksDB::setIndexInfo(IndexInfo *info)
+void BooksDB::setIndexInfo(ShamelaIndexInfo *info)
 {
     close();
     m_indexInfo = info;

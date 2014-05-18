@@ -3,7 +3,7 @@
 #include "common.h"
 #include "cl_common.h"
 #include "bookinfo.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "bookprogresswidget.h"
 #include "indexesmanager.h"
 #include "shamelaindexer.h"
@@ -11,6 +11,7 @@
 #include "settingschecker.h"
 #include "filechooserwidget.h"
 #include "indexoptimizer.h"
+#include "booksdb.h"
 
 #include <qcheckbox.h>
 #include <qgroupbox.h>

@@ -4,6 +4,7 @@
 #include <qsettings.h>
 #include <qfont.h>
 #include <QWebSettings>
+#include <QThread>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),

@@ -1,8 +1,35 @@
 #include "indexesmanager.h"
+#include "shamelaindexinfo.h"
 #include <qfile.h>
 #include <qdir.h>
 #include <qdebug.h>
 #include <qdesktopservices.h>
+
+QDomNode findChildText(QDomElement &parent, QDomDocument &doc, bool cdata)
+{
+    QDomNode child = parent.firstChild();
+    if(child.isNull()) {
+        if(cdata)
+            child = parent.appendChild(doc.createCDATASection(""));
+        else
+            child = parent.appendChild(doc.createTextNode(""));
+    }
+
+    return child;
+}
+
+void setElementText(QDomElement &parent, QDomDocument &doc, const QString &text, bool cdata)
+{
+    if(!parent.isNull()) {
+        QDomNode textNode = findChildText(parent, doc, cdata);
+        if(!textNode.isNull())
+            textNode.setNodeValue(text);
+        else
+            qCritical("findChildText: Text node is null");
+    } else {
+        qCritical("findChildText: element is null");
+    }
+}
 
 IndexesManager::IndexesManager()
 {
@@ -73,81 +100,24 @@ int IndexesManager::count()
     return  m_rootElement.elementsByTagName("index").count();
 }
 
-void IndexesManager::add(IndexInfo *index)
+void IndexesManager::add(IndexInfoBase *index)
 {
     qDebug() << "Adding" << index->name() << "to xml file...";
-    QDomDocumentFragment newIndex(m_doc.createDocumentFragment());
 
-    int indexID =  m_rootElement.attribute("last-id", 0).toInt()+1;
-    QDomElement indexNode(m_doc.createElement("index"));
-    indexNode.setAttribute("id", indexID);
-    indexNode.setAttribute("type", index->type());
-
-    QDomElement nameNode(m_doc.createElement("name"));
-    nameNode.appendChild(m_doc.createTextNode(index->name()));
-    indexNode.appendChild(nameNode);
-
-    QDomElement shaPathNode(m_doc.createElement("shamel-path"));
-    shaPathNode.appendChild(m_doc.createTextNode(index->shamelaPath()));
-    indexNode.appendChild(shaPathNode);
-
-    QDomElement indexPathNode(m_doc.createElement("index-path"));
-    indexPathNode.appendChild(m_doc.createTextNode(index->path()));
-    indexNode.appendChild(indexPathNode);
-
-    newIndex.appendChild(indexNode);
-
-    // Indexing info
-    if(index->indexingInfo()) {
-        IndexingInfo *info = index->indexingInfo();
-        QDomElement indexingInfoNode(m_doc.createElement("info"));
-
-        QDomElement createTime(m_doc.createElement("create-time"));
-        createTime.appendChild(m_doc.createTextNode(QString::number(info->creatTime)));
-        indexingInfoNode.appendChild(createTime);
-
-        QDomElement indexingTime(m_doc.createElement("indexing-toke"));
-        indexingTime.appendChild(m_doc.createTextNode(QString::number(info->indexingTime)));
-        indexingInfoNode.appendChild(indexingTime);
-
-        QDomElement optimizingTime(m_doc.createElement("optimizing-toke"));
-        optimizingTime.appendChild(m_doc.createTextNode(QString::number(info->optimizingTime)));
-        indexingInfoNode.appendChild(optimizingTime);
-
-        QDomElement indexSize(m_doc.createElement("index-size"));
-        indexSize.appendChild(m_doc.createTextNode(QString::number(info->indexSize)));
-        indexingInfoNode.appendChild(indexSize);
-
-        QDomElement shamelaSize(m_doc.createElement("shamela-size"));
-        shamelaSize.appendChild(m_doc.createTextNode(QString::number(info->shamelaSize)));
-        indexingInfoNode.appendChild(shamelaSize);
-
-        indexNode.appendChild(indexingInfoNode);
+    int indexID = numberRand(1111, 9999);
+    while (indexInfo(indexID)) {
+        indexID = numberRand(1111, 9999);
     }
 
-    m_rootElement.appendChild(newIndex);
-    m_rootElement.setAttribute("last-id", indexID);
+    QDomElement indexNode = index->toDomElement(m_doc);
+
+    m_rootElement.appendChild(indexNode);
     m_rootElement.setAttribute("count", m_rootElement.elementsByTagName("index").count());
 
     save();
 }
 
-void IndexesManager::add(QSettings &settings, QString name)
-{
-
-    IndexInfo info;
-
-    settings.beginGroup(name);
-    info.setType(IndexInfo::ShamelaIndex);
-    info.setName(settings.value("name").toString());
-    info.setShamelaPath(settings.value("shamela_path").toString());
-    info.setPath(settings.value("index_path").toString());
-    settings.endGroup();
-
-    add(&info);
-}
-
-void IndexesManager::remove(IndexInfo *index)
+void IndexesManager::remove(IndexInfoBase *index)
 {
     QDomNodeList nodesList = m_rootElement.elementsByTagName("index");
 
@@ -165,7 +135,7 @@ void IndexesManager::remove(IndexInfo *index)
     }
 }
 
-void IndexesManager::update(IndexInfo *index)
+void IndexesManager::update(IndexInfoBase *index)
 {
     QDomNodeList nodesList = m_rootElement.elementsByTagName("index");
 
@@ -175,27 +145,7 @@ void IndexesManager::update(IndexInfo *index)
         if(indexElement.attribute("id").toInt() == index->id()) {
             qDebug("Update index: %d", index->id());
 
-            QDomDocumentFragment newIndex(m_doc.createDocumentFragment());
-
-            QDomElement indexNode(m_doc.createElement("index"));;
-            indexNode.setAttribute("id", indexElement.attribute("id").toInt());
-            indexNode.setAttribute("type", indexElement.attribute("type").toInt());
-
-            QDomElement nameNode(m_doc.createElement("name"));
-            nameNode.appendChild(m_doc.createTextNode(index->name()));
-            indexNode.appendChild(nameNode);
-
-            QDomElement shaPathNode(m_doc.createElement("shamel-path"));
-            shaPathNode.appendChild(m_doc.createTextNode(index->shamelaPath()));
-            indexNode.appendChild(shaPathNode);
-
-            QDomElement indexPathNode(m_doc.createElement("index-path"));
-            indexPathNode.appendChild(m_doc.createTextNode(index->path()));
-            indexNode.appendChild(indexPathNode);
-
-            newIndex.appendChild(indexNode);
-
-            m_rootElement.replaceChild(newIndex, indexElement);
+            setElementText(indexElement.firstChildElement("name"), m_doc, index->name(), false);
             save();
 
             break;
@@ -203,7 +153,7 @@ void IndexesManager::update(IndexInfo *index)
     }
 }
 
-void IndexesManager::setIndexName(IndexInfo *index, QString name)
+void IndexesManager::setIndexName(IndexInfoBase *index, QString name)
 {
     index->setName(name);
     update(index);
@@ -220,7 +170,7 @@ void IndexesManager::createFile()
     out.setCodec("utf-8");
 
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << "\n"
-        << "<indexes-list count=\"0\" last-id=\"0\"></indexes-list>";
+        << "<indexes-list count=\"0\"></indexes-list>";
 }
 
 void IndexesManager::save()
@@ -243,7 +193,7 @@ void IndexesManager::checkFile()
         createFile();
 }
 
-QList<IndexInfo *> IndexesManager::list()
+QList<IndexInfoBase *> IndexesManager::list()
 {
     if(m_list.isEmpty())
         generateIndexesList();
@@ -256,27 +206,8 @@ void IndexesManager::generateIndexesList()
     QDomNodeList nodesList = m_rootElement.elementsByTagName("index");
 
     for (int i=0; i<nodesList.count(); i++) {
-        IndexInfo *index = new IndexInfo();
-        QDomElement indexElement = nodesList.at(i).toElement();
-        index->setID(indexElement.attribute("id").toInt());
-        index->setType((IndexInfo::IndexType) indexElement.attribute("type").toInt());
-        index->setName(indexElement.firstChildElement("name").text());
-        index->setShamelaPath(indexElement.firstChildElement("shamel-path").text());
-        index->setPath(indexElement.firstChildElement("index-path").text());
-
-        // Index info
-        QDomNodeList infoList = indexElement.elementsByTagName("info");
-        if(infoList.count() > 0) {
-            QDomElement infoElement = infoList.at(0).toElement();
-            IndexingInfo *indexingInfo = new IndexingInfo;
-            indexingInfo->creatTime = infoElement.firstChildElement("create-time").text().toUInt();
-            indexingInfo->indexingTime = infoElement.firstChildElement("indexing-toke").text().toInt();
-            indexingInfo->optimizingTime = infoElement.firstChildElement("optimizing-toke").text().toInt();
-            indexingInfo->indexSize = infoElement.firstChildElement("index-size").text().toULongLong();
-            indexingInfo->shamelaSize = infoElement.firstChildElement("shamela-size").text().toULongLong();
-
-            index->setIndexingInfo(indexingInfo);
-        }
+        IndexInfoBase *index = new ShamelaIndexInfo();
+        index->fromDomElement(nodesList.at(i).toElement());
 
         m_list.append(index);
         m_indexInfoMap.insert(index->id(), index);
@@ -290,7 +221,7 @@ void IndexesManager::clear()
     m_indexInfoMap.clear();
 }
 
-IndexInfo *IndexesManager::indexInfo(int indexID)
+IndexInfoBase *IndexesManager::indexInfo(int indexID)
 {
     if(m_list.isEmpty())
         generateIndexesList();
@@ -303,7 +234,7 @@ bool IndexesManager::nameExists(QString name)
     if(m_list.isEmpty())
         generateIndexesList();
 
-    foreach (IndexInfo *info, m_list) {
+    foreach (IndexInfoBase *info, m_list) {
         if(info->name() == name)
             return true;
     }
@@ -316,7 +247,7 @@ bool IndexesManager::idExists(int id)
     if(m_list.isEmpty())
         generateIndexesList();
 
-    foreach (IndexInfo *info, m_list) {
+    foreach (IndexInfoBase *info, m_list) {
         if(info->id() == id) {
             return true;
         }

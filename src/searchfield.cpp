@@ -118,7 +118,7 @@ QList<SearchFieldInfo*> SearchField::getFieldsNames()
     return getFieldsNames(m_indexInfo->id());
 }
 
-void SearchField::setIndexInfo(IndexInfo *index)
+void SearchField::setIndexInfo(IndexInfoBase *index)
 {
     m_indexInfo = index;
 

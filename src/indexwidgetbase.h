@@ -12,7 +12,7 @@ namespace lucene {
 
 class IndexesManager;
 class BooksDB;
-class IndexInfo;
+class ShamelaIndexInfo;
 class QMessageBox;
 class QPushButton;
 class QWizardPage;

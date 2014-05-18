@@ -2,7 +2,7 @@
 #include "ui_shamelaupdaterdialog.h"
 #include "common.h"
 #include "cl_common.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "booksdb.h"
 #include "shamelaselectbookdialog.h"
 #include "arabicanalyzer.h"
@@ -131,7 +131,7 @@ void ShamelaUpdaterDialog::startUpdate()
     progress.setValue(progressMax);
 }
 
-void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info)
+void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, ShamelaIndexInfo *info)
 {
     try {
         IndexWriter *writer;
@@ -186,7 +186,7 @@ void ShamelaUpdaterDialog::indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo
     }
 }
 
-void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, IndexInfo *info)
+void ShamelaUpdaterDialog::deletBooksFromIndex(QList<int> ids, ShamelaIndexInfo *info)
 {
 
     try {

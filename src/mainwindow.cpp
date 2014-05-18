@@ -14,6 +14,8 @@
 #include "updatedialog.h"
 #include "app_version.h"
 #include "createindexdialog.h"
+#include "booksdb.h"
+#include "shamelaindexinfo.h"
 
 #include <qtextbrowser.h>
 #include <qfile.h>
@@ -33,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle(APP_NAME);
 
+    numberSrand();
+
     m_indexesManager = new IndexesManager;
 
     m_tabWidget = new TabWidget(this);
@@ -40,7 +44,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_searchWidget = 0;
     m_currentIndex = 0;
-    m_booksDB = new BooksDB();
 
     m_logDialog = new LogDialog(this);
     m_logDialog->hide();
@@ -67,7 +70,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    DELETE_DB(m_booksDB);
     delete m_searchFields;
     delete m_logDialog;
     delete m_tabWidget;
@@ -123,7 +125,7 @@ void MainWindow::loadIndexesList()
 {
     qDebug("Loading Indexes List...");
     QSettings settings;
-    QList<IndexInfo *> indexesList =  m_indexesManager->list();
+    QList<IndexInfoBase *> indexesList =  m_indexesManager->list();
     int current;
     bool haveIndexes = !indexesList.isEmpty();
 
@@ -135,7 +137,7 @@ void MainWindow::loadIndexesList()
         }
 
         for(int i=0; i<indexesList.count(); i++) {
-            IndexInfo *info = indexesList.at(i);
+            IndexInfoBase *info = indexesList.at(i);
 
             QAction *action = new QAction(info->name(), ui->menuIndexesList);
             action->setData(info->id());
@@ -242,18 +244,12 @@ void MainWindow::indexChanged()
     if(m_searchWidget)
         delete m_searchWidget;
 
-    if(m_currentIndex->type() == IndexInfo::ShamelaIndex)
+    if(m_currentIndex->type() == IndexInfoBase::ShamelaIndex)
         m_searchWidget = new ShamelaSearchWidget(m_tabWidget);
     else
         qFatal("Unknow index type");
 
-    DELETE_DB(m_booksDB);
-
-    m_booksDB = new BooksDB();
-    m_booksDB->setIndexInfo(m_currentIndex);
-
     m_searchWidget->setIndexInfo(m_currentIndex);
-    m_searchWidget->setBooksDb(m_booksDB);
     m_searchWidget->setTabWidget(m_tabWidget);
     m_searchWidget->indexChanged();
 
@@ -401,7 +397,7 @@ void MainWindow::showStatistic()
         //int64_t ver = r->getCurrentVersion(qPrintable(m_currentIndex->path()));
 
         QTextBrowser *textBrowser = new QTextBrowser;
-        IndexingInfo *info = m_currentIndex->indexingInfo();
+        IndexingInfo *info = static_cast<ShamelaIndexInfo*>(m_currentIndex)->indexingInfo();
 
         ADD_VALUE("اسم الفهرس", m_currentIndex->name());
 
@@ -409,7 +405,7 @@ void MainWindow::showStatistic()
             ADD_VALUE("تاريخ الانشاء", QDateTime::fromTime_t(info->creatTime).toString("dd/MM/yyyy - hh:mm"));
 
         ADD_VALUE("مسار الفهرس", m_currentIndex->path());
-        ADD_VALUE("المكتبة الشاملة", m_currentIndex->shamelaPath());
+        ADD_VALUE("المكتبة الشاملة", static_cast<ShamelaIndexInfo*>(m_currentIndex)->shamelaPath());
         ADD_VALUE("عدد الصفحات", r->numDocs());
 
         //ADD_VALUE("Current Version", ver));
@@ -421,7 +417,7 @@ void MainWindow::showStatistic()
 
         ADD_VALUE("عدد الكلمات", nterms);
         ADD_VALUE("حجم الفهرس", getSizeString(getIndexSize(m_currentIndex->indexPath())));
-        ADD_VALUE("حجم المكتبة", getSizeString(getBooksSize(m_currentIndex->shamelaPath())));
+        ADD_VALUE("حجم المكتبة", getSizeString(getBooksSize(static_cast<ShamelaIndexInfo*>(m_currentIndex)->shamelaPath())));
         if(info) {
             ADD_VALUE("مدة الفهرسة", getTimeString(info->indexingTime, false));
 

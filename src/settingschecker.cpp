@@ -15,7 +15,7 @@ SettingsChecker::SettingsChecker()
 void SettingsChecker::checkIndexes()
 {
     IndexesManager manager;
-    foreach (IndexInfo *index, manager.list()) {
+    foreach (IndexInfoBase *index, manager.list()) {
         if(!checkIndex(index)) {
             int rep = QMessageBox::question(0,
                                             QObject::tr("فحص الفهارس"),
@@ -30,10 +30,9 @@ void SettingsChecker::checkIndexes()
     }
 }
 
-bool SettingsChecker::checkIndex(IndexInfo *index)
+bool SettingsChecker::checkIndex(IndexInfoBase *index)
 {
     QString indexPath = index->indexPath();
-    QString shaPath = index->shamelaPath();
 
     QDir indexDir(indexPath);
     if(!indexDir.exists()) {
@@ -41,11 +40,12 @@ bool SettingsChecker::checkIndex(IndexInfo *index)
         return false;
     }
 
-    QDir shaDir(shaPath);
-    if(!shaDir.exists()) {
-        qWarning() << "Directory" << shaPath << "not found";
-        return false;
-    }
+    //TODO: Reimplement this
+//    QDir shaDir(shaPath);
+//    if(!shaDir.exists()) {
+//        qWarning() << "Directory" << shaPath << "not found";
+//        return false;
+//    }
 
     return true;
 }

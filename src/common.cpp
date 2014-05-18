@@ -4,6 +4,17 @@
 #include <qsettings.h>
 #include <quuid.h>
 
+void numberSrand()
+{
+    srand(QDateTime::currentDateTime().toTime_t());
+}
+
+int numberRand(int smin, int smax)
+{
+    int rVal = (smin + (rand() % (smax-smin+1)));
+    return qBound(smin, rVal, smax);
+}
+
 TCHAR* QStringToTChar(const QString &str)
 {
     TCHAR *string = (TCHAR*) malloc((str.length()+1) * sizeof(TCHAR));

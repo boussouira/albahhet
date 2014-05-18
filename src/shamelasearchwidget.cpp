@@ -11,6 +11,7 @@
 #include "selectedfilterwidget.h"
 #include "searchquerywidget.h"
 #include "networkrequest.h"
+#include "shamelaindexinfo.h"
 
 #include <qmessagebox.h>
 #include <qsettings.h>
@@ -26,6 +27,8 @@ ShamelaSearchWidget::ShamelaSearchWidget(QWidget *parent) :
     ui(new Ui::ShamelaSearchWidget)
 {
     ui->setupUi(this);
+
+    m_booksDB = new BooksDB();
 
     m_shaModel = new ShamelaModels(this);
     m_filterHandler = new SearchFilterHandler(this);
@@ -218,14 +221,10 @@ Query *ShamelaSearchWidget::getBooksListQuery()
     return count ? q : 0;
 }
 
-void ShamelaSearchWidget::setIndexInfo(IndexInfo *info)
+void ShamelaSearchWidget::setIndexInfo(IndexInfoBase *info)
 {
-    m_currentIndex = info;
-}
-
-void ShamelaSearchWidget::setBooksDb(BooksDB *db)
-{
-    m_booksDB = db;
+    m_currentIndex = static_cast<ShamelaIndexInfo*>(info);
+    m_booksDB->setIndexInfo(m_currentIndex);
 }
 
 void ShamelaSearchWidget::setTabWidget(TabWidget *tabWidget)

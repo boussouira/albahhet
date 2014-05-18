@@ -4,7 +4,7 @@
 #include "cl_common.h"
 #include "booksdb.h"
 #include "bookinfo.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "shamelaresult.h"
 #include <cmath>
 #include <exception>
@@ -277,7 +277,7 @@ int ShamelaSearcher::currentPage()
     return m_currentPage;
 }
 
-void ShamelaSearcher::setIndexInfo(IndexInfo *index)
+void ShamelaSearcher::setIndexInfo(ShamelaIndexInfo *index)
 {
     m_indexInfo = index;
 }

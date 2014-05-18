@@ -10,7 +10,8 @@ namespace Ui {
     class ShamelaSearchWidget;
 }
 
-class IndexInfo;
+class IndexInfoBase;
+class ShamelaIndexInfo;
 class BooksDB;
 class ShamelaModels;
 class SearchFilterHandler;
@@ -24,8 +25,7 @@ class ShamelaSearchWidget : public AbstractSearchWidget
 public:
     ShamelaSearchWidget(QWidget *parent = 0);
     ~ShamelaSearchWidget();
-    void setIndexInfo(IndexInfo *info);
-    void setBooksDb(BooksDB *db);
+    void setIndexInfo(IndexInfoBase *info);
     void setTabWidget(TabWidget *tabWidget);
     void saveSettings();
     void indexChanged();
@@ -56,7 +56,7 @@ protected slots:
 
 protected:
     Ui::ShamelaSearchWidget *ui;
-    IndexInfo *m_currentIndex;
+    ShamelaIndexInfo *m_currentIndex;
     BooksDB *m_booksDB;
     TabWidget *m_tabWidget;
     ShamelaModels *m_shaModel;

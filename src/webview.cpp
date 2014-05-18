@@ -4,7 +4,7 @@
 #include <qsettings.h>
 #include <qaction.h>
 
-WebView::WebView(IndexInfo::IndexType indexType, QWidget *parent) : QWebView(parent), m_indexType(indexType)
+WebView::WebView(ShamelaIndexInfo::IndexType indexType, QWidget *parent) : QWebView(parent), m_indexType(indexType)
 {
     m_frame = page()->mainFrame();
 
@@ -25,7 +25,7 @@ WebView::WebView(IndexInfo::IndexType indexType, QWidget *parent) : QWebView(par
     QWebSettings::globalSettings()->setFontSize(QWebSettings::DefaultFontSize, fontSize);
 }
 
-void WebView::setIndexType(IndexInfo::IndexType indexType)
+void WebView::setIndexType(ShamelaIndexInfo::IndexType indexType)
 {
     m_indexType = indexType;
 }
@@ -35,7 +35,7 @@ void WebView::init()
     QString appPath = QUrl::fromLocalFile(qApp->applicationDirPath()).toString();
     QString jsFile;
 
-    if(m_indexType == IndexInfo::ShamelaIndex)
+    if(m_indexType == ShamelaIndexInfo::ShamelaIndex)
         jsFile = "shamela.js";
     else
         qFatal("Unknow index type");

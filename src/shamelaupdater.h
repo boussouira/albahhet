@@ -6,7 +6,7 @@
 #include <qsqlquery.h>
 #include <qstandarditemmodel.h>
 
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 class ShamelaUpdaterTask
 {
 public:
@@ -34,7 +34,7 @@ public:
     ShamelaUpdater();
     ~ShamelaUpdater();
 
-    void setIndexInfo(IndexInfo *index);
+    void setIndexInfo(ShamelaIndexInfo *index);
     void close();
 
     void loadBooks();
@@ -55,7 +55,7 @@ protected:
     QSqlDatabase m_shamelaDB;
     QSqlQuery *m_query;
     QSqlQuery *m_shamelaQuery;
-    IndexInfo *m_indexInfo;
+    ShamelaIndexInfo *m_indexInfo;
     QString connName;
     QList<ShamelaUpdaterTask> m_tasks;
 };

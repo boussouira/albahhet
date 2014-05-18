@@ -1,7 +1,7 @@
 #include "shamelaindexer.h"
 #include "common.h"
 #include "booksdb.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "bookinfo.h"
 #include <qvariant.h>
 #include <qsqlquery.h>

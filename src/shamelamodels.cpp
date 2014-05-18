@@ -6,7 +6,7 @@ ShamelaModels::ShamelaModels(QObject *parent): QObject(parent)
     m_reload = true;
 }
 
-void ShamelaModels::setIndexInfo(IndexInfo *info)
+void ShamelaModels::setIndexInfo(ShamelaIndexInfo *info)
 {
     m_reload = true;
     m_indexInfo = info;

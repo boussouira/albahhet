@@ -5,7 +5,7 @@
 #include <qsqldatabase.h>
 #include <qsqlquery.h>
 
-#include "indexinfo.h"
+#include "indexinfobase.h"
 
 class SearchFieldInfo {
 public:
@@ -20,7 +20,7 @@ public:
     SearchField();
     ~SearchField();
 
-    void setIndexInfo(IndexInfo *index);
+    void setIndexInfo(IndexInfoBase *index);
     void close();
     QList<int> getFieldBooks(int fid);
     void removeield(int fid);
@@ -35,7 +35,7 @@ protected:
 protected:
     QSqlDatabase m_indexDB;
     QSqlQuery *m_query;
-    IndexInfo *m_indexInfo;
+    IndexInfoBase *m_indexInfo;
     QString connName;
 };
 

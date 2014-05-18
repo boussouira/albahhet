@@ -13,7 +13,7 @@ namespace Ui {
 class ShamelaSearcher;
 class ShamelaBooksReader;
 class WebView;
-class IndexInfo;
+class ShamelaIndexInfo;
 class BooksDB;
 class ShamelaResult;
 
@@ -25,7 +25,7 @@ public:
     ShamelaResultWidget(QWidget *parent = 0);
     ~ShamelaResultWidget();
     void setShamelaSearch(ShamelaSearcher *s);
-    void setIndexInfo(IndexInfo *info) { m_indexInfo = info; }
+    void setIndexInfo(ShamelaIndexInfo *info) { m_indexInfo = info; }
     void setBooksDb(BooksDB *db) {m_booksDb = db; }
     void doSearch();
     void clearResults();
@@ -61,7 +61,7 @@ protected:
     WebView *m_readerWebView;
     ShamelaSearcher *m_searcher;
     ShamelaBooksReader *m_bookReader;
-    IndexInfo *m_indexInfo;
+    ShamelaIndexInfo *m_indexInfo;
     BooksDB *m_booksDb;
     Ui::ShamelaResultWidget *ui;
 

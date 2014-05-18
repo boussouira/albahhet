@@ -6,7 +6,7 @@
 #include <qsqldatabase.h>
 #include <qhash.h>
 
-class IndexInfo;
+class ShamelaIndexInfo;
 class BooksDB;
 class ShamelaResult;
 
@@ -34,7 +34,7 @@ public:
     QString queryString() { return m_queryStr; }
 
     void setBooksDb(BooksDB *db);
-    void setIndexInfo(IndexInfo *index);
+    void setIndexInfo(ShamelaIndexInfo *index);
     void setPageCount(int pageCount);
     void setCurrentPage(int page);
     void setHits(Hits *hit);
@@ -70,7 +70,7 @@ signals:
 
 private:
     Action m_action;
-    IndexInfo *m_indexInfo;
+    ShamelaIndexInfo *m_indexInfo;
     BooksDB *m_booksDb;
     Hits* m_hits;
     Query* m_query;

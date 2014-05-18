@@ -5,8 +5,6 @@
 #include <qdesktopservices.h>
 #include <qdir.h>
 #include <CLucene/SharedHeader.h>
-#include "indexinfo.h"
-#include "booksdb.h"
 
 #define LOG_FILE QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).filePath("session.txt")
 
@@ -16,6 +14,9 @@ enum PULRAL{
     HOUR    = 3,
     BOOK    = 4
 };
+
+void numberSrand();
+int numberRand(int smin, int smax);
 
 TCHAR* QStringToTChar(const QString &str);
 QString TCharToQString(const TCHAR *string);

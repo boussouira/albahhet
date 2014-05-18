@@ -3,16 +3,16 @@
 
 #include <qwebview.h>
 #include <qwebframe.h>
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 
 class WebView : public QWebView
 {
     Q_OBJECT
 public:
-    WebView(IndexInfo::IndexType indexType, QWidget* parent = 0);
+    WebView(ShamelaIndexInfo::IndexType indexType, QWidget* parent = 0);
     void execJS(QString js);
     void addObject(const QString &name, QObject *object);
-    void setIndexType(IndexInfo::IndexType indexType);
+    void setIndexType(ShamelaIndexInfo::IndexType indexType);
     void init();
     QString html();
 
@@ -21,7 +21,7 @@ public slots:
 
 protected:
     QWebFrame *m_frame;
-    IndexInfo::IndexType m_indexType;
+    ShamelaIndexInfo::IndexType m_indexType;
     QString m_html;
 };
 

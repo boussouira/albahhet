@@ -9,7 +9,7 @@ namespace Ui {
 }
 
 class BooksDB;
-class IndexInfo;
+class ShamelaIndexInfo;
 class ShamelaUpdater;
 
 class ShamelaUpdaterDialog : public QDialog
@@ -24,8 +24,8 @@ public:
 protected:
     void getUpdateBooks();
     void startUpdate();
-    void indexBooks(QList<int> ids, BooksDB *bookDB, IndexInfo *info);
-    void deletBooksFromIndex(QList<int> ids, IndexInfo *info);
+    void indexBooks(QList<int> ids, BooksDB *bookDB, ShamelaIndexInfo *info);
+    void deletBooksFromIndex(QList<int> ids, ShamelaIndexInfo *info);
 
 private:
     Ui::ShamelaUpdaterDialog *ui;

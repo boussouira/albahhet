@@ -1,5 +1,5 @@
 #include "bookinfo.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include <stdlib.h>
 
 BookInfo::BookInfo()
@@ -36,7 +36,7 @@ void BookInfo::genInfo()
     m_tocTable = (m_archive) ? QString("t%1").arg(m_id) : "title";
 }
 
-void BookInfo::genInfo(IndexInfo *info)
+void BookInfo::genInfo(ShamelaIndexInfo *info)
 {
     genInfo();
 

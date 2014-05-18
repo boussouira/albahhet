@@ -2,7 +2,7 @@
 #include "ui_indexesdialog.h"
 #include "common.h"
 #include "cl_common.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "booksdb.h"
 #include "shamelaupdaterdialog.h"
 #include "indexesmanager.h"
@@ -41,13 +41,13 @@ void IndexesDialog::loadIndexesList()
     ui->treeWidget->clear();
     m_indexesManager->clear();
 
-    QList<IndexInfo *> list = m_indexesManager->list();
+    QList<IndexInfoBase *> list = m_indexesManager->list();
     QList<QTreeWidgetItem*> itemList;
     bool haveIndexes = !list.isEmpty();
 
     if(haveIndexes) {
         for(int i=0; i<list.count(); i++) {
-            IndexInfo *info = list.at(i);
+            IndexInfoBase *info = list.at(i);
 
             QTreeWidgetItem *item = new QTreeWidgetItem(ui->treeWidget);
             item->setData(0, Qt::DisplayRole, info->name());
@@ -75,123 +75,115 @@ void IndexesDialog::indexOptimizeDone()
 
 void IndexesDialog::on_pushEdit_clicked()
 {
-    QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
-    if(items.count() > 0) {
-        bool ok;
-        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
+    IndexInfoBase *indexInfo = selectedIndex(true);
+    if(!indexInfo) return;
 
-        QString text = QInputDialog::getText(this,
-                                             tr("تغيير اسم الفهرس"),
-                                             tr("الاسم الجديد:"),
-                                             QLineEdit::Normal,
-                                             indexInfo->name(),
-                                             &ok);
-        if (ok && !text.isEmpty() && text != indexInfo->name()) {
-            if(!m_indexesManager->nameExists(text)) {
-                m_indexesManager->setIndexName(indexInfo, text);
-                loadIndexesList();
-                emit indexesChanged();
+    bool ok;
+    QString text = QInputDialog::getText(this,
+                                         tr("تغيير اسم الفهرس"),
+                                         tr("الاسم الجديد:"),
+                                         QLineEdit::Normal,
+                                         indexInfo->name(),
+                                         &ok);
+    if (ok && !text.isEmpty() && text != indexInfo->name()) {
+        if(!m_indexesManager->nameExists(text)) {
+            m_indexesManager->setIndexName(indexInfo, text);
+            loadIndexesList();
+            emit indexesChanged();
 
-            } else {
-                QMessageBox::warning(this,
-                                     tr("تعديل فهرس"),
-                                     tr("الاسم المدخل موجود مسبقا"));
-            }
+        } else {
+            QMessageBox::warning(this,
+                                 tr("تعديل فهرس"),
+                                 tr("الاسم المدخل موجود مسبقا"));
         }
-
-    } else {
-        QMessageBox::warning(this,
-                             tr("تعديل فهرس"),
-                             tr("لم تقم باختيار اي فهرس!"));
     }
 }
 
 void IndexesDialog::on_pushDelete_clicked()
 {
-    QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
-    if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
-        int rep = QMessageBox::question(this,
-                                        tr("حذف فهرس"),
-                                        tr("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
-                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    IndexInfoBase *indexInfo = selectedIndex(true);
+    if(!indexInfo) return;
 
-        if(rep == QMessageBox::Yes) {
-            m_indexesManager->remove(indexInfo);
-            loadIndexesList();
-            emit indexesChanged();
-        }
-    } else {
-        QMessageBox::warning(this,
-                             tr("حذف فهرس"),
-                             tr("لم تقم باختيار اي فهرس!"));
+    int rep = QMessageBox::question(this,
+                                    tr("حذف فهرس"),
+                                    tr("هل تريد حذف فهرس <strong>%1</strong>؟").arg(indexInfo->name()),
+                                    QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+
+    if(rep == QMessageBox::Yes) {
+        m_indexesManager->remove(indexInfo);
+        loadIndexesList();
+        emit indexesChanged();
     }
+}
+
+IndexInfoBase *IndexesDialog::selectedIndex(bool showWarningMsg)
+{
+    QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
+    if(items.isEmpty()) {
+        if(showWarningMsg) {
+            QMessageBox::warning(this,
+                                 tr("تعديل فهرس"),
+                                 tr("لم تقم باختيار اي فهرس!"));
+        }
+
+        return 0;
+    }
+
+    int indexId = items.first()->data(0, Qt::UserRole).toInt();
+
+    return m_indexesManager->indexInfo(indexId);
 }
 
 void IndexesDialog::on_pushUpDate_clicked()
 {
-    QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
+    IndexInfoBase *indexInfo = selectedIndex(true);
+    if(!indexInfo) return;
 
-    if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
+    BooksDB *bookDb = new BooksDB();
+    bookDb->setIndexInfo(static_cast<ShamelaIndexInfo*>(indexInfo));
 
-        BooksDB *bookDb = new BooksDB();
-        bookDb->setIndexInfo(indexInfo);
+    ShamelaUpdaterDialog updater(this);
+    updater.setBooksDB(bookDb);
+    updater.resize(size());
 
-        ShamelaUpdaterDialog updater(this);
-        updater.setBooksDB(bookDb);
-        updater.resize(size());
+    updater.exec();
 
-        updater.exec();
-
-        DELETE_DB(bookDb);
-
-    } else {
-        QMessageBox::warning(this,
-                             tr("تحديث فهرس"),
-                             tr("لم تقم باختيار اي فهرس!"));
-    }
+    DELETE_DB(bookDb);
 }
 
 void IndexesDialog::on_pushOptimize_clicked()
 {
-    QList<QTreeWidgetItem*> items = ui->treeWidget->selectedItems();
-    if(items.count() > 0) {
-        IndexInfo *indexInfo = m_indexesManager->indexInfo(items.at(0)->data(0, Qt::UserRole).toInt());
-        int rep = QMessageBox::question(this,
-                             tr("ضغط فهرس"),
-                             tr("هل تريد ضغط فهرس <strong>%1</strong>؟"
-                                    "<br>"
-                                    "هذه العملية قد تأخذ بعض الوقت.")
-                             .arg(indexInfo->name()),
-                             QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    IndexInfoBase *indexInfo = selectedIndex(true);
+    if(!indexInfo) return;
 
-        if(rep == QMessageBox::Yes){
-            m_optimizeProgressdialog = new QProgressDialog(tr("جاري ضغط فهرس %1...").arg(indexInfo->name()),
-                                                            QString(), 0, 1, this);
-            m_optimizeProgressdialog->setWindowModality(Qt::WindowModal);
+    int rep = QMessageBox::question(this,
+                                    tr("ضغط فهرس"),
+                                    tr("هل تريد ضغط فهرس <strong>%1</strong>؟"
+                                       "<br>"
+                                       "هذه العملية قد تأخذ بعض الوقت.")
+                                    .arg(indexInfo->name()),
+                                    QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
-            QProgressBar *bar = new QProgressBar(m_optimizeProgressdialog);
-            bar->setAlignment(Qt::AlignCenter);
+    if(rep == QMessageBox::Yes){
+        m_optimizeProgressdialog = new QProgressDialog(tr("جاري ضغط فهرس %1...").arg(indexInfo->name()),
+                                                       QString(), 0, 1, this);
+        m_optimizeProgressdialog->setWindowModality(Qt::WindowModal);
 
-            m_optimizeProgressdialog->setBar(bar);
-            m_optimizeProgressdialog->setMaximum(0);
+        QProgressBar *bar = new QProgressBar(m_optimizeProgressdialog);
+        bar->setAlignment(Qt::AlignCenter);
 
-            hideWindowButtons(m_optimizeProgressdialog, true, true);
+        m_optimizeProgressdialog->setBar(bar);
+        m_optimizeProgressdialog->setMaximum(0);
 
-            optimizeIndex(indexInfo);
+        hideWindowButtons(m_optimizeProgressdialog, true, true);
 
-            m_optimizeProgressdialog->exec();
-        }
+        optimizeIndex(indexInfo);
 
-    } else {
-        QMessageBox::warning(this,
-                             tr("ضغط فهرس"),
-                             tr("لم تقم باختيار اي فهرس!"));
+        m_optimizeProgressdialog->exec();
     }
 }
 
-void IndexesDialog::optimizeIndex(IndexInfo *info)
+void IndexesDialog::optimizeIndex(IndexInfoBase *info)
 {
 
     IndexWriter *writer = 0;
@@ -226,13 +218,13 @@ void IndexesDialog::optimizeIndex(IndexInfo *info)
     optimizer->start();
 }
 
-void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* item, int column)
+void IndexesDialog::on_treeWidget_itemActivated(QTreeWidgetItem* , int column)
 {
     if(column != -1) {
-        IndexInfo *indexInfo = m_indexesManager->indexInfo(item->data(0, Qt::UserRole).toInt());
+        IndexInfoBase *indexInfo = selectedIndex();
         if(indexInfo) {
             ui->labelIndexName->setText(indexInfo->name());
-            ui->labelShaPath->setText(indexInfo->shamelaPath());
+            ui->labelShaPath->setText(static_cast<ShamelaIndexInfo*>(indexInfo)->shamelaPath());
             ui->labelIndexPath->setText(indexInfo->path());
 
             ui->widgetIndexInfo->show();

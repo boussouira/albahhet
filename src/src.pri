@@ -17,7 +17,6 @@ SOURCES += main.cpp \
     arabicanalyzer.cpp \
     shamelaindexer.cpp \
     booksdb.cpp \
-    indexinfo.cpp \
     shamelasearcher.cpp \
     shamelaresult.cpp \
     shamelaresultwidget.cpp \
@@ -62,14 +61,15 @@ SOURCES += main.cpp \
     filechooserwidget.cpp \
     indexoptimizer.cpp \
     shamelaindexerpages.cpp \
-    indexwidgetbase.cpp
+    indexwidgetbase.cpp \
+    shamelaindexinfo.cpp \
+    indexinfobase.cpp
 
 HEADERS += mainwindow.h \
     arabicanalyzer.h \
     shamelaindexer.h \
     common.h \
     booksdb.h \
-    indexinfo.h \
     shamelasearcher.h \
     shamelaresult.h \
     shamelaresultwidget.h \
@@ -115,7 +115,9 @@ HEADERS += mainwindow.h \
     filechooserwidget.h \
     indexoptimizer.h \
     shamelaindexerpages.h \
-    indexwidgetbase.h
+    indexwidgetbase.h \
+    shamelaindexinfo.h \
+    indexinfobase.h
 
 FORMS += mainwindow.ui \
     shamelaresultwidget.ui \

@@ -7,7 +7,7 @@
 
 class BooksDB;
 class BookInfo;
-class IndexInfo;
+class ShamelaIndexInfo;
 
 class ShamelaIndexer : public QThread
 {
@@ -16,7 +16,7 @@ public:
     ShamelaIndexer();
     void setBookDB(BooksDB *bookDB) { m_bookDB = bookDB; }
     void setWirter(IndexWriter* writer) { m_writer = writer;}
-    void setIndexInfo(IndexInfo* info) { m_indexInfo = info;}
+    void setIndexInfo(ShamelaIndexInfo* info) { m_indexInfo = info;}
     void run();
 
 public slots:
@@ -35,7 +35,7 @@ signals:
 protected:
     BooksDB *m_bookDB;
     IndexWriter* m_writer;
-    IndexInfo* m_indexInfo;
+    ShamelaIndexInfo* m_indexInfo;
     bool m_skipCurrent;
     int m_threadId;
     QSet<int> m_indexedBooks;

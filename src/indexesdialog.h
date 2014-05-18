@@ -8,7 +8,7 @@ namespace Ui {
     class IndexesDialog;
 }
 
-class IndexInfo;
+class IndexInfoBase;
 class BooksDB;
 class QTreeWidgetItem;
 class IndexesManager;
@@ -22,9 +22,10 @@ public:
     IndexesDialog(IndexesManager *manager, QWidget *parent = 0);
     ~IndexesDialog();
     void setIndexesManager(IndexesManager *manager);
-    void optimizeIndex(IndexInfo *info);
+    void optimizeIndex(IndexInfoBase *info);
 
 protected slots:
+    IndexInfoBase *selectedIndex(bool showWarningMsg=false);
     void loadIndexesList();
     void indexOptimizeDone();
 
@@ -33,15 +34,15 @@ signals:
 
 private slots:
     void on_treeWidget_itemSelectionChanged();
-    void on_treeWidget_itemActivated(QTreeWidgetItem* item, int column);
+    void on_treeWidget_itemActivated(QTreeWidgetItem*, int column);
     void on_pushOptimize_clicked();
     void on_pushUpDate_clicked();
     void on_pushDelete_clicked();
     void on_pushEdit_clicked();
 
 private:
-    IndexesManager *m_indexesManager;
     Ui::IndexesDialog *ui;
+    IndexesManager *m_indexesManager;
     QProgressDialog *m_optimizeProgressdialog;
 };
 

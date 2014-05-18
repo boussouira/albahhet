@@ -12,7 +12,7 @@ class ShamelaModels : public QObject
 
 public:
     ShamelaModels(QObject *parent = 0);
-    void setIndexInfo(IndexInfo *info);
+    void setIndexInfo(ShamelaIndexInfo *info);
     void setBooksListModel(QStandardItemModel *model);
 
     QList<int> selectedBooks();
@@ -26,7 +26,7 @@ public:
     void getBooks(QModelIndex index);
 
 protected:
-    IndexInfo *m_indexInfo;
+    ShamelaIndexInfo *m_indexInfo;
     QStandardItemModel *m_booksModel;
     QList<int> m_selectedBooks;
     QList<int> m_unSelectedBooks;

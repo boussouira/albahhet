@@ -5,7 +5,7 @@
 #include <tchar.h>
 #include <qdebug.h>
 
-class IndexInfo;
+class ShamelaIndexInfo;
 
 class BookInfo
 {
@@ -26,7 +26,7 @@ public:
     QString info() { return m_info; }
 
     void genInfo();
-    void genInfo(IndexInfo *info);
+    void genInfo(ShamelaIndexInfo *info);
 
     TCHAR *idT() { return m_idT; }
     TCHAR *authorDeathT() { return m_authorDeathT; }

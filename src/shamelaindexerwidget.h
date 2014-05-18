@@ -24,7 +24,7 @@ public:
 
     QList<QWizardPage*> pages();
 
-    IndexInfo *indexInfo() const;
+    ShamelaIndexInfo *indexInfo() const;
     BooksDB *bookDB() const;
     int booksCount() const;
     int indexedBooksCount() const;
@@ -41,7 +41,7 @@ public:
     bool cancel();
 
 protected:
-    IndexInfo *m_indexInfo;
+    ShamelaIndexInfo *m_indexInfo;
     BooksDB *m_bookDB;
     QList<QWizardPage*> m_pages;
     int m_booksCount;

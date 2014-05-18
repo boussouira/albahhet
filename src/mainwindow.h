@@ -11,7 +11,7 @@ namespace Ui {
     class MainWindow;
 }
 
-class IndexInfo;
+class IndexInfoBase;
 class BooksDB;
 class TabWidget;
 class AbstractSearchWidget;
@@ -59,8 +59,7 @@ protected:
     TabWidget *m_tabWidget;
     AbstractSearchWidget *m_searchWidget;
     LogDialog *m_logDialog;
-    IndexInfo *m_currentIndex;
-    BooksDB *m_booksDB;
+    IndexInfoBase *m_currentIndex;
     SearchField *m_searchFields;
     UpdateChecker *m_updateChecker;
     SupportDialog m_supportDialog;

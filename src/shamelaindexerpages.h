@@ -5,7 +5,6 @@
 #include <QTime>
 
 class ShamelaIndexerWidget;
-class IndexInfo;
 class IndexOptimizer;
 class BookProgressWidget;
 class QListWidget;

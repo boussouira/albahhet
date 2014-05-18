@@ -25,11 +25,11 @@ ShamelaResultWidget::ShamelaResultWidget(QWidget *parent) :
 
     m_searcher = new ShamelaSearcher;
     m_bookReader = new ShamelaBooksReader(this);
-    m_webView = new WebView(IndexInfo::ShamelaIndex, this);
+    m_webView = new WebView(ShamelaIndexInfo::ShamelaIndex, this);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     ui->widgetResult->layout()->addWidget(m_webView);
 
-    m_readerWebView = new WebView(IndexInfo::ShamelaIndex, this);
+    m_readerWebView = new WebView(ShamelaIndexInfo::ShamelaIndex, this);
     ui->widgetBookView->layout()->addWidget(m_readerWebView);
 
     ui->progressWidget->hide();

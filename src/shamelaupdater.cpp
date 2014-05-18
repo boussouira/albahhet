@@ -49,7 +49,7 @@ ShamelaUpdater::~ShamelaUpdater()
     close();
 }
 
-void ShamelaUpdater::setIndexInfo(IndexInfo *index)
+void ShamelaUpdater::setIndexInfo(ShamelaIndexInfo *index)
 {
     m_indexInfo = index;
 

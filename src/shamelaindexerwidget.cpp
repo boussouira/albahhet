@@ -1,13 +1,13 @@
 #include "shamelaindexerwidget.h"
 #include "shamelaindexerpages.h"
 #include "common.h"
-#include "indexinfo.h"
+#include "shamelaindexinfo.h"
 #include "indexesmanager.h"
-
+#include "booksdb.h"
 
 ShamelaIndexerWidget::ShamelaIndexerWidget(QWidget *parent) : IndexWidgetBase(parent)
 {
-    m_indexInfo = new IndexInfo();
+    m_indexInfo = new ShamelaIndexInfo();
     m_bookDB = new BooksDB();
 
     m_booksCount = 0;
@@ -41,7 +41,7 @@ QList<QWizardPage *> ShamelaIndexerWidget::pages()
     return m_pages;
 }
 
-IndexInfo *ShamelaIndexerWidget::indexInfo() const
+ShamelaIndexInfo *ShamelaIndexerWidget::indexInfo() const
 {
     return m_indexInfo;
 }
@@ -78,7 +78,7 @@ void ShamelaIndexerWidget::setBooksCount(int booksCount)
 
 void ShamelaIndexerWidget::saveIndexInfo()
 {
-    m_indexInfo->setType(IndexInfo::ShamelaIndex);
+    m_indexInfo->setType(ShamelaIndexInfo::ShamelaIndex);
     m_indexInfo->generateIndexingInfo();
     m_indexInfo->indexingInfo()->indexingTime = m_indexingTime;
     m_indexInfo->indexingInfo()->optimizingTime = m_optimizeIndexTime;
